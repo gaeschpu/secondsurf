@@ -1,7 +1,7 @@
 ---
 import Icon from './Icon.astro';
 import { htmlLang, l, langLabel, languages, stripLang, url, useT, type Lang } from '../i18n';
-import { ANNOUNCEMENT, CATEGORIES, SITE } from '../config';
+import { ANNOUNCEMENT, CATEGORIES, HOLIDAY_BANNER, SITE } from '../config';
 
 interface Props {
 	lang: Lang;
@@ -33,9 +33,11 @@ const nav: NavItem[] = [
 	{ href: '/contact/', label: t('nav.contact') },
 ];
 const announcement = l(ANNOUNCEMENT, lang);
+const holiday = l(HOLIDAY_BANNER, lang);
 const isActive = (href: string) => (href === '/' ? current === '/' : current.startsWith(href));
 ---
 
+{holiday && <p class="announcement holiday">{holiday}</p>}
 {announcement && <p class="announcement">{announcement}</p>}
 <header class="site-header">
 	<div class="container-wide bar">
@@ -161,6 +163,10 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 		letter-spacing: 0.08em;
 		text-align: center;
 		text-transform: uppercase;
+	}
+	.holiday {
+		background: var(--sand-tint);
+		color: var(--ink);
 	}
 	.site-header {
 		position: sticky;

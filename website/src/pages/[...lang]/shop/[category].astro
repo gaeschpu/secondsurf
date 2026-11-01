@@ -3,7 +3,7 @@ import Base from '../../../layouts/Base.astro';
 import ProductGrid from '../../../components/ProductGrid.astro';
 import CategoryNav from '../../../components/CategoryNav.astro';
 import { availableFirst, getProducts } from '../../../lib/products';
-import { l, langPaths, type Lang } from '../../../i18n';
+import { l, langPaths, useT, type Lang } from '../../../i18n';
 import { CATEGORIES } from '../../../config';
 
 export function getStaticPaths() {
@@ -16,7 +16,7 @@ const products = availableFirst((await getProducts()).filter((p) => p.data.categ
 const title = l(category.label, lang);
 ---
 
-<Base lang={lang} title={title}>
+<Base lang={lang} title={title} description={`${title}: ${useT(lang)('site.tagline')}. ${useT(lang)('shop.intro')}`}>
 	<div class="container-wide">
 		<header class="page-head">
 			<h1>{title}</h1>

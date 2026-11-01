@@ -1,0 +1,10 @@
+---
+// Structured data for search engines. "<" is escaped so a text can't close the script tag.
+interface Props {
+	data: Record<string, unknown>;
+}
+const { data } = Astro.props;
+const body = JSON.stringify({ '@context': 'https://schema.org', ...data }).replace(/</g, '\\u003c');
+---
+
+<script is:inline type="application/ld+json" set:html={body} />

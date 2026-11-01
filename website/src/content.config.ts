@@ -6,8 +6,11 @@ import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { CATEGORIES, CONDITIONS, SIZES } from './config';
 
+/** Pages CMS may save an unfilled language as null or "". */
+const optionalText = z.string().nullish().transform((text) => text || undefined);
+
 /** A text that is the same in all languages ("Foo") or translated ({ de: "Foo", fr: …, en: … }). */
-const localized = z.union([z.string(), z.object({ de: z.string(), fr: z.string().optional(), en: z.string().optional() })]);
+const localized = z.union([z.string(), z.object({ de: z.string(), fr: optionalText, en: optionalText })]);
 
 const categoryIds = CATEGORIES.map((c) => c.id) as [string, ...string[]];
 const conditionIds = Object.keys(CONDITIONS) as [keyof typeof CONDITIONS, ...(keyof typeof CONDITIONS)[]];
@@ -48,4 +51,14 @@ const products = defineCollection({
 		}),
 });
 
-export const collections = { products };
+/** News from src/content/news/, edited in Pages CMS. Only German is required. */
+const news = defineCollection({
+	loader: glob({ pattern: '*.md', base: './src/content/news' }),
+	schema: z.object({
+		date: z.coerce.date(),
+		title: localized,
+		text: localized,
+	}),
+});
+
+export const collections = { products, news };

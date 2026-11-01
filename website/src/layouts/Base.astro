@@ -14,9 +14,11 @@ interface Props {
 	/** Language versions of this page. Defaults to the same path in every language. */
 	alternates?: Partial<Record<Lang, string>>;
 	noindex?: boolean;
+	/** Image shown when the page is shared. Defaults to the site's share image. */
+	image?: string;
 }
 
-const { lang, title, description, noindex = false } = Astro.props;
+const { lang, title, description, noindex = false, image = '/og.png' } = Astro.props;
 const t = useT(lang);
 
 const basePath = stripLang(Astro.url.pathname);
@@ -51,8 +53,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
 		<meta property="og:description" content={metaDescription} />
 		<meta property="og:url" content={canonical} />
 		<meta property="og:locale" content={htmlLang[lang].replace('-', '_')} />
+		<meta property="og:image" content={new URL(image, Astro.site ?? SITE.url).href} />
+		<meta name="twitter:card" content="summary_large_image" />
 
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 		<meta name="theme-color" content="#f5f2ea" media="(prefers-color-scheme: light)" />
 		<meta name="theme-color" content="#0b1416" media="(prefers-color-scheme: dark)" />
 		<meta name="generator" content={Astro.generator} />

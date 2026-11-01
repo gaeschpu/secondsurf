@@ -1,0 +1,61 @@
+---
+import Base from '../../layouts/Base.astro';
+import InquiryForm from '../../components/InquiryForm.astro';
+import { langPaths, url, useT, type Lang } from '../../i18n';
+import { SITE } from '../../config';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+
+const text = {
+	de: {
+		conditions: 'Wann eine Rückgabe möglich ist',
+		items: ['Du hast das falsche Piece erhalten.', 'Das Piece wurde beim Versand beschädigt.', 'Das Piece entspricht nicht der Beschreibung.'],
+		rules: 'Melde dich innert 14 Tagen nach Erhalt. Das Piece muss ungetragen und im erhaltenen Zustand sein. Ist der Fehler bei uns, übernehmen wir den Rückversand, sonst du. Weil jedes Piece ein Einzelstück ist, gibt es keinen Umtausch; du erhältst den Kaufpreis zurück.',
+		terms: 'Alle Details stehen in den',
+	},
+	fr: {
+		conditions: 'Quand un retour est possible',
+		items: ['Tu as reçu la mauvaise pièce.', 'La pièce a été endommagée pendant l’envoi.', 'La pièce ne correspond pas à la description.'],
+		rules: 'Annonce-le dans les 14 jours après réception. La pièce doit être non portée et dans l’état reçu. Si l’erreur vient de nous, nous prenons le renvoi en charge, sinon il est à ta charge. Chaque pièce étant unique, il n’y a pas d’échange : le prix d’achat t’est remboursé.',
+		terms: 'Tous les détails figurent dans les',
+	},
+	en: {
+		conditions: 'When a return is possible',
+		items: ['You received the wrong piece.', 'The piece was damaged in shipping.', 'The piece doesn’t match the description.'],
+		rules: 'Tell us within 14 days of receiving it. The piece must be unworn and in the condition you received it. If the mistake was ours, we pay for return shipping; otherwise you do. Every piece is one of a kind, so there are no exchanges: you get the purchase price back.',
+		terms: 'All the details are in the',
+	},
+}[lang];
+---
+
+<Base lang={lang} title={t('returns.title')} description={t('returns.intro')}>
+	<div class="container">
+		<header class="page-head">
+			<h1>{t('returns.title')}</h1>
+			<p>{t('returns.intro')}</p>
+		</header>
+		<div class="prose">
+			<h2>{text.conditions}</h2>
+			<ul>
+				{text.items.map((item) => <li>{item}</li>)}
+			</ul>
+			<p>{text.rules}</p>
+			<p>{text.terms} <a href={url(lang, '/terms/')}>{t('legal.terms')}</a>.</p>
+		</div>
+		<div class="form">
+			<InquiryForm lang={lang} kind="returns" title={t('returns.form')} />
+			<p class="small muted fallback">{t('returns.orEmail')} <a href={`mailto:${SITE.email}`}>{SITE.email}</a></p>
+		</div>
+	</div>
+</Base>
+
+<style>
+	.form {
+		margin-top: 3rem;
+	}
+	.fallback {
+		margin-top: 1.5rem;
+	}
+</style>

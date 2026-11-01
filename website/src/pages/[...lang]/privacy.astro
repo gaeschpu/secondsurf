@@ -1,12 +1,111 @@
 ---
 import LegalPage from '../../components/LegalPage.astro';
 import { langPaths, useT, type Lang } from '../../i18n';
+import { OWNER, SITE } from '../../config';
 
 export const getStaticPaths = langPaths;
 const { lang } = Astro.props as { lang: Lang };
 const t = useT(lang);
+const mail = `mailto:${SITE.email}`;
 ---
 
-<LegalPage lang={lang} title={t('legal.privacy')}>
-	<p><span class="todo">TODO</span> Datenschutzerklärung nach dem Schweizer Datenschutzgesetz (revDSG): wer verantwortlich ist, welche Daten (Bestellungen, Formulare via Web3Forms, Zahlungsanbieter), wofür und wie lange.</p>
+<LegalPage
+	lang={lang}
+	title={t('legal.privacy')}
+	description={{
+		de: 'Datenschutzerklärung von secondsurf: welche Daten wir bearbeiten, wofür, und welche Dienste beteiligt sind.',
+		fr: 'Protection des données chez secondsurf : quelles données nous traitons, pourquoi et avec quels services.',
+		en: 'Privacy policy of secondsurf: what data we process, why, and which services are involved.',
+	}[lang]}
+>
+	{lang === 'de' && (
+		<>
+			<p>Diese Erklärung richtet sich nach dem Schweizer Datenschutzgesetz (revDSG) und, soweit anwendbar, nach der EU-Datenschutz-Grundverordnung (DSGVO).</p>
+			<h2>Verantwortlich</h2>
+			<p>{SITE.name}, {OWNER.name}, <a href={mail}>{SITE.email}</a>. Die Adresse steht im Impressum.</p>
+			<h2>Welche Daten wir bearbeiten</h2>
+			<ul>
+				<li><strong>Formulare:</strong> Name, E-Mail, Nachricht und deine weiteren Angaben (z.&nbsp;B. Telefon oder Bestelldatum), um deine Anfrage zu beantworten.</li>
+				<li><strong>Bestellungen:</strong> Name, Lieferadresse und Zahlungsangaben, die du uns schickst, um die Bestellung abzuwickeln.</li>
+				<li><strong>Website-Besuch:</strong> Beim Aufruf fallen technisch nötige Daten an, z.&nbsp;B. IP-Adresse, Zeitpunkt und aufgerufene Seite.</li>
+			</ul>
+			<h2>Dienste, die wir nutzen</h2>
+			<ul>
+				<li><strong>Cloudflare</strong> (Hosting und Sicherheit): verarbeitet die Daten des Website-Besuchs.</li>
+				<li><strong>Cloudflare Turnstile</strong> (Spam-Schutz in den Formularen): prüft mit technischen Daten deines Browsers und der IP-Adresse, ob ein Mensch das Formular sendet.</li>
+				<li><strong>Resend</strong> (E-Mail-Versand): stellt Formularnachrichten und Bestätigungen zu.</li>
+				<li><strong>Google Gmail</strong> (unser E-Mail-Postfach): speichert die E-Mails, die uns erreichen.</li>
+			</ul>
+			<p>Diese Anbieter können Daten auch ausserhalb der Schweiz bearbeiten, insbesondere in den USA. Dabei stützen wir uns auf die von den Anbietern vorgesehenen Garantien, etwa die Standardvertragsklauseln.</p>
+			<p>Schriften liegen auf unserem eigenen Server. Instagram wird nur aufgerufen, wenn du auf den Link klickst.</p>
+			<h2>Cookies und Tracking</h2>
+			<p>Wir nutzen keine Tracking- oder Werbe-Cookies und keine Analyse-Tools. Deine Wahl von hellem oder dunklem Design wird nur in deinem Browser gespeichert.</p>
+			<h2>Aufbewahrung</h2>
+			<p>Wir bewahren Daten nur so lange auf, wie es für den Zweck nötig ist. Bestell- und Buchhaltungsunterlagen bewahren wir 10 Jahre auf, wie gesetzlich vorgeschrieben.</p>
+			<h2>Deine Rechte</h2>
+			<p>Du kannst Auskunft, Berichtigung oder Löschung deiner Daten verlangen und der Bearbeitung widersprechen. Schreib uns an <a href={mail}>{SITE.email}</a>. Du kannst dich auch beim Eidgenössischen Datenschutz- und Öffentlichkeitsbeauftragten (EDÖB) beschweren.</p>
+			<h2>Personen im EWR</h2>
+			<p>Rechtsgrundlagen sind die Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO), deine Einwilligung (lit. a) und unser berechtigtes Interesse an einer sicheren Website (lit. f). Du kannst dich auch bei der Aufsichtsbehörde deines Landes beschweren.</p>
+		</>
+	)}
+	{lang === 'fr' && (
+		<>
+			<p>La présente déclaration se fonde sur la loi suisse sur la protection des données (nLPD) et, si applicable, sur le règlement général européen sur la protection des données (RGPD).</p>
+			<h2>Responsable</h2>
+			<p>{SITE.name}, {OWNER.name}, <a href={mail}>{SITE.email}</a>. L’adresse figure dans les mentions légales.</p>
+			<h2>Données que nous traitons</h2>
+			<ul>
+				<li><strong>Formulaires :</strong> nom, e-mail, message et tes autres indications (p.&nbsp;ex. téléphone ou date de commande), pour répondre à ta demande.</li>
+				<li><strong>Commandes :</strong> nom, adresse de livraison et données de paiement que tu nous envoies, pour traiter la commande.</li>
+				<li><strong>Visite du site :</strong> des données techniques sont nécessaires, p.&nbsp;ex. adresse IP, heure et page consultée.</li>
+			</ul>
+			<h2>Services utilisés</h2>
+			<ul>
+				<li><strong>Cloudflare</strong> (hébergement et sécurité) : traite les données de visite du site.</li>
+				<li><strong>Cloudflare Turnstile</strong> (protection anti-spam des formulaires) : vérifie, avec des données techniques de ton navigateur et l’adresse IP, qu’un humain envoie le formulaire.</li>
+				<li><strong>Resend</strong> (envoi d’e-mails) : transmet les messages des formulaires et les confirmations.</li>
+				<li><strong>Google Gmail</strong> (notre boîte e-mail) : conserve les e-mails qui nous parviennent.</li>
+			</ul>
+			<p>Ces prestataires peuvent aussi traiter des données hors de Suisse, notamment aux États-Unis. Nous nous appuyons alors sur les garanties qu’ils prévoient, comme les clauses contractuelles types.</p>
+			<p>Les polices sont hébergées sur notre propre serveur. Instagram n’est appelé que si tu cliques sur le lien.</p>
+			<h2>Cookies et suivi</h2>
+			<p>Nous n’utilisons ni cookies de suivi ou publicitaires, ni outils d’analyse. Ton choix de thème clair ou sombre est enregistré uniquement dans ton navigateur.</p>
+			<h2>Conservation</h2>
+			<p>Nous conservons les données seulement le temps nécessaire. Les documents de commande et de comptabilité sont conservés 10 ans, comme l’exige la loi.</p>
+			<h2>Tes droits</h2>
+			<p>Tu peux demander l’accès à tes données, leur rectification ou leur suppression, et t’opposer à leur traitement. Écris-nous à <a href={mail}>{SITE.email}</a>. Tu peux aussi déposer une plainte auprès du Préposé fédéral à la protection des données et à la transparence (PFPDT).</p>
+			<h2>Personnes dans l’EEE</h2>
+			<p>Les bases légales sont l’exécution du contrat (art. 6 par. 1 let. b RGPD), ton consentement (let. a) et notre intérêt légitime à un site sûr (let. f). Tu peux aussi déposer une plainte auprès de l’autorité de contrôle de ton pays.</p>
+		</>
+	)}
+	{lang === 'en' && (
+		<>
+			<p>This policy follows the Swiss Federal Act on Data Protection (revFADP) and, where it applies, the EU General Data Protection Regulation (GDPR).</p>
+			<h2>Who is responsible</h2>
+			<p>{SITE.name}, {OWNER.name}, <a href={mail}>{SITE.email}</a>. The address is in the imprint.</p>
+			<h2>What data we process</h2>
+			<ul>
+				<li><strong>Forms:</strong> name, email, message and any other details you give (such as phone or order date), to answer your request.</li>
+				<li><strong>Orders:</strong> name, delivery address and payment details you send us, to handle the order.</li>
+				<li><strong>Visiting the website:</strong> technically necessary data, such as IP address, time and page visited.</li>
+			</ul>
+			<h2>Services we use</h2>
+			<ul>
+				<li><strong>Cloudflare</strong> (hosting and security): processes website visit data.</li>
+				<li><strong>Cloudflare Turnstile</strong> (spam protection on forms): uses technical data from your browser and your IP address to check that a person is sending the form.</li>
+				<li><strong>Resend</strong> (email delivery): delivers form messages and confirmations.</li>
+				<li><strong>Google Gmail</strong> (our mailbox): stores the emails that reach us.</li>
+			</ul>
+			<p>These providers may also process data outside Switzerland, particularly in the USA. For this we rely on the safeguards they provide, such as standard contractual clauses.</p>
+			<p>Fonts are hosted on our own server. Instagram is only contacted if you click the link.</p>
+			<h2>Cookies and tracking</h2>
+			<p>We use no tracking or advertising cookies and no analytics tools. Your choice of light or dark theme is stored only in your browser.</p>
+			<h2>Retention</h2>
+			<p>We keep data only as long as needed for its purpose. Order and accounting records are kept for 10 years, as the law requires.</p>
+			<h2>Your rights</h2>
+			<p>You can ask for access to your data, its correction or its deletion, and you can object to its processing. Write to <a href={mail}>{SITE.email}</a>. You can also complain to the Federal Data Protection and Information Commissioner (FDPIC).</p>
+			<h2>People in the EEA</h2>
+			<p>The legal bases are performing the contract (Art. 6(1)(b) GDPR), your consent (a) and our legitimate interest in a secure website (f). You can also complain to the supervisory authority in your country.</p>
+		</>
+	)}
 </LegalPage>

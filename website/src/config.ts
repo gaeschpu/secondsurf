@@ -1,33 +1,42 @@
-// Central site settings. Edit names, links, categories and contact info here.
+// Central site settings. Contact details, banners, shipping prices and the current drop live in
+// src/settings/site.json, so they can be edited in Pages CMS. Categories, sizes and conditions are here.
 
 import type { Localized } from './i18n';
+import settings from './settings/site.json';
 
 export const SITE = {
 	url: 'https://secondsurf.ch',
 	name: 'secondsurf',
-	// The email is stored in two parts and only assembled in the browser
-	// after a click, so spam bots scraping the HTML don't find it.
-	// TODO: put the real address here.
-	emailUser: 'hello',
-	emailDomain: 'secondsurf.ch',
-	// TODO: create a free access key at https://web3forms.com and paste it here.
-	// Leave empty to hide the forms (contact, stockist, sell once) on the live site.
-	web3formsKey: '',
+	email: settings.email,
+	phone: settings.phone,
 	// Number of the current drop. Items with `drop:` equal to this number appear under "New drop".
-	currentDrop: 1,
+	currentDrop: settings.currentDrop,
 };
 
-/** Bar at the very top of every page. Leave empty ('') to hide it. */
-export const ANNOUNCEMENT: Localized = {
-	de: '☆ Versand innert 2 Arbeitstagen in der ganzen Schweiz ☆',
-	fr: '☆ Envoi sous 2 jours ouvrables dans toute la Suisse ☆',
-	en: '☆ We ship within 2 business days all over Switzerland ☆',
+/** Who runs the shop, for the imprint and the legal pages. */
+export const OWNER = {
+	name: settings.ownerName,
+	legalForm: settings.legalForm,
+	address: [settings.addressLine1, settings.addressLine2].filter(Boolean),
+	uid: settings.uid,
+	/** While false, the legal pages show a visible "template" note. */
+	legalReviewed: settings.legalReviewed,
 };
 
-// TODO: put the real Instagram handle here.
-export const SOCIALS = [
-	{ label: 'Instagram', handle: '@secondsurf.ch', href: 'https://www.instagram.com/secondsurf.ch/', icon: 'instagram' },
-] as const;
+/** Swiss Post PostPac Economy prices in CHF, free from `freeFrom`. */
+export const SHIPPING = {
+	freeFrom: settings.freeShippingFrom,
+	upTo2kg: settings.shippingUpTo2kg,
+	upTo10kg: settings.shippingUpTo10kg,
+};
+
+/** Bar at the very top of every page. Leave the German text empty to hide it. */
+export const ANNOUNCEMENT: Localized = settings.announcement;
+
+/** Holiday notice above the announcement bar, switched on and off in the settings. */
+export const HOLIDAY_BANNER: Localized = settings.holidayBanner.enabled ? { de: settings.holidayBanner.de, fr: settings.holidayBanner.fr || undefined, en: settings.holidayBanner.en || undefined } : '';
+
+export const SOCIALS = [{ label: 'Instagram', handle: settings.instagramHandle, href: settings.instagramUrl, icon: 'instagram' }] as const;
 
 /**
  * Shop categories. The `id` is used in the product files (`category: hoodies`) and in the address (/shop/hoodies/).

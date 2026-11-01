@@ -4,7 +4,9 @@ import Icon from '../../components/Icon.astro';
 import ProductGrid from '../../components/ProductGrid.astro';
 import { availableFirst, getNewDrop, getProducts } from '../../lib/products';
 import { l, langPaths, url, useT, type Lang } from '../../i18n';
-import { CATEGORIES, SOCIALS } from '../../config';
+import JsonLd from '../../components/JsonLd.astro';
+import { CATEGORIES, OWNER, SITE, SOCIALS } from '../../config';
+import TEXTS from '../../settings/texts.json';
 
 export const getStaticPaths = langPaths;
 const { lang } = Astro.props as { lang: Lang };
@@ -21,11 +23,23 @@ const insta = SOCIALS[0];
 ---
 
 <Base lang={lang}>
+	<JsonLd
+		slot="head"
+		data={{
+			'@type': 'Organization',
+			name: SITE.name,
+			url: SITE.url,
+			logo: `${SITE.url}/apple-touch-icon.png`,
+			email: SITE.email,
+			founder: { '@type': 'Person', name: OWNER.name },
+			sameAs: SOCIALS.map((s) => s.href),
+		}}
+	/>
 	<section class="hero">
 		<div class="container-wide hero-inner">
 			<p class="eyebrow">☆ {t('site.tagline')} ☆</p>
-			<h1>{t('home.heroTitle')}</h1>
-			<p class="lead">{t('home.heroText')}</p>
+			<h1>{l(TEXTS.heroTitle, lang)}</h1>
+			<p class="lead">{l(TEXTS.heroText, lang)}</p>
 			<p class="actions">
 				<a class="btn btn-light" href={url(lang, '/new/')}>{t('home.shopNew')} <Icon name="arrow" /></a>
 				<a class="btn btn-outline" href={url(lang, '/shop/')}>{t('home.shopAll')}</a>
@@ -78,8 +92,8 @@ const insta = SOCIALS[0];
 		<div class="card sell">
 			<Icon name="recycle" size={40} />
 			<div>
-				<h2>{t('home.sellTitle')}</h2>
-				<p class="muted">{t('home.sellText')}</p>
+				<h2>{l(TEXTS.sellTitle, lang)}</h2>
+				<p class="muted">{l(TEXTS.sellText, lang)}</p>
 				<p class="actions">
 					<a class="btn" href={url(lang, '/sell/stockist/')}>{t('nav.stockist')}</a>
 					<a class="btn btn-ghost" href={url(lang, '/sell/once/')}>{t('nav.sellOnce')}</a>

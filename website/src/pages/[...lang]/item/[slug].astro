@@ -1,10 +1,11 @@
 ---
 import { getCollection } from 'astro:content';
-import { Image } from 'astro:assets';
+import { getImage, Image } from 'astro:assets';
 import Base from '../../../layouts/Base.astro';
 import Icon from '../../../components/Icon.astro';
+import JsonLd from '../../../components/JsonLd.astro';
 import { chf, l, langPaths, url, useT, type Lang } from '../../../i18n';
-import { CATEGORIES, CONDITIONS } from '../../../config';
+import { CATEGORIES, CONDITIONS, SHIPPING, SITE } from '../../../config';
 import type { Product } from '../../../lib/products';
 
 export async function getStaticPaths() {
@@ -19,9 +20,38 @@ const p = product.data;
 const name = l(p.title, lang);
 const category = CATEGORIES.find((c) => c.id === p.category)!;
 const inquireHref = `${url(lang, '/contact/')}?item=${encodeURIComponent(`${p.brand} ${name} (${p.size}, ${chf(p.price)}) – ${product.id}`)}`;
+const ogImage = p.photos[0] && (await getImage({ src: p.photos[0], width: 1200, format: 'jpeg' })).src;
+const shippingNote =
+	p.price >= SHIPPING.freeFrom
+		? t('shop.shippingFree')
+		: t('shop.shippingCost').replace('{small}', chf(SHIPPING.upTo2kg)).replace('{big}', chf(SHIPPING.upTo10kg)).replace('{free}', chf(SHIPPING.freeFrom));
 ---
 
-<Base lang={lang} title={`${p.brand} ${name}`} description={l(p.description, lang) || undefined}>
+<Base
+	lang={lang}
+	title={`${p.brand} ${name}`}
+	description={l(p.description, lang) || `${p.brand} ${name}, ${t('shop.size')} ${p.size}, ${l(CONDITIONS[p.condition], lang)}, ${chf(p.price)}.`}
+	image={ogImage}
+>
+	<JsonLd
+		slot="head"
+		data={{
+			'@type': 'Product',
+			name: `${p.brand} ${name}`,
+			brand: { '@type': 'Brand', name: p.brand },
+			category: l(category.label, lang),
+			...(l(p.description, lang) && { description: l(p.description, lang) }),
+			...(ogImage && { image: new URL(ogImage, SITE.url).href }),
+			offers: {
+				'@type': 'Offer',
+				url: new URL(url(lang, `/item/${product.id}/`), SITE.url).href,
+				priceCurrency: 'CHF',
+				price: p.price,
+				availability: `https://schema.org/${p.sold ? 'SoldOut' : 'InStock'}`,
+				itemCondition: `https://schema.org/${p.condition === 'new' ? 'NewCondition' : 'UsedCondition'}`,
+			},
+		}}
+	/>
 	<div class="container-wide">
 		<p class="crumbs small">
 			<a href={url(lang, '/shop/')}>{t('nav.shopAll')}</a> / <a href={url(lang, `/shop/${category.id}/`)}>{l(category.label, lang)}</a>
@@ -52,6 +82,9 @@ const inquireHref = `${url(lang, '/contact/')}?item=${encodeURIComponent(`${p.br
 				<p class="eyebrow">{p.brand}</p>
 				<h1>{name}{p.staffPick && ' ★'}</h1>
 				<p class="price">{chf(p.price)}</p>
+				<p class="small muted">
+					{t('shop.priceNote')} {shippingNote} <a href={url(lang, '/contact/')}>{t('shop.shippingAbroad')}</a>
+				</p>
 				<dl>
 					<dt>{t('shop.size')}</dt>
 					<dd>{p.size}{p.sizeNote && ` · ${p.sizeNote}`}</dd>

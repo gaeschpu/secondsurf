@@ -9,9 +9,10 @@ export const getStaticPaths = langPaths;
 const { lang } = Astro.props as { lang: Lang };
 const t = useT(lang);
 
-// The address never appears in the HTML: both parts are reversed and base64-encoded,
+// The address doesn't appear on this page's HTML: both parts are reversed and base64-encoded,
 // and only put together in the browser after a click.
 const encode = (s: string) => Buffer.from([...s].reverse().join('')).toString('base64');
+const [emailUser, emailDomain] = SITE.email.split('@');
 ---
 
 <Base lang={lang} title={t('contact.title')} description={t('contact.intro')}>
@@ -27,7 +28,7 @@ const encode = (s: string) => Buffer.from([...s].reverse().join('')).toString('b
 			<h2 id="email-title">{t('contact.orEmail')}</h2>
 			<div class="card email-card">
 				<Icon name="mail" size={28} />
-				<div class="email-slot" data-u={encode(SITE.emailUser)} data-d={encode(SITE.emailDomain)}>
+				<div class="email-slot" data-u={encode(emailUser)} data-d={encode(emailDomain)}>
 					<button type="button" class="btn btn-ghost reveal">{t('contact.showEmail')}</button>
 				</div>
 			</div>

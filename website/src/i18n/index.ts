@@ -43,7 +43,7 @@ export function useT(lang: Lang) {
 export function l(value: Localized | undefined, lang: Lang): string {
 	if (value === undefined) return '';
 	if (typeof value === 'string') return value;
-	return value[lang] ?? value.de;
+	return value[lang] || value.de;
 }
 
 /** Format a price in Swiss francs: 45 -> "CHF 45.–", 12.5 -> "CHF 12.50". */

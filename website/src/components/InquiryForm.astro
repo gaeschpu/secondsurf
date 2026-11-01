@@ -1,41 +1,46 @@
 ---
-// Form used on the contact page and both "Sell" pages. Sends through Web3Forms (key in src/config.ts).
+// Form used on the contact, returns and both "Sell" pages. Sends through functions/api/forms.ts.
 // On the contact page, a link like /contact/?item=Quiksilver%20Hoodie pre-fills the message.
-import { useT, type Lang } from '../i18n';
-import { SITE } from '../config';
+import { url, useT, type Lang } from '../i18n';
 
 interface Props {
 	lang: Lang;
-	kind: 'contact' | 'stockist' | 'sellOnce';
+	kind: 'contact' | 'stockist' | 'sellOnce' | 'returns';
 	title: string;
 }
 
 const { lang, kind, title } = Astro.props;
 const t = useT(lang);
-const showForm = Boolean(SITE.web3formsKey) || import.meta.env.DEV;
-const subject = { contact: 'Nachricht', stockist: 'Stockist-Anfrage', sellOnce: 'Einmal verkaufen' }[kind];
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
+const showForm = Boolean(siteKey) || import.meta.env.DEV;
 const id = `form-${kind}`;
+const reasons = ['returns.reasonWrong', 'returns.reasonDamaged', 'returns.reasonNotAsDescribed', 'returns.reasonOther'] as const;
 ---
 
 {
 	showForm && (
 		<section aria-labelledby={id} class="inquiry">
 			<h2 id={id}>{title}</h2>
-			{!SITE.web3formsKey && (
+			{!siteKey && (
 				<p class="small">
-					<span class="todo">TODO</span> Add a Web3Forms key in src/config.ts. Without it this form is hidden on the live site.
+					<span class="todo">TODO</span> Set PUBLIC_TURNSTILE_SITE_KEY. Without it this form is hidden on the live site.
 				</p>
 			)}
 			<form
 				class="inquiry-form"
-				data-key={SITE.web3formsKey}
+				novalidate
 				data-sending={t('contact.sending')}
 				data-sent={t('contact.sent')}
 				data-error={t('contact.error')}
+				data-required={t('form.required')}
+				data-email={t('form.email')}
+				data-privacy={t('form.privacy')}
+				data-captcha={t('form.captcha')}
 			>
-				<input type="hidden" name="subject" value={`${subject} via ${new URL(SITE.url).host}`} />
+				<input type="hidden" name="kind" value={kind} />
+				<input type="hidden" name="lang" value={lang} />
 				{/* Honeypot: real people never see or fill this field. */}
-				<input type="checkbox" name="botcheck" class="sr-only" tabindex="-1" aria-hidden="true" />
+				<input type="checkbox" name="botcheck" class="sr-only" tabindex="-1" aria-hidden="true" autocomplete="off" />
 				<div class="row">
 					<label>
 						<span>{t('contact.name')}</span>
@@ -46,6 +51,12 @@ const id = `form-${kind}`;
 						<input name="email" type="email" autocomplete="email" required maxlength="200" />
 					</label>
 				</div>
+				{kind === 'contact' && (
+					<label>
+						<span>{t('contact.phone')}</span>
+						<input name="phone" type="tel" autocomplete="tel" maxlength="40" />
+					</label>
+				)}
 				{kind === 'stockist' && (
 					<div class="row">
 						<label>
@@ -58,7 +69,7 @@ const id = `form-${kind}`;
 						</label>
 					</div>
 				)}
-				{kind !== 'contact' && (
+				{(kind === 'stockist' || kind === 'sellOnce') && (
 					<div class="row">
 						<label>
 							<span>{t('contact.amount')}</span>
@@ -70,13 +81,50 @@ const id = `form-${kind}`;
 						</label>
 					</div>
 				)}
+				{kind === 'returns' && (
+					<>
+						<div class="row">
+							<label>
+								<span>{t('returns.piece')}</span>
+								<input name="piece" required maxlength="200" />
+							</label>
+							<label>
+								<span>{t('returns.orderDate')}</span>
+								<input name="orderDate" type="date" required />
+							</label>
+						</div>
+						<label>
+							<span>{t('returns.reason')}</span>
+							<select name="reason" required>
+								<option value="">{t('returns.choose')}</option>
+								{reasons.map((reason) => (
+									<option value={t(reason)}>{t(reason)}</option>
+								))}
+							</select>
+						</label>
+					</>
+				)}
 				<label>
 					<span>{t('contact.message')}</span>
 					<textarea name="message" rows="6" required maxlength="5000" />
 				</label>
+				<label class="check">
+					<input type="checkbox" name="privacy" required />
+					<span>
+						{t('form.privacyLabel')} (<a href={url(lang, '/privacy/')}>{t('legal.privacy')}</a>)
+					</span>
+				</label>
 				<p class="small muted">{t('contact.formNote')}</p>
+				{
+					siteKey && (
+						<>
+							<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+							<div class="cf-turnstile" data-sitekey={siteKey} data-language={lang} />
+						</>
+					)
+				}
 				<div class="form-foot">
-					<button class="btn" type="submit" disabled={!SITE.web3formsKey}>
+					<button class="btn" type="submit" disabled={!siteKey}>
 						{t('contact.send')}
 					</button>
 					<p class="status" role="status" aria-live="polite" />
@@ -87,32 +135,79 @@ const id = `form-${kind}`;
 }
 
 <script>
+	declare const turnstile: { reset: () => void } | undefined;
+
+	function setError(field: HTMLInputElement, message: string) {
+		const error = document.createElement('span');
+		error.className = 'field-error';
+		error.id = `${field.name}-error`;
+		error.textContent = message;
+		field.closest('label')?.append(error);
+		field.setAttribute('aria-invalid', 'true');
+		field.setAttribute('aria-describedby', error.id);
+	}
+
+	/** Our own messages, so they match the page language and not the browser's. */
+	function validate(form: HTMLFormElement) {
+		form.querySelectorAll('.field-error').forEach((el) => el.remove());
+		const fields = [...form.querySelectorAll<HTMLInputElement>('input, select, textarea')];
+		fields.forEach((field) => field.removeAttribute('aria-invalid'));
+		const invalid = fields.filter((field) => !field.checkValidity());
+		for (const field of invalid) {
+			const { required, email, privacy } = form.dataset;
+			setError(field, field.type === 'checkbox' ? privacy! : field.validity.typeMismatch && field.type === 'email' ? email! : required!);
+		}
+		invalid[0]?.focus();
+		return invalid.length === 0;
+	}
+
 	document.querySelectorAll<HTMLFormElement>('.inquiry-form').forEach((form) => {
 		const item = new URL(location.href).searchParams.get('item');
 		const message = form.querySelector<HTMLTextAreaElement>('textarea[name=message]');
 		if (item && message && !message.value) message.value = `${item}\n\n`;
 
+		form.addEventListener('input', (e) => {
+			const field = e.target as HTMLInputElement;
+			if (!field.checkValidity()) return;
+			field.closest('label')?.querySelector('.field-error')?.remove();
+			field.removeAttribute('aria-invalid');
+			field.removeAttribute('aria-describedby');
+		});
+
 		form.addEventListener('submit', async (e) => {
 			e.preventDefault();
 			const status = form.querySelector<HTMLElement>('.status')!;
 			const button = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
+			status.textContent = '';
+			if (!validate(form)) return;
 			const data = Object.fromEntries(new FormData(form));
+			if (!data['cf-turnstile-response']) {
+				status.textContent = form.dataset.captcha!;
+				return;
+			}
 			button.disabled = true;
 			status.textContent = form.dataset.sending!;
 			try {
-				const res = await fetch('https://api.web3forms.com/submit', {
+				const res = await fetch('/api/forms', {
 					method: 'POST',
-					headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-					body: JSON.stringify({ ...data, access_key: form.dataset.key }),
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(data),
 				});
 				const json = await res.json();
-				if (!json.success) throw new Error(json.message);
-				status.textContent = form.dataset.sent!;
-				form.reset();
+				if (json.error === 'captcha') {
+					status.textContent = form.dataset.captcha!;
+				} else if (!res.ok) {
+					throw new Error(json.error);
+				} else {
+					status.textContent = form.dataset.sent!;
+					form.reset();
+				}
 			} catch {
 				status.textContent = form.dataset.error!;
 			} finally {
 				button.disabled = false;
+				// A token only works once.
+				if (typeof turnstile !== 'undefined') turnstile.reset();
 			}
 		});
 	});
@@ -138,6 +233,7 @@ const id = `form-${kind}`;
 		font-size: var(--step--1);
 	}
 	input,
+	select,
 	textarea {
 		width: 100%;
 		padding: 0.7rem 0.85rem;
@@ -145,14 +241,35 @@ const id = `form-${kind}`;
 		border-radius: var(--radius-sm);
 		background: var(--bg-raised);
 		font-weight: 400;
-		font-size: var(--step-0);
+		font-size: max(1rem, var(--step-0));
 	}
 	input:focus,
+	select:focus,
 	textarea:focus {
 		border-color: var(--accent);
 	}
+	[aria-invalid='true'] {
+		border-color: var(--focus);
+	}
+	label :global(.field-error) {
+		grid-column: 1 / -1;
+		color: var(--focus);
+		font-weight: 600;
+	}
+	.check {
+		grid-template-columns: auto 1fr;
+		align-items: start;
+		gap: 0.6rem;
+		font-weight: 400;
+	}
+	.check input {
+		width: 1.25rem;
+		height: 1.25rem;
+		margin-top: 0.15rem;
+	}
 	.form-foot {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		gap: 1rem;
 	}

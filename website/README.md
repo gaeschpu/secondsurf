@@ -33,13 +33,19 @@ Anything marked **TODO** on the site or in the files is placeholder content wait
 | Stockist werden | `/sell/stockist/` | For shops and resellers with regular stock (consignment), with application form |
 | Einmalig verkaufen | `/sell/once/` | For private people selling once, with form |
 | Über uns, Kontakt | `/about/`, `/contact/` | Story, contact form, email, Instagram |
-| AGB, Datenschutz, Impressum | `/terms/`, `/privacy/`, `/imprint/` | **TODO: legal texts** (an imprint is mandatory for Swiss online shops) |
+| Rückgabe | `/returns/` | Return conditions and form |
+| News | `/news/` | News items; linked in the footer once one exists |
+| AGB, Datenschutz, Impressum | `/terms/`, `/privacy/`, `/imprint/` | Templates. Set `legalReviewed` to `true` in `src/settings/site.json` once checked, to hide the note |
 
 ## Where things live
 
 ```
 src/content/products/      one folder per piece: index.md + its photos
-src/config.ts              name, email, Instagram, announcement bar, current drop, categories, sizes, conditions
+src/content/news/          news items, usually edited in Pages CMS
+src/settings/site.json     email, owner, address, shipping prices, banners, current drop
+src/settings/texts.json    texts on the start and about pages
+src/config.ts              categories, sizes, conditions
+functions/api/             server code: dashboard and forms
 src/i18n/ui.ts             all short texts (menus, buttons, headings) in DE, FR, EN
 src/pages/[...lang]/       the pages
 src/pages/[...lang]/sell/  the two "sell" pages: steps, what you cover, your share (TODO: your real deal)
@@ -75,7 +81,7 @@ src/styles/global.css      colours, fonts, buttons, cards
    ```
 
 When it sells, add `sold: true` (it stays visible, greyed out, at the end of the list). To hide a piece, add `draft: true`.
-For a new drop, raise `currentDrop` in `src/config.ts` and give the new pieces that number.
+For a new drop, raise `currentDrop` in `src/settings/site.json` and give the new pieces that number.
 The four example pieces (`0001`–`0004`) are drafts: they only show in `npm run dev`. Delete them once you have real ones.
 Big phone photos are fine: they are resized and compressed automatically. Strip the location from photos first.
 
@@ -108,10 +114,22 @@ To let people pay directly, create a payment link for the piece (for example a S
 
 ## Forms (contact, stockist, sell once)
 
-The email address is never in the HTML; it is assembled in the browser when someone clicks "Show email address".
-Set the real address in `emailUser` / `emailDomain` in `src/config.ts`.
-To enable the forms, get a free access key at [web3forms.com](https://web3forms.com) and paste it into `web3formsKey`
-in `src/config.ts`. Without a key, the forms are hidden on the live site.
+The forms send through `functions/api/forms.ts`: Turnstile stops bots, Resend emails you and sends the customer a short confirmation.
+The contact, returns and both sell pages use them. Without `PUBLIC_TURNSTILE_SITE_KEY`, the forms are hidden on the live site.
+
+1. **Turnstile:** in Cloudflare, go to **Turnstile → Add widget**, and add `secondsurf.ch`, `secondsurf.pages.dev` and `localhost`.
+2. **Resend:** create an account at [resend.com](https://resend.com), add `secondsurf.ch` as a domain (this needs the domain to be active in Cloudflare) and create an API key.
+3. **Cloudflare Pages settings:** add `PUBLIC_TURNSTILE_SITE_KEY` as a variable, and `TURNSTILE_SECRET_KEY` and `RESEND_API_KEY` as secrets. Then redeploy.
+
+All names are listed in `.env.example`. The email address comes from `src/settings/site.json`. It's shown in plain text in the imprint and returns pages, and only after a click on the contact page.
+
+## Texts and settings (Pages CMS)
+
+Texts, contact details, banners, shipping prices and news can be edited at [app.pagescms.org](https://app.pagescms.org): log in with GitHub and pick the `secondsurf` repository. The setup is in `.pages.yml` in the repository root. Pieces are added at `/admin/`, not here.
+
+The owner guide in German is in `OWNER-ANLEITUNG.md`. What's still missing before going live is in `CLIENT-CHECKLIST.md`.
+
+To show shipping costs, the site uses Swiss Post's PostPac Economy prices at the counter, stored in `src/settings/site.json`. Check them each January, when Swiss Post usually adjusts prices.
 
 ## Deploy (Cloudflare Pages)
 

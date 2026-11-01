@@ -10,6 +10,13 @@ export interface Env {
 	GITHUB_BRANCH?: string;
 	/** Only for local testing against a fake GitHub. */
 	GITHUB_API?: string;
+	/** Forms: Resend sends the emails, Turnstile stops bots. */
+	RESEND_API_KEY?: string;
+	TURNSTILE_SECRET_KEY?: string;
+	/** Defaults to secondsurf <noreply@secondsurf.ch>. The domain must be verified in Resend. */
+	MAIL_FROM?: string;
+	/** Only for local testing against fake Resend and Turnstile. */
+	FORMS_TEST_API?: string;
 }
 
 export type Handler = (context: {

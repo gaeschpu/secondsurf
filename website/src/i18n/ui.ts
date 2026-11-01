@@ -22,16 +22,10 @@ const de = {
 	'theme.toggle': 'Hell/Dunkel umschalten',
 	'lang.switchLabel': 'Sprache',
 
-	'home.heroTitle': 'Surfkleidung mit zweitem Leben',
-	'home.heroText':
-		'Handverlesene Second-Hand Pieces von Surfern und kleinen Shops aus der ganzen Schweiz. Jedes Teil gibt es nur einmal.',
 	'home.shopNew': 'Neuen Drop ansehen',
 	'home.shopAll': 'Alles ansehen',
 	'home.categories': 'Kategorien',
 	'home.staffPicks': 'Staff Picks ☆',
-	'home.sellTitle': 'Du hast Surfkleidung, die rumliegt?',
-	'home.sellText':
-		'Wir fotografieren, listen, verkaufen und versenden. Du bekommst deinen Anteil. Für Shops und Reseller mit regelmässigem Nachschub, oder einmalig für deinen Kleiderschrank.',
 	'home.newsletter': 'Neue Drops zuerst erfahren',
 	'home.newsletterText': 'Folge uns auf Instagram, dort kündigen wir jeden Drop an.',
 
@@ -65,7 +59,6 @@ const de = {
 	'sell.apply': 'Jetzt anfragen',
 
 	'about.title': 'Über uns',
-	'about.intro': 'Warum secondsurf?',
 
 	'contact.title': 'Kontakt',
 	'contact.intro': 'Fragen zu einem Piece, einer Bestellung oder zum Verkaufen? Schreib uns. Wir antworten meist innert einem Tag.',
@@ -85,8 +78,38 @@ const de = {
 	'contact.sending': 'Wird gesendet …',
 	'contact.sent': 'Danke! Die Nachricht wurde gesendet.',
 	'contact.error': 'Etwas ist schiefgelaufen. Schreib uns direkt per E-Mail.',
-	'contact.formNote': 'Nachrichten werden über Web3Forms zugestellt. Deine Angaben werden nur für die Antwort verwendet.',
+	'contact.phone': 'Telefon (optional)',
+	'contact.formNote': 'Der Spam-Schutz läuft über Cloudflare Turnstile, der Versand über Resend. Deine Angaben werden nur für die Antwort verwendet.',
 
+	'form.required': 'Bitte fülle dieses Feld aus.',
+	'form.email': 'Bitte gib eine gültige E-Mail-Adresse ein.',
+	'form.privacy': 'Bitte bestätige, dass du die Datenschutzerklärung gelesen hast.',
+	'form.privacyLabel': 'Ich habe die Datenschutzerklärung gelesen',
+	'form.captcha': 'Die Spam-Prüfung ist noch nicht fertig. Warte kurz und versuch es nochmals.',
+
+	'shop.priceNote': 'Endpreise in CHF, keine MWST-Pflicht.',
+	'shop.shippingFree': 'Gratis Versand in der Schweiz.',
+	'shop.shippingCost': 'Versand in der Schweiz: {small} bis 2 kg, {big} bis 10 kg, gratis ab {free} Bestellwert.',
+	'shop.shippingAbroad': 'Versand ins Ausland: kontaktiere uns.',
+
+	'returns.title': 'Rückgabe',
+	'returns.intro': 'Stimmt etwas mit deinem Piece nicht? Melde es uns über dieses Formular.',
+	'returns.form': 'Rückgabe melden',
+	'returns.piece': 'Welches Piece?',
+	'returns.orderDate': 'Bestelldatum',
+	'returns.reason': 'Grund',
+	'returns.choose': 'Bitte wählen …',
+	'returns.reasonWrong': 'Falsches Piece erhalten',
+	'returns.reasonDamaged': 'Beim Versand beschädigt',
+	'returns.reasonNotAsDescribed': 'Entspricht nicht der Beschreibung',
+	'returns.reasonOther': 'Anderer Grund',
+	'returns.orEmail': 'Du kannst uns auch direkt schreiben:',
+
+	'news.title': 'News',
+	'news.intro': 'Neuigkeiten von secondsurf.',
+	'news.empty': 'Gerade gibt es keine News.',
+
+	'legal.template': 'Vorlage: vom Inhaber / Fachperson prüfen lassen.',
 	'legal.terms': 'AGB',
 	'legal.privacy': 'Datenschutz',
 	'legal.imprint': 'Impressum',
@@ -124,15 +147,9 @@ const fr: Partial<Record<UiKey, string>> = {
 	'theme.toggle': 'Thème clair/sombre',
 	'lang.switchLabel': 'Langue',
 
-	'home.heroTitle': 'Des vêtements de surf pour une deuxième vie',
-	'home.heroText':
-		'Des pièces de seconde main choisies à la main, de surfeurs et de petits shops de toute la Suisse. Chaque pièce est unique.',
 	'home.shopNew': 'Voir le nouveau drop',
 	'home.shopAll': 'Tout voir',
 	'home.categories': 'Catégories',
-	'home.sellTitle': 'Tu as des vêtements de surf qui dorment ?',
-	'home.sellText':
-		'Nous photographions, publions, vendons et expédions. Tu reçois ta part. Pour les shops et revendeurs réguliers, ou une seule fois pour ton armoire.',
 	'home.newsletter': 'Sois le premier informé des drops',
 	'home.newsletterText': 'Suis-nous sur Instagram, nous y annonçons chaque drop.',
 
@@ -166,7 +183,6 @@ const fr: Partial<Record<UiKey, string>> = {
 	'sell.apply': 'Faire une demande',
 
 	'about.title': 'À propos',
-	'about.intro': 'Pourquoi secondsurf ?',
 
 	'contact.title': 'Contact',
 	'contact.intro': 'Une question sur une pièce, une commande ou la vente ? Écris-nous. Nous répondons en général en un jour.',
@@ -185,8 +201,37 @@ const fr: Partial<Record<UiKey, string>> = {
 	'contact.sending': 'Envoi en cours …',
 	'contact.sent': 'Merci ! Le message a été envoyé.',
 	'contact.error': 'Quelque chose n’a pas fonctionné. Écris-nous directement par e-mail.',
-	'contact.formNote': 'Les messages sont transmis par Web3Forms. Tes données servent uniquement à te répondre.',
+	'contact.phone': 'Téléphone (facultatif)',
+	'contact.formNote': 'La protection anti-spam passe par Cloudflare Turnstile, l’envoi par Resend. Tes données servent uniquement à te répondre.',
 
+	'form.required': 'Merci de remplir ce champ.',
+	'form.email': 'Merci d’indiquer une adresse e-mail valable.',
+	'form.privacy': 'Merci de confirmer que tu as lu la déclaration de protection des données.',
+	'form.privacyLabel': 'J’ai lu la déclaration de protection des données',
+	'form.captcha': 'La vérification anti-spam n’est pas terminée. Attends un instant et réessaie.',
+
+	'shop.priceNote': 'Prix finaux en CHF, pas de TVA.',
+	'shop.shippingFree': 'Livraison gratuite en Suisse.',
+	'shop.shippingCost': 'Envoi en Suisse : {small} jusqu’à 2 kg, {big} jusqu’à 10 kg, gratuit dès {free} de commande.',
+	'shop.shippingAbroad': 'Envoi à l’étranger : contacte-nous.',
+
+	'returns.title': 'Retour',
+	'returns.intro': 'Un problème avec ta pièce ? Signale-le-nous avec ce formulaire.',
+	'returns.form': 'Signaler un retour',
+	'returns.piece': 'Quelle pièce ?',
+	'returns.orderDate': 'Date de commande',
+	'returns.reason': 'Motif',
+	'returns.choose': 'Choisir …',
+	'returns.reasonWrong': 'Mauvaise pièce reçue',
+	'returns.reasonDamaged': 'Endommagée pendant l’envoi',
+	'returns.reasonNotAsDescribed': 'Non conforme à la description',
+	'returns.reasonOther': 'Autre motif',
+	'returns.orEmail': 'Tu peux aussi nous écrire directement :',
+
+	'news.intro': 'Les nouvelles de secondsurf.',
+	'news.empty': 'Pas de nouvelles pour le moment.',
+
+	'legal.template': 'Modèle : à faire vérifier par le propriétaire ou un spécialiste.',
 	'legal.terms': 'CGV',
 	'legal.privacy': 'Protection des données',
 	'legal.imprint': 'Mentions légales',
@@ -219,15 +264,9 @@ const en: Partial<Record<UiKey, string>> = {
 	'theme.toggle': 'Toggle light/dark theme',
 	'lang.switchLabel': 'Language',
 
-	'home.heroTitle': 'Surf clothing with a second life',
-	'home.heroText':
-		'Hand-picked second-hand pieces from surfers and small shops all over Switzerland. Every piece is one of a kind.',
 	'home.shopNew': 'Shop the new drop',
 	'home.shopAll': 'See everything',
 	'home.categories': 'Categories',
-	'home.sellTitle': 'Got surf clothing lying around?',
-	'home.sellText':
-		'We photograph, list, sell and ship. You get your share. For shops and resellers with regular stock, or once for your own wardrobe.',
 	'home.newsletter': 'Hear about new drops first',
 	'home.newsletterText': 'Follow us on Instagram, we announce every drop there.',
 
@@ -259,7 +298,6 @@ const en: Partial<Record<UiKey, string>> = {
 	'sell.apply': 'Apply now',
 
 	'about.title': 'About',
-	'about.intro': 'Why secondsurf?',
 
 	'contact.title': 'Contact',
 	'contact.intro': 'Questions about a piece, an order or selling? Message us. We usually answer within a day.',
@@ -278,8 +316,37 @@ const en: Partial<Record<UiKey, string>> = {
 	'contact.sending': 'Sending …',
 	'contact.sent': 'Thanks! Your message has been sent.',
 	'contact.error': 'Something went wrong. Please email us directly.',
-	'contact.formNote': 'Messages are delivered by Web3Forms. Your details are only used to answer you.',
+	'contact.phone': 'Phone (optional)',
+	'contact.formNote': 'Spam protection is by Cloudflare Turnstile, delivery by Resend. Your details are only used to answer you.',
 
+	'form.required': 'Please fill in this field.',
+	'form.email': 'Please enter a valid email address.',
+	'form.privacy': 'Please confirm that you have read the privacy policy.',
+	'form.privacyLabel': 'I have read the privacy policy',
+	'form.captcha': 'The spam check isn’t finished yet. Wait a moment and try again.',
+
+	'shop.priceNote': 'Final prices in CHF, no VAT charged.',
+	'shop.shippingFree': 'Free shipping within Switzerland.',
+	'shop.shippingCost': 'Shipping within Switzerland: {small} up to 2 kg, {big} up to 10 kg, free for orders from {free}.',
+	'shop.shippingAbroad': 'Shipping abroad: contact us.',
+
+	'returns.title': 'Returns',
+	'returns.intro': 'Something wrong with your piece? Tell us with this form.',
+	'returns.form': 'Report a return',
+	'returns.piece': 'Which piece?',
+	'returns.orderDate': 'Order date',
+	'returns.reason': 'Reason',
+	'returns.choose': 'Please choose …',
+	'returns.reasonWrong': 'Received the wrong piece',
+	'returns.reasonDamaged': 'Damaged in shipping',
+	'returns.reasonNotAsDescribed': 'Doesn’t match the description',
+	'returns.reasonOther': 'Other reason',
+	'returns.orEmail': 'You can also write to us directly:',
+
+	'news.intro': 'News from secondsurf.',
+	'news.empty': 'No news right now.',
+
+	'legal.template': 'Template: have the owner or a specialist check it.',
 	'legal.terms': 'Terms',
 	'legal.privacy': 'Privacy',
 	'legal.imprint': 'Imprint',

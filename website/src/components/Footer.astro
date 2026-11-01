@@ -1,5 +1,6 @@
 ---
 import Icon from './Icon.astro';
+import { getCollection } from 'astro:content';
 import { l, url, useT, type Lang } from '../i18n';
 import { CATEGORIES, SITE, SOCIALS } from '../config';
 
@@ -10,6 +11,7 @@ interface Props {
 const { lang } = Astro.props;
 const t = useT(lang);
 const year = new Date().getFullYear();
+const hasNews = (await getCollection('news')).length > 0;
 
 const columns = [
 	{
@@ -31,7 +33,9 @@ const columns = [
 		title: t('footer.info'),
 		links: [
 			{ href: '/about/', label: t('nav.about') },
+			...(hasNews ? [{ href: '/news/', label: t('news.title') }] : []),
 			{ href: '/contact/', label: t('nav.contact') },
+			{ href: '/returns/', label: t('returns.title') },
 			{ href: '/terms/', label: t('legal.terms') },
 			{ href: '/privacy/', label: t('legal.privacy') },
 			{ href: '/imprint/', label: t('legal.imprint') },
@@ -76,7 +80,7 @@ const columns = [
 		}
 	</div>
 	<div class="container-wide bottom">
-		<p>© {year} {SITE.name}</p>
+		<p>© {year} {SITE.name} · {t('shop.priceNote')}</p>
 	</div>
 </footer>
 

@@ -1,0 +1,71 @@
+# Pages CMS (https://pagescms.org): edit texts and settings from a phone. Pieces are added at /admin/ instead.
+content:
+  - name: site
+    label: Einstellungen
+    type: file
+    path: website/src/settings/site.json
+    fields:
+      - { name: email, label: E-Mail, type: string, required: true }
+      - { name: phone, label: Telefon (optional), type: string }
+      - { name: instagramHandle, label: Instagram-Name, type: string }
+      - { name: instagramUrl, label: Instagram-Link, type: string }
+      - { name: ownerName, label: Name Inhaber, type: string, required: true }
+      - { name: legalForm, label: Rechtsform, type: string, required: true }
+      - { name: addressLine1, label: Adresse Zeile 1 (Strasse), type: string }
+      - { name: addressLine2, label: Adresse Zeile 2 (PLZ Ort), type: string }
+      - { name: uid, label: UID (falls vorhanden), type: string }
+      - { name: legalReviewed, label: Rechtstexte geprüft (blendet den Vorlage-Hinweis aus), type: boolean }
+      - { name: currentDrop, label: Aktueller Drop, type: number, required: true }
+      - { name: freeShippingFrom, label: Gratis Versand ab (CHF), type: number, required: true }
+      - { name: shippingUpTo2kg, label: Versand bis 2 kg (CHF), type: number, required: true }
+      - { name: shippingUpTo10kg, label: Versand bis 10 kg (CHF), type: number, required: true }
+      - name: announcement
+        label: Balken ganz oben
+        type: object
+        fields:
+          - { name: de, label: Deutsch, type: string }
+          - { name: fr, label: Französisch, type: string }
+          - { name: en, label: Englisch, type: string }
+      - name: holidayBanner
+        label: Ferien-Hinweis
+        type: object
+        fields:
+          - { name: enabled, label: Anzeigen, type: boolean }
+          - { name: de, label: Deutsch, type: string }
+          - { name: fr, label: Französisch, type: string }
+          - { name: en, label: Englisch, type: string }
+
+  - name: texts
+    label: Texte Start und Über uns
+    type: file
+    path: website/src/settings/texts.json
+    fields:
+      - name: heroTitle
+        label: Start, Titel
+        type: object
+        fields: &short
+          - { name: de, label: Deutsch, type: string, required: true }
+          - { name: fr, label: Französisch, type: string }
+          - { name: en, label: Englisch, type: string }
+      - name: heroText
+        label: Start, Text
+        type: object
+        fields: &long
+          - { name: de, label: Deutsch, type: text, required: true }
+          - { name: fr, label: Französisch, type: text }
+          - { name: en, label: Englisch, type: text }
+      - { name: sellTitle, label: "Start, Titel Verkaufen", type: object, fields: *short }
+      - { name: sellText, label: "Start, Text Verkaufen", type: object, fields: *long }
+      - { name: aboutTitle, label: "Über uns, Titel", type: object, fields: *short }
+      - { name: aboutText, label: "Über uns, Text (Leerzeile für neuen Absatz)", type: object, fields: *long }
+
+  - name: news
+    label: News
+    type: collection
+    path: website/src/content/news
+    view:
+      fields: [title, date]
+    fields:
+      - { name: date, label: Datum, type: date, required: true }
+      - { name: title, label: Titel, type: object, fields: *short }
+      - { name: text, label: Text, type: object, fields: *long }
