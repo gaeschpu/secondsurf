@@ -20,7 +20,7 @@ Was du eintippst, erscheint in allen drei Sprachen gleich.
 
 ## Ein Piece als verkauft markieren
 
-So verkaufst du im Moment: Kundinnen und Kunden tippen auf **Anfragen**, du bekommst eine E-Mail und schickst ihnen die Zahlungsangaben.
+So verkaufst du im Moment: Kundinnen und Kunden tippen auf **Anfragen**, du bekommst eine E-Mail und schickst ihnen die Zahlungsangaben. Sie bezahlen sofort. Reserviert wird nichts: Wer zuerst bezahlt, bekommt das Piece.
 
 Sobald bezahlt ist:
 
@@ -31,7 +31,15 @@ Falls du dich vertippt hast, stellst du es mit **Available again** wieder zurüc
 
 ## Einen Preis ändern
 
-Das geht im Moment nur so: Lösche das Piece in `/admin/` mit **Delete** und erfasse es mit dem neuen Preis nochmals.
+1. Öffne `/admin/`.
+2. Scrolle zum Piece unter **Your pieces**.
+3. Tippe den neuen Preis ins Feld **Price (CHF)** und tippe auf **Save price**.
+
+Nach 1 bis 2 Minuten steht der neue Preis im Shop.
+
+## Eine Rückgabe abwickeln
+
+Rückgaben kommen per E-Mail über das Rückgabeformular. Akzeptierst du eine Rückgabe, schickst du der Kundin oder dem Kunden einen Gutschein im Wert des Kaufpreises, zum Beispiel per E-Mail mit einem Code. Notiere dir die Codes selbst: Die Website prüft oder verwaltet keine Gutscheine.
 
 ## Den Ferien-Hinweis einschalten
 

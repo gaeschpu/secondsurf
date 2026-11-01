@@ -291,6 +291,16 @@ button:disabled {
 	background: var(--accent-tint);
 	border-radius: 4px;
 }
+.price-edit {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	gap: 0.5rem;
+	margin-top: 0.5rem;
+}
+.price-edit label {
+	flex: 1 1 6rem;
+}
 .actions {
 	display: flex;
 	flex-wrap: wrap;

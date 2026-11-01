@@ -44,7 +44,7 @@ const de = {
 	'shop.measurements': 'Masse',
 	'shop.buy': 'Kaufen',
 	'shop.inquire': 'Anfragen',
-	'shop.inquireNote': 'Schreib uns, wir reservieren dir das Teil und schicken dir die Zahlungsinfos.',
+	'shop.inquireNote': 'Schreib uns, wir schicken dir die Zahlungsinfos. Du bezahlst sofort: Das Teil gehört dir, sobald deine Zahlung da ist.',
 	'shop.back': 'Zurück zum Shop',
 	'shop.example': 'Beispiel, nur in der Vorschau sichtbar',
 
@@ -168,7 +168,7 @@ const fr: Partial<Record<UiKey, string>> = {
 	'shop.measurements': 'Mesures',
 	'shop.buy': 'Acheter',
 	'shop.inquire': 'Demander',
-	'shop.inquireNote': 'Écris-nous, nous te réservons la pièce et t’envoyons les infos de paiement.',
+	'shop.inquireNote': 'Écris-nous, nous t’envoyons les infos de paiement. Tu paies immédiatement : la pièce est à toi dès réception du paiement.',
 	'shop.back': 'Retour au shop',
 	'shop.example': 'Exemple, visible seulement en aperçu',
 
@@ -285,7 +285,7 @@ const en: Partial<Record<UiKey, string>> = {
 	'shop.measurements': 'Measurements',
 	'shop.buy': 'Buy',
 	'shop.inquire': 'Ask about it',
-	'shop.inquireNote': 'Message us, we reserve the piece for you and send you the payment details.',
+	'shop.inquireNote': 'Message us and we’ll send you the payment details. You pay right away: the piece is yours as soon as your payment arrives.',
 	'shop.back': 'Back to the shop',
 	'shop.example': 'Example, only visible in the preview',
 

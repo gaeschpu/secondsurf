@@ -246,10 +246,32 @@ function renderProduct(product) {
 		return api(`products/${product.id}`, { method: 'DELETE' });
 	});
 	actions.append(sold, remove);
-	meta.append(actions);
+	meta.append(priceEditor(product), actions);
 
 	item.append(thumb, meta);
 	return item;
+}
+
+function priceEditor(product) {
+	const row = document.createElement('div');
+	row.className = 'price-edit';
+	const label = document.createElement('label');
+	label.textContent = 'Price (CHF)';
+	const input = document.createElement('input');
+	input.type = 'number';
+	input.inputMode = 'decimal';
+	input.min = '1';
+	input.step = '0.05';
+	input.value = String(product.price);
+	label.append(input);
+	const save = actionButton('Save price', '', () => {
+		const price = input.valueAsNumber;
+		if (!input.checkValidity() || !price) throw new Error('Enter a price of at least CHF 1.');
+		if (price === product.price) return null;
+		return api(`products/${product.id}`, { method: 'PATCH', body: { price } });
+	});
+	row.append(label, save);
+	return row;
 }
 
 function actionButton(label, className, run) {
@@ -260,11 +282,13 @@ function actionButton(label, className, run) {
 	button.addEventListener('click', async () => {
 		button.disabled = true;
 		show($('list-error'));
+		show($('list-status'));
 		try {
 			const pending = run();
 			if (pending) {
 				await pending;
 				await loadProducts();
+				show($('list-status'), 'Saved! The shop updates after the site rebuilds, usually within 2 minutes.');
 			}
 		} catch (error) {
 			show($('list-error'), error.message);

@@ -40,7 +40,7 @@ export function parseNewProduct(body: any): NewProduct | string {
 	if (!CATEGORIES.some((c) => c.id === product.category)) return 'Pick a category.';
 	if (!(SIZES as readonly string[]).includes(product.size)) return 'Pick a size.';
 	if (!Object.keys(CONDITIONS).includes(product.condition)) return 'Pick a condition.';
-	if (!Number.isFinite(product.price) || product.price <= 0 || product.price > 100000) return 'Enter a price above 0.';
+	if (!isValidPrice(product.price)) return 'Enter a price above 0.';
 	if (product.photos.length < 1 || product.photos.length > MAX_PHOTOS) return `Add 1 to ${MAX_PHOTOS} photos.`;
 	if (!product.photos.every((sha) => typeof sha === 'string' && BLOB_SHA.test(sha))) return 'A photo did not upload correctly.';
 	return product;
@@ -92,6 +92,14 @@ export function setSold(markdown: string, sold: boolean) {
 		const kept = body.split(/\r?\n/).filter((line) => !/^sold:/.test(line));
 		return ['---', ...kept, ...(sold ? ['sold: true'] : []), '---'].join('\n');
 	});
+}
+
+export function isValidPrice(price: unknown): price is number {
+	return typeof price === 'number' && Number.isFinite(price) && price > 0 && price <= 100000;
+}
+
+export function setPrice(markdown: string, price: number) {
+	return markdown.replace(FRONTMATTER, (block) => block.replace(/^price:.*$/m, `price: ${price}`));
 }
 
 function unquote(value: string) {

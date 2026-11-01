@@ -27,11 +27,11 @@ const contactHref = url(lang, '/contact/');
 			<h2>1. Geltungsbereich</h2>
 			<p>Diese AGB gelten für alle Käufe bei {SITE.name}, {OWNER.legalForm}, Inhaber {OWNER.name} (im Folgenden «wir»).</p>
 			<h2>2. Anfrage und Vertragsschluss</h2>
-			<p>Die Pieces auf der Website sind kein verbindliches Angebot. Du fragst ein Piece über den Button «Anfragen» an. Wir reservieren es für dich und schicken dir die Zahlungsangaben. Der Kaufvertrag kommt zustande, wenn du bezahlst. Ist die Zahlung nicht innert 3 Tagen bei uns, können wir das Piece wieder freigeben.</p>
+			<p>Die Pieces auf der Website sind kein verbindliches Angebot. Du fragst ein Piece über den Button «Anfragen» an, und wir schicken dir die Zahlungsangaben. Der Kaufvertrag kommt zustande, wenn deine Zahlung bei uns eingeht. Vorher ist das Piece nicht reserviert. Bezahlt jemand anderes zuerst, informieren wir dich und erstatten eine bereits geleistete Zahlung zurück.</p>
 			<h2>3. Preise</h2>
 			<p>Alle Preise sind Endpreise in Schweizer Franken (CHF). {SITE.name} ist nicht MWST-pflichtig. Versandkosten kommen gemäss Ziffer 5 dazu.</p>
 			<h2>4. Zahlung</h2>
-			<p>Du bezahlst im Voraus. Die Zahlungsangaben erhältst du per E-Mail. Wir versenden nach Zahlungseingang.</p>
+			<p>Du bezahlst sofort und im Voraus. Die Zahlungsangaben erhältst du per E-Mail. Wir versenden nach Zahlungseingang.</p>
 			<h2>5. Lieferung und Versandkosten</h2>
 			<p>Wir versenden in der Schweiz mit der Schweizerischen Post, in der Regel innert 2 Arbeitstagen nach Zahlungseingang.</p>
 			<ul>
@@ -40,7 +40,7 @@ const contactHref = url(lang, '/contact/');
 			</ul>
 			<p>Für Versand ins Ausland <a href={contactHref}>kontaktiere uns</a>, wir nennen dir die Kosten im Voraus.</p>
 			<h2>6. Rückgabe und Umtausch</h2>
-			<p>Eine Rückgabe ist in diesen Fällen möglich: falsches Piece erhalten, beim Versand beschädigt oder das Piece entspricht nicht der Beschreibung. Melde dich innert 14 Tagen nach Erhalt über das <a href={returnsHref}>Rückgabeformular</a>. Das Piece muss ungetragen und im erhaltenen Zustand sein. Ist der Fehler bei uns, übernehmen wir den Rückversand, sonst du. Weil jedes Piece ein Einzelstück ist, gibt es keinen Umtausch; du erhältst den Kaufpreis zurück.</p>
+			<p>Eine Rückgabe ist in diesen Fällen möglich: falsches Piece erhalten, beim Versand beschädigt oder das Piece entspricht nicht der Beschreibung. Melde dich innert 14 Tagen nach Erhalt über das <a href={returnsHref}>Rückgabeformular</a>. Das Piece muss ungetragen und im erhaltenen Zustand sein. Ist der Fehler bei uns, übernehmen wir den Rückversand, sonst du. Bei einer Rückgabe erhältst du kein Geld zurück, sondern einen Gutschein im Wert des Kaufpreises. Weil jedes Piece ein Einzelstück ist, gibt es keinen Umtausch.</p>
 			<h2>7. Gewährleistung</h2>
 			<p>Unsere Pieces sind, wenn nicht anders angegeben, gebraucht. Beschriebene oder auf den Fotos sichtbare Gebrauchsspuren sind kein Mangel. Im Übrigen gelten die gesetzlichen Gewährleistungsrechte (Art. 197 ff. OR).</p>
 			<h2>8. Anwendbares Recht</h2>
@@ -52,11 +52,11 @@ const contactHref = url(lang, '/contact/');
 			<h2>1. Champ d’application</h2>
 			<p>Les présentes CGV s’appliquent à tous les achats auprès de {SITE.name}, {OWNER.legalForm}, propriétaire {OWNER.name} (ci-après « nous »).</p>
 			<h2>2. Demande et conclusion du contrat</h2>
-			<p>Les pièces présentées sur le site ne constituent pas une offre ferme. Tu demandes une pièce avec le bouton « Demander ». Nous la réservons et t’envoyons les informations de paiement. Le contrat de vente est conclu lorsque tu paies. Sans paiement sous 3 jours, nous pouvons remettre la pièce en vente.</p>
+			<p>Les pièces présentées sur le site ne constituent pas une offre ferme. Tu demandes une pièce avec le bouton « Demander » et nous t’envoyons les informations de paiement. Le contrat de vente est conclu à la réception de ton paiement. Avant cela, la pièce n’est pas réservée. Si quelqu’un d’autre paie en premier, nous t’informons et remboursons tout paiement déjà effectué.</p>
 			<h2>3. Prix</h2>
 			<p>Tous les prix sont des prix finaux en francs suisses (CHF). {SITE.name} n’est pas assujetti à la TVA. Les frais d’envoi s’ajoutent selon le point 5.</p>
 			<h2>4. Paiement</h2>
-			<p>Le paiement se fait à l’avance. Tu reçois les informations de paiement par e-mail. Nous expédions après réception du paiement.</p>
+			<p>Le paiement se fait immédiatement et à l’avance. Tu reçois les informations de paiement par e-mail. Nous expédions après réception du paiement.</p>
 			<h2>5. Livraison et frais d’envoi</h2>
 			<p>En Suisse, nous expédions par La Poste Suisse, en général sous 2 jours ouvrables après réception du paiement.</p>
 			<ul>
@@ -65,7 +65,7 @@ const contactHref = url(lang, '/contact/');
 			</ul>
 			<p>Pour un envoi à l’étranger, <a href={contactHref}>contacte-nous</a> : nous t’indiquons les frais à l’avance.</p>
 			<h2>6. Retour et échange</h2>
-			<p>Un retour est possible dans les cas suivants : mauvaise pièce reçue, pièce endommagée pendant l’envoi ou pièce non conforme à la description. Annonce-le dans les 14 jours après réception via le <a href={returnsHref}>formulaire de retour</a>. La pièce doit être non portée et dans l’état reçu. Si l’erreur vient de nous, nous prenons le renvoi en charge, sinon il est à ta charge. Chaque pièce étant unique, il n’y a pas d’échange : le prix d’achat t’est remboursé.</p>
+			<p>Un retour est possible dans les cas suivants : mauvaise pièce reçue, pièce endommagée pendant l’envoi ou pièce non conforme à la description. Annonce-le dans les 14 jours après réception via le <a href={returnsHref}>formulaire de retour</a>. La pièce doit être non portée et dans l’état reçu. Si l’erreur vient de nous, nous prenons le renvoi en charge, sinon il est à ta charge. En cas de retour, tu ne reçois pas d’argent, mais un bon d’une valeur égale au prix d’achat. Chaque pièce étant unique, il n’y a pas d’échange.</p>
 			<h2>7. Garantie</h2>
 			<p>Sauf indication contraire, nos pièces sont d’occasion. Les traces d’usure décrites ou visibles sur les photos ne constituent pas un défaut. Pour le reste, les droits légaux de garantie s’appliquent (art. 197 ss CO).</p>
 			<h2>8. Droit applicable</h2>
@@ -77,11 +77,11 @@ const contactHref = url(lang, '/contact/');
 			<h2>1. Scope</h2>
 			<p>These terms apply to all purchases from {SITE.name}, {OWNER.legalForm}, owner {OWNER.name} (“we”).</p>
 			<h2>2. Enquiry and contract</h2>
-			<p>The pieces on the website are not a binding offer. You enquire about a piece with the “Ask about it” button. We reserve it for you and send you the payment details. The contract of sale is made when you pay. If payment hasn’t reached us within 3 days, we may release the piece again.</p>
+			<p>The pieces on the website are not a binding offer. You enquire about a piece with the “Ask about it” button, and we send you the payment details. The contract of sale is made when your payment reaches us. Until then, the piece isn’t reserved. If someone else pays first, we’ll tell you and refund any payment you’ve already made.</p>
 			<h2>3. Prices</h2>
 			<p>All prices are final prices in Swiss francs (CHF). {SITE.name} is not registered for VAT. Shipping costs are added as set out in section 5.</p>
 			<h2>4. Payment</h2>
-			<p>You pay in advance. You get the payment details by email. We ship once payment has arrived.</p>
+			<p>You pay immediately and in advance. You get the payment details by email. We ship once payment has arrived.</p>
 			<h2>5. Delivery and shipping costs</h2>
 			<p>Within Switzerland we ship with Swiss Post, usually within 2 business days of receiving payment.</p>
 			<ul>
@@ -90,7 +90,7 @@ const contactHref = url(lang, '/contact/');
 			</ul>
 			<p>For shipping abroad, <a href={contactHref}>contact us</a> and we’ll tell you the cost in advance.</p>
 			<h2>6. Returns and exchanges</h2>
-			<p>Returns are possible in these cases: you received the wrong piece, it was damaged in shipping, or it doesn’t match the description. Tell us within 14 days of receiving it, using the <a href={returnsHref}>returns form</a>. The piece must be unworn and in the condition you received it. If the mistake was ours, we pay for return shipping; otherwise you do. Every piece is one of a kind, so there are no exchanges: you get the purchase price back.</p>
+			<p>Returns are possible in these cases: you received the wrong piece, it was damaged in shipping, or it doesn’t match the description. Tell us within 14 days of receiving it, using the <a href={returnsHref}>returns form</a>. The piece must be unworn and in the condition you received it. If the mistake was ours, we pay for return shipping; otherwise you do. With a return you don’t get money back, but a gift card worth the purchase price. Every piece is one of a kind, so there are no exchanges.</p>
 			<h2>7. Warranty</h2>
 			<p>Unless stated otherwise, our pieces are used. Wear that is described or visible in the photos is not a defect. Otherwise, the statutory warranty rights apply (Art. 197 ff. of the Swiss Code of Obligations).</p>
 			<h2>8. Applicable law</h2>
