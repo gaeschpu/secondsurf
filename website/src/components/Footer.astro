@@ -1,0 +1,157 @@
+---
+import Icon from './Icon.astro';
+import { l, url, useT, type Lang } from '../i18n';
+import { CATEGORIES, SITE, SOCIALS } from '../config';
+
+interface Props {
+	lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+const year = new Date().getFullYear();
+
+const columns = [
+	{
+		title: t('footer.shop'),
+		links: [
+			{ href: '/new/', label: t('nav.new') },
+			{ href: '/shop/', label: t('nav.shopAll') },
+			...CATEGORIES.slice(0, 5).map((c) => ({ href: `/shop/${c.id}/`, label: l(c.label, lang) })),
+		],
+	},
+	{
+		title: t('footer.sell'),
+		links: [
+			{ href: '/sell/stockist/', label: t('nav.stockist') },
+			{ href: '/sell/once/', label: t('nav.sellOnce') },
+		],
+	},
+	{
+		title: t('footer.info'),
+		links: [
+			{ href: '/about/', label: t('nav.about') },
+			{ href: '/contact/', label: t('nav.contact') },
+			{ href: '/terms/', label: t('legal.terms') },
+			{ href: '/privacy/', label: t('legal.privacy') },
+			{ href: '/imprint/', label: t('legal.imprint') },
+		],
+	},
+];
+---
+
+<footer class="site-footer">
+	<div class="container-wide cols">
+		<div class="brand-col">
+			<p class="name"><Icon name="wave" size={22} /> {SITE.name}</p>
+			<p class="muted">{t('footer.made')}</p>
+			<ul class="social">
+				{
+					SOCIALS.map((s) => (
+						<li>
+							<a href={s.href} rel="noopener" target="_blank">
+								<Icon name={s.icon} size={20} label={s.label} />
+							</a>
+						</li>
+					))
+				}
+				<li>
+					<a href={url(lang, '/contact/')}><Icon name="mail" size={20} label={t('nav.contact')} /></a>
+				</li>
+			</ul>
+		</div>
+		{
+			columns.map((col) => (
+				<nav aria-label={col.title}>
+					<h2>{col.title}</h2>
+					<ul>
+						{col.links.map((link) => (
+							<li>
+								<a href={url(lang, link.href)}>{link.label}</a>
+							</li>
+						))}
+					</ul>
+				</nav>
+			))
+		}
+	</div>
+	<div class="container-wide bottom">
+		<p>© {year} {SITE.name}</p>
+	</div>
+</footer>
+
+<style>
+	.site-footer {
+		border-top: 1px solid var(--line);
+		background: var(--bg-sunken);
+		font-size: var(--step--1);
+	}
+	.cols {
+		display: grid;
+		grid-template-columns: 1.4fr repeat(3, 1fr);
+		gap: 2rem;
+		padding-block: 2.5rem 1.5rem;
+	}
+	.name {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-family: var(--font-display);
+		font-size: var(--step-1);
+		font-weight: 700;
+		color: var(--accent);
+	}
+	h2 {
+		margin-bottom: 0.6rem;
+		font-family: var(--font-body);
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+	ul {
+		padding: 0;
+		list-style: none;
+	}
+	nav li + li {
+		margin-top: 0.3rem;
+	}
+	nav a {
+		color: var(--ink-soft);
+		text-decoration: none;
+	}
+	nav a:hover {
+		color: var(--accent);
+		text-decoration: underline;
+	}
+	.social {
+		display: flex;
+		gap: 0.25rem;
+		margin-top: 0.75rem;
+	}
+	.social a {
+		display: grid;
+		place-items: center;
+		width: 2.5rem;
+		height: 2.5rem;
+		border-radius: var(--radius-sm);
+		color: var(--ink-soft);
+	}
+	.social a:hover {
+		color: var(--accent);
+		background: var(--bg);
+	}
+	.bottom {
+		padding-block: 1rem 1.5rem;
+		border-top: 1px solid var(--line);
+		color: var(--ink-soft);
+	}
+	@media (max-width: 48rem) {
+		.cols {
+			grid-template-columns: 1fr 1fr;
+		}
+		.brand-col {
+			grid-column: 1 / -1;
+		}
+	}
+</style>

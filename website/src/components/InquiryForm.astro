@@ -1,0 +1,163 @@
+---
+// Form used on the contact page and both "Sell" pages. Sends through Web3Forms (key in src/config.ts).
+// On the contact page, a link like /contact/?item=Quiksilver%20Hoodie pre-fills the message.
+import { useT, type Lang } from '../i18n';
+import { SITE } from '../config';
+
+interface Props {
+	lang: Lang;
+	kind: 'contact' | 'stockist' | 'sellOnce';
+	title: string;
+}
+
+const { lang, kind, title } = Astro.props;
+const t = useT(lang);
+const showForm = Boolean(SITE.web3formsKey) || import.meta.env.DEV;
+const subject = { contact: 'Nachricht', stockist: 'Stockist-Anfrage', sellOnce: 'Einmal verkaufen' }[kind];
+const id = `form-${kind}`;
+---
+
+{
+	showForm && (
+		<section aria-labelledby={id} class="inquiry">
+			<h2 id={id}>{title}</h2>
+			{!SITE.web3formsKey && (
+				<p class="small">
+					<span class="todo">TODO</span> Add a Web3Forms key in src/config.ts. Without it this form is hidden on the live site.
+				</p>
+			)}
+			<form
+				class="inquiry-form"
+				data-key={SITE.web3formsKey}
+				data-sending={t('contact.sending')}
+				data-sent={t('contact.sent')}
+				data-error={t('contact.error')}
+			>
+				<input type="hidden" name="subject" value={`${subject} via ${new URL(SITE.url).host}`} />
+				{/* Honeypot: real people never see or fill this field. */}
+				<input type="checkbox" name="botcheck" class="sr-only" tabindex="-1" aria-hidden="true" />
+				<div class="row">
+					<label>
+						<span>{t('contact.name')}</span>
+						<input name="name" autocomplete="name" required maxlength="120" />
+					</label>
+					<label>
+						<span>{t('contact.email')}</span>
+						<input name="email" type="email" autocomplete="email" required maxlength="200" />
+					</label>
+				</div>
+				{kind === 'stockist' && (
+					<div class="row">
+						<label>
+							<span>{t('contact.company')}</span>
+							<input name="company" autocomplete="organization" required maxlength="160" />
+						</label>
+						<label>
+							<span>{t('contact.website')}</span>
+							<input name="website" maxlength="200" />
+						</label>
+					</div>
+				)}
+				{kind !== 'contact' && (
+					<div class="row">
+						<label>
+							<span>{t('contact.amount')}</span>
+							<input name="amount" inputmode="numeric" maxlength="40" />
+						</label>
+						<label>
+							<span>{t('contact.photos')}</span>
+							<input name="photos" type="url" maxlength="300" />
+						</label>
+					</div>
+				)}
+				<label>
+					<span>{t('contact.message')}</span>
+					<textarea name="message" rows="6" required maxlength="5000" />
+				</label>
+				<p class="small muted">{t('contact.formNote')}</p>
+				<div class="form-foot">
+					<button class="btn" type="submit" disabled={!SITE.web3formsKey}>
+						{t('contact.send')}
+					</button>
+					<p class="status" role="status" aria-live="polite" />
+				</div>
+			</form>
+		</section>
+	)
+}
+
+<script>
+	document.querySelectorAll<HTMLFormElement>('.inquiry-form').forEach((form) => {
+		const item = new URL(location.href).searchParams.get('item');
+		const message = form.querySelector<HTMLTextAreaElement>('textarea[name=message]');
+		if (item && message && !message.value) message.value = `${item}\n\n`;
+
+		form.addEventListener('submit', async (e) => {
+			e.preventDefault();
+			const status = form.querySelector<HTMLElement>('.status')!;
+			const button = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
+			const data = Object.fromEntries(new FormData(form));
+			button.disabled = true;
+			status.textContent = form.dataset.sending!;
+			try {
+				const res = await fetch('https://api.web3forms.com/submit', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+					body: JSON.stringify({ ...data, access_key: form.dataset.key }),
+				});
+				const json = await res.json();
+				if (!json.success) throw new Error(json.message);
+				status.textContent = form.dataset.sent!;
+				form.reset();
+			} catch {
+				status.textContent = form.dataset.error!;
+			} finally {
+				button.disabled = false;
+			}
+		});
+	});
+</script>
+
+<style>
+	h2 {
+		margin-bottom: 1rem;
+	}
+	.inquiry-form {
+		display: grid;
+		gap: 1rem;
+	}
+	.row {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+		gap: 1rem;
+	}
+	label {
+		display: grid;
+		gap: 0.35rem;
+		font-weight: 600;
+		font-size: var(--step--1);
+	}
+	input,
+	textarea {
+		width: 100%;
+		padding: 0.7rem 0.85rem;
+		border: 1.5px solid var(--line);
+		border-radius: var(--radius-sm);
+		background: var(--bg-raised);
+		font-weight: 400;
+		font-size: var(--step-0);
+	}
+	input:focus,
+	textarea:focus {
+		border-color: var(--accent);
+	}
+	.form-foot {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+	.btn:disabled {
+		opacity: 0.55;
+		cursor: not-allowed;
+	}
+</style>

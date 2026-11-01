@@ -1,0 +1,100 @@
+---
+import { Font } from 'astro:assets';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { htmlLang, languages, stripLang, url, useT, type Lang } from '../i18n';
+import { SITE } from '../config';
+
+interface Props {
+	lang: Lang;
+	/** Page title; the site name is appended automatically. */
+	title?: string;
+	description?: string;
+	/** Language versions of this page. Defaults to the same path in every language. */
+	alternates?: Partial<Record<Lang, string>>;
+	noindex?: boolean;
+}
+
+const { lang, title, description, noindex = false } = Astro.props;
+const t = useT(lang);
+
+const basePath = stripLang(Astro.url.pathname);
+const alternates: Partial<Record<Lang, string>> =
+	Astro.props.alternates ??
+	Object.fromEntries((Object.keys(languages) as Lang[]).map((l) => [l, url(l, basePath)]));
+
+const fullTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · ${t('site.tagline')}`;
+const metaDescription = description ?? t('site.description');
+const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
+---
+
+<!doctype html>
+<html lang={htmlLang[lang]}>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{fullTitle}</title>
+		<meta name="description" content={metaDescription} />
+		<link rel="canonical" href={canonical} />
+		{noindex && <meta name="robots" content="noindex" />}
+		{
+			Object.entries(alternates).map(([l, href]) => (
+				<link rel="alternate" hreflang={htmlLang[l as Lang]} href={new URL(href, Astro.site).href} />
+			))
+		}
+		{alternates.de && <link rel="alternate" hreflang="x-default" href={new URL(alternates.de, Astro.site).href} />}
+
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content={SITE.name} />
+		<meta property="og:title" content={title ?? SITE.name} />
+		<meta property="og:description" content={metaDescription} />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:locale" content={htmlLang[lang].replace('-', '_')} />
+
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<meta name="theme-color" content="#f5f2ea" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#0b1416" media="(prefers-color-scheme: dark)" />
+		<meta name="generator" content={Astro.generator} />
+
+		<Font cssVariable="--font-sans" preload />
+		<Font cssVariable="--font-serif" />
+
+		<!-- Apply a saved theme before first paint to avoid a flash. -->
+		<script is:inline>
+			try {
+				const theme = localStorage.getItem('theme');
+				if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+			} catch {}
+		</script>
+		<slot name="head" />
+	</head>
+	<body>
+		<a class="skip-link" href="#main">{t('nav.skip')}</a>
+		<Header lang={lang} alternates={alternates} />
+		<main id="main">
+			<slot />
+		</main>
+		<Footer lang={lang} />
+	</body>
+</html>
+
+<style>
+	main {
+		flex: 1;
+		padding-bottom: clamp(3rem, 8vw, 6rem);
+	}
+	.skip-link {
+		position: absolute;
+		left: 1rem;
+		top: -3rem;
+		z-index: 100;
+		padding: 0.5rem 1rem;
+		background: var(--accent);
+		color: var(--on-accent);
+		border-radius: var(--radius-sm);
+	}
+	.skip-link:focus {
+		top: 1rem;
+	}
+</style>

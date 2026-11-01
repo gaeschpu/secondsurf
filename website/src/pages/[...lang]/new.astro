@@ -1,0 +1,21 @@
+---
+import Base from '../../layouts/Base.astro';
+import ProductGrid from '../../components/ProductGrid.astro';
+import { getNewDrop } from '../../lib/products';
+import { langPaths, useT, type Lang } from '../../i18n';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+const products = await getNewDrop();
+---
+
+<Base lang={lang} title={t('shop.newTitle')} description={t('shop.newIntro')}>
+	<div class="container-wide">
+		<header class="page-head">
+			<h1>{t('shop.newTitle')}</h1>
+			<p>{t('shop.newIntro')}</p>
+		</header>
+		<ProductGrid lang={lang} products={products} filter />
+	</div>
+</Base>

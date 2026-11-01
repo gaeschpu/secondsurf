@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://secondsurf.ch/sitemap-index.xml

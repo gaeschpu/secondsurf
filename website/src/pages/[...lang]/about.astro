@@ -1,0 +1,57 @@
+---
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import { langPaths, url, useT, type Lang } from '../../i18n';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+
+// TODO: write your own story here (who you are, how secondsurf started, why second-hand).
+const text = {
+	de: [
+		'secondsurf ist ein Online-Shop für handverlesene Second-Hand Surfkleidung aus der Schweiz.',
+		'Gute Surfkleidung hält ewig, landet aber viel zu oft ungetragen im Schrank. Wir suchen die besten Pieces bei Surfern, Surfshops und Resellern und geben ihnen ein zweites Leben.',
+		'Jedes Teil wird geprüft, fotografiert und gibt es nur einmal. Weniger Fast Fashion, mehr Stil.',
+	],
+	fr: [
+		'secondsurf est une boutique en ligne de vêtements de surf de seconde main, sélectionnés à la main en Suisse.',
+		'Les bons vêtements de surf durent une éternité, mais finissent trop souvent au fond d’une armoire. Nous dénichons les meilleures pièces chez des surfeurs, des surf shops et des revendeurs, et leur donnons une deuxième vie.',
+		'Chaque pièce est contrôlée, photographiée et unique. Moins de fast fashion, plus de style.',
+	],
+	en: [
+		'secondsurf is an online shop for hand-picked second-hand surf clothing from Switzerland.',
+		'Good surf clothing lasts forever, but far too often ends up unworn in a wardrobe. We find the best pieces from surfers, surf shops and resellers and give them a second life.',
+		'Every piece is checked, photographed and one of a kind. Less fast fashion, more style.',
+	],
+}[lang];
+---
+
+<Base lang={lang} title={t('about.title')}>
+	<div class="container">
+		<header class="page-head">
+			<p class="eyebrow">{t('about.title')}</p>
+			<h1>{t('about.intro')}</h1>
+		</header>
+		<div class="prose">
+			{text.map((p) => <p>{p}</p>)}
+			<p><span class="todo">TODO</span></p>
+		</div>
+		<p class="actions">
+			<a class="btn" href={url(lang, '/shop/')}>{t('nav.shopAll')} <Icon name="arrow" /></a>
+			<a class="btn btn-ghost" href={url(lang, '/sell/stockist/')}>{t('nav.stockist')}</a>
+		</p>
+	</div>
+</Base>
+
+<style>
+	.prose {
+		font-size: var(--step-1);
+	}
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin-top: 2.5rem;
+	}
+</style>

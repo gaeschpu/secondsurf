@@ -1,0 +1,57 @@
+---
+import Base from '../../../layouts/Base.astro';
+import SellInfo from '../../../components/SellInfo.astro';
+import { langPaths, useT, type Lang } from '../../../i18n';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+
+// TODO: adjust steps, covered costs and the share to your real deal.
+const text = {
+	de: {
+		steps: [
+			'Schick uns Fotos deiner Ware über das Formular oder per Instagram-DM.',
+			'Wir wählen die Pieces aus, die sich bei uns am besten verkaufen.',
+			'Wir vereinbaren einen Termin, du schickst die Ware oder bringst sie vorbei.',
+			'Wir fotografieren, listen, verkaufen und versenden.',
+			'Einmal im Monat bekommst du eine Abrechnung und dein Geld per Überweisung oder TWINT.',
+		],
+		covers: ['Fotos & Styling', 'Listing auf secondsurf.ch', 'Marketing & Instagram', 'Verpackung & Versand', 'Zahlungsabwicklung', 'Lagerung'],
+		terms: 'Du bekommst 50 % vom Verkaufspreis. Ideal für Surfshops, Reseller und alle mit regelmässigem Nachschub.',
+	},
+	fr: {
+		steps: [
+			'Envoie-nous des photos de ta marchandise via le formulaire ou en DM Instagram.',
+			'Nous choisissons les pièces qui se vendent le mieux chez nous.',
+			'Nous fixons une date, tu envoies la marchandise ou tu la déposes.',
+			'Nous photographions, publions, vendons et expédions.',
+			'Une fois par mois, tu reçois un décompte et ton argent par virement ou TWINT.',
+		],
+		covers: ['Photos & stylisme', 'Mise en ligne sur secondsurf.ch', 'Marketing & Instagram', 'Emballage & envoi', 'Paiements', 'Stockage'],
+		terms: 'Tu reçois 50 % du prix de vente. Idéal pour les surf shops, revendeurs et tous ceux qui ont du stock régulier.',
+	},
+	en: {
+		steps: [
+			'Send us photos of your stock through the form or by Instagram DM.',
+			'We pick the pieces that sell best with us.',
+			'We set a date, you ship the pieces or drop them off.',
+			'We photograph, list, sell and ship.',
+			'Once a month you get a statement and your money by bank transfer or TWINT.',
+		],
+		covers: ['Photos & styling', 'Listing on secondsurf.ch', 'Marketing & Instagram', 'Packaging & shipping', 'Payments', 'Storage'],
+		terms: 'You get 50 % of the selling price. Ideal for surf shops, resellers and anyone with regular stock.',
+	},
+}[lang];
+---
+
+<Base lang={lang} title={t('stockist.title')} description={t('stockist.intro')}>
+	<div class="container-wide">
+		<header class="page-head">
+			<p class="eyebrow">{t('nav.sell')}</p>
+			<h1>{t('stockist.title')}</h1>
+			<p>{t('stockist.intro')}</p>
+		</header>
+		<SellInfo lang={lang} kind="stockist" {...text} />
+	</div>
+</Base>

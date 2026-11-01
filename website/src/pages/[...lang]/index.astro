@@ -1,0 +1,214 @@
+---
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import ProductGrid from '../../components/ProductGrid.astro';
+import { availableFirst, getNewDrop, getProducts } from '../../lib/products';
+import { l, langPaths, url, useT, type Lang } from '../../i18n';
+import { CATEGORIES, SOCIALS } from '../../config';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+
+const all = await getProducts();
+const newDrop = (await getNewDrop()).filter((p) => !p.data.sold).slice(0, 8);
+const staffPicks = availableFirst(all.filter((p) => p.data.staffPick)).slice(0, 4);
+// Categories that have at least one available piece come first.
+const categories = [...CATEGORIES].sort(
+	(a, b) => Number(all.some((p) => p.data.category === b.id && !p.data.sold)) - Number(all.some((p) => p.data.category === a.id && !p.data.sold)),
+);
+const insta = SOCIALS[0];
+---
+
+<Base lang={lang}>
+	<section class="hero">
+		<div class="container-wide hero-inner">
+			<p class="eyebrow">☆ {t('site.tagline')} ☆</p>
+			<h1>{t('home.heroTitle')}</h1>
+			<p class="lead">{t('home.heroText')}</p>
+			<p class="actions">
+				<a class="btn btn-light" href={url(lang, '/new/')}>{t('home.shopNew')} <Icon name="arrow" /></a>
+				<a class="btn btn-outline" href={url(lang, '/shop/')}>{t('home.shopAll')}</a>
+			</p>
+		</div>
+	</section>
+
+	{
+		newDrop.length > 0 && (
+			<section class="container-wide block">
+				<div class="section-title">
+					<h2>{t('shop.newTitle')}</h2>
+					<a href={url(lang, '/new/')}>{t('home.shopAll')} →</a>
+				</div>
+				<ProductGrid lang={lang} products={newDrop} />
+			</section>
+		)
+	}
+
+	<section class="container-wide block">
+		<div class="section-title">
+			<h2>{t('home.categories')}</h2>
+		</div>
+		<ul class="cats">
+			{
+				categories.map((c) => (
+					<li>
+						<a class="card cat" href={url(lang, `/shop/${c.id}/`)}>
+							{l(c.label, lang)} <Icon name="arrow" size={16} />
+						</a>
+					</li>
+				))
+			}
+		</ul>
+	</section>
+
+	{
+		staffPicks.length > 0 && (
+			<section class="container-wide block">
+				<div class="section-title">
+					<h2>{t('home.staffPicks')}</h2>
+					<a href={url(lang, '/shop/')}>{t('home.shopAll')} →</a>
+				</div>
+				<ProductGrid lang={lang} products={staffPicks} />
+			</section>
+		)
+	}
+
+	<section class="container-wide block">
+		<div class="card sell">
+			<Icon name="recycle" size={40} />
+			<div>
+				<h2>{t('home.sellTitle')}</h2>
+				<p class="muted">{t('home.sellText')}</p>
+				<p class="actions">
+					<a class="btn" href={url(lang, '/sell/stockist/')}>{t('nav.stockist')}</a>
+					<a class="btn btn-ghost" href={url(lang, '/sell/once/')}>{t('nav.sellOnce')}</a>
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="container-wide block newsletter">
+		<h2>{t('home.newsletter')}</h2>
+		<p class="muted">{t('home.newsletterText')}</p>
+		<p class="actions">
+			<a class="btn btn-ghost" href={insta.href} rel="noopener" target="_blank"><Icon name="instagram" /> {insta.handle}</a>
+		</p>
+	</section>
+</Base>
+
+<style>
+	.hero {
+		background:
+			linear-gradient(160deg, rgb(4 40 48 / 0.15), rgb(4 40 48 / 0.65)),
+			radial-gradient(120% 90% at 80% 0%, #3aa6b0 0%, #0e5f6e 45%, #062d35 100%);
+		color: #fff;
+	}
+	/* TODO: replace the gradient with a photo: put e.g. hero.jpg in public/ and use
+	   background: linear-gradient(rgb(0 0 0 / 0.35), rgb(0 0 0 / 0.35)), url('/hero.jpg') center / cover; */
+	.hero-inner {
+		padding-block: clamp(4rem, 12vw, 8rem);
+	}
+	.hero .eyebrow {
+		color: #f1d7a4;
+	}
+	.hero h1 {
+		max-width: 16ch;
+		margin-top: 0.75rem;
+		text-transform: uppercase;
+	}
+	.lead {
+		margin-top: 1rem;
+		max-width: 34rem;
+		font-size: var(--step-1);
+		opacity: 0.9;
+	}
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin-top: 1.75rem;
+	}
+	.btn-light {
+		background: #fff;
+		border-color: #fff;
+		color: #0a4753;
+	}
+	.btn-light:hover {
+		background: #f1d7a4;
+		border-color: #f1d7a4;
+		color: #0a4753;
+	}
+	.btn-outline {
+		background: transparent;
+		border-color: #fff;
+		color: #fff;
+	}
+	.btn-outline:hover {
+		background: rgb(255 255 255 / 0.15);
+		border-color: #fff;
+		color: #fff;
+	}
+	.block {
+		margin-top: clamp(3rem, 7vw, 5rem);
+	}
+	.section-title a {
+		font-weight: 600;
+		font-size: var(--step--1);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+	}
+	.section-title h2 {
+		text-transform: uppercase;
+	}
+	.cats {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+		gap: 0.75rem;
+		padding: 0;
+		list-style: none;
+	}
+	.cat {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 1rem 1.2rem;
+		color: var(--ink);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		font-size: var(--step--1);
+		text-decoration: none;
+	}
+	.cat:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.sell {
+		display: flex;
+		gap: 1.5rem;
+		padding: clamp(1.5rem, 4vw, 2.5rem);
+		color: var(--accent);
+	}
+	.sell :global(svg) {
+		flex: none;
+	}
+	.sell h2 {
+		color: var(--ink);
+	}
+	.sell p {
+		margin-top: 0.6rem;
+		max-width: 40rem;
+	}
+	.newsletter {
+		text-align: center;
+	}
+	.newsletter .actions {
+		justify-content: center;
+	}
+	@media (max-width: 40rem) {
+		.sell {
+			flex-direction: column;
+		}
+	}
+</style>

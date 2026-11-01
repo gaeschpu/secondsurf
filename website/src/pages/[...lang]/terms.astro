@@ -1,0 +1,12 @@
+---
+import LegalPage from '../../components/LegalPage.astro';
+import { langPaths, useT, type Lang } from '../../i18n';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+---
+
+<LegalPage lang={lang} title={t('legal.terms')}>
+	<p><span class="todo">TODO</span> Allgemeine Geschäftsbedingungen: Bestellung, Zahlung, Versand, Rückgabe (bei Second-Hand Einzelstücken oft ausgeschlossen, klar angeben), Gewährleistung.</p>
+</LegalPage>

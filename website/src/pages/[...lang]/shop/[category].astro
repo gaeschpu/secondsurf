@@ -1,0 +1,27 @@
+---
+import Base from '../../../layouts/Base.astro';
+import ProductGrid from '../../../components/ProductGrid.astro';
+import CategoryNav from '../../../components/CategoryNav.astro';
+import { availableFirst, getProducts } from '../../../lib/products';
+import { l, langPaths, type Lang } from '../../../i18n';
+import { CATEGORIES } from '../../../config';
+
+export function getStaticPaths() {
+	return langPaths().flatMap(({ params, props }) =>
+		CATEGORIES.map((c) => ({ params: { ...params, category: c.id }, props: { ...props, category: c } })),
+	);
+}
+const { lang, category } = Astro.props as { lang: Lang; category: (typeof CATEGORIES)[number] };
+const products = availableFirst((await getProducts()).filter((p) => p.data.category === category.id));
+const title = l(category.label, lang);
+---
+
+<Base lang={lang} title={title}>
+	<div class="container-wide">
+		<header class="page-head">
+			<h1>{title}</h1>
+		</header>
+		<CategoryNav lang={lang} current={category.id} />
+		<ProductGrid lang={lang} products={products} filter />
+	</div>
+</Base>

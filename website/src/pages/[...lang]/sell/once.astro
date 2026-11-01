@@ -1,0 +1,54 @@
+---
+import Base from '../../../layouts/Base.astro';
+import SellInfo from '../../../components/SellInfo.astro';
+import { langPaths, useT, type Lang } from '../../../i18n';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+
+// TODO: adjust steps and the deal to how you want to buy from private sellers.
+const text = {
+	de: {
+		steps: [
+			'Mach Fotos von deinen Surf-Pieces (Vorder- und Rückseite, Etikett).',
+			'Schick uns den Link zu den Fotos über das Formular.',
+			'Wir sagen dir innert ein paar Tagen, was wir übernehmen.',
+			'Du schickst die Pieces, wir verkaufen sie und zahlen dich aus.',
+		],
+		covers: ['Fotos & Listing', 'Verkauf & Versand an die Käufer', 'Zahlungsabwicklung'],
+		terms: 'Du bekommst 40 % vom Verkaufspreis, sobald ein Piece verkauft ist. Was wir nicht nehmen, schicken wir dir zurück.',
+	},
+	fr: {
+		steps: [
+			'Prends en photo tes pièces de surf (devant, dos, étiquette).',
+			'Envoie-nous le lien vers les photos via le formulaire.',
+			'Nous te disons en quelques jours ce que nous reprenons.',
+			'Tu envoies les pièces, nous les vendons et te payons.',
+		],
+		covers: ['Photos & mise en ligne', 'Vente & envoi aux acheteurs', 'Paiements'],
+		terms: 'Tu reçois 40 % du prix de vente dès qu’une pièce est vendue. Ce que nous ne prenons pas, nous te le renvoyons.',
+	},
+	en: {
+		steps: [
+			'Take photos of your surf pieces (front, back, label).',
+			'Send us the link to the photos through the form.',
+			'Within a few days we tell you what we take.',
+			'You send the pieces, we sell them and pay you out.',
+		],
+		covers: ['Photos & listing', 'Selling & shipping to buyers', 'Payments'],
+		terms: 'You get 40 % of the selling price as soon as a piece sells. Anything we don’t take, we send back to you.',
+	},
+}[lang];
+---
+
+<Base lang={lang} title={t('sellOnce.title')} description={t('sellOnce.intro')}>
+	<div class="container-wide">
+		<header class="page-head">
+			<p class="eyebrow">{t('nav.sell')}</p>
+			<h1>{t('sellOnce.title')}</h1>
+			<p>{t('sellOnce.intro')}</p>
+		</header>
+		<SellInfo lang={lang} kind="sellOnce" {...text} />
+	</div>
+</Base>

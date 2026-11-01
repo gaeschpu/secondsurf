@@ -1,0 +1,22 @@
+---
+// Placeholder layout for terms, privacy and imprint. The legal texts themselves are TODO.
+import Base from '../layouts/Base.astro';
+import type { Lang } from '../i18n';
+
+interface Props {
+	lang: Lang;
+	title: string;
+}
+const { lang, title } = Astro.props;
+---
+
+<Base lang={lang} title={title}>
+	<div class="container">
+		<header class="page-head">
+			<h1>{title}</h1>
+		</header>
+		<div class="prose">
+			<slot />
+		</div>
+	</div>
+</Base>

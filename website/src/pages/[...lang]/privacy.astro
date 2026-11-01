@@ -1,0 +1,12 @@
+---
+import LegalPage from '../../components/LegalPage.astro';
+import { langPaths, useT, type Lang } from '../../i18n';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+---
+
+<LegalPage lang={lang} title={t('legal.privacy')}>
+	<p><span class="todo">TODO</span> Datenschutzerklärung nach dem Schweizer Datenschutzgesetz (revDSG): wer verantwortlich ist, welche Daten (Bestellungen, Formulare via Web3Forms, Zahlungsanbieter), wofür und wie lange.</p>
+</LegalPage>

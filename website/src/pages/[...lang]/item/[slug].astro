@@ -1,0 +1,185 @@
+---
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../../../layouts/Base.astro';
+import Icon from '../../../components/Icon.astro';
+import { chf, l, langPaths, url, useT, type Lang } from '../../../i18n';
+import { CATEGORIES, CONDITIONS } from '../../../config';
+import type { Product } from '../../../lib/products';
+
+export async function getStaticPaths() {
+	const products = await getCollection('products', (p) => import.meta.env.DEV || !p.data.draft);
+	return langPaths().flatMap(({ params, props }) =>
+		products.map((product) => ({ params: { ...params, slug: product.id }, props: { ...props, product } })),
+	);
+}
+const { lang, product } = Astro.props as { lang: Lang; product: Product };
+const t = useT(lang);
+const p = product.data;
+const name = l(p.title, lang);
+const category = CATEGORIES.find((c) => c.id === p.category)!;
+const inquireHref = `${url(lang, '/contact/')}?item=${encodeURIComponent(`${p.brand} ${name} (${p.size}, ${chf(p.price)}) – ${product.id}`)}`;
+---
+
+<Base lang={lang} title={`${p.brand} ${name}`} description={l(p.description, lang) || undefined}>
+	<div class="container-wide">
+		<p class="crumbs small">
+			<a href={url(lang, '/shop/')}>{t('nav.shopAll')}</a> / <a href={url(lang, `/shop/${category.id}/`)}>{l(category.label, lang)}</a>
+		</p>
+		<article class="item">
+			<div class="photos">
+				{
+					p.photos.length > 0 ? (
+						p.photos.map((photo, i) => (
+							<Image
+								src={photo}
+								alt={i === 0 ? `${p.brand} ${name}` : ''}
+								widths={[480, 900, 1400]}
+								sizes="(max-width: 48rem) 100vw, 55vw"
+								loading={i === 0 ? 'eager' : 'lazy'}
+								class:list={{ sold: p.sold }}
+							/>
+						))
+					) : (
+						<div class="placeholder" aria-hidden="true">
+							<Icon name="shirt" size={64} />
+						</div>
+					)
+				}
+			</div>
+			<div class="info">
+				{p.draft && <p class="small"><span class="todo">DRAFT</span> {t('shop.example')}</p>}
+				<p class="eyebrow">{p.brand}</p>
+				<h1>{name}{p.staffPick && ' ★'}</h1>
+				<p class="price">{chf(p.price)}</p>
+				<dl>
+					<dt>{t('shop.size')}</dt>
+					<dd>{p.size}{p.sizeNote && ` · ${p.sizeNote}`}</dd>
+					<dt>{t('shop.condition')}</dt>
+					<dd>{l(CONDITIONS[p.condition], lang)}</dd>
+					{p.measurements && (
+						<>
+							<dt>{t('shop.measurements')}</dt>
+							<dd>{p.measurements}</dd>
+						</>
+					)}
+				</dl>
+				{p.description && <p class="desc">{l(p.description, lang)}</p>}
+				{
+					p.sold ? (
+						<p class="sold-note">{t('shop.sold')}</p>
+					) : p.buyUrl ? (
+						<p class="actions">
+							<a class="btn big" href={p.buyUrl} rel="noopener">
+								{t('shop.buy')} <Icon name="arrow" />
+							</a>
+						</p>
+					) : (
+						<>
+							<p class="actions">
+								<a class="btn big" href={inquireHref}>
+									{t('shop.inquire')} <Icon name="arrow" />
+								</a>
+							</p>
+							<p class="small muted">{t('shop.inquireNote')}</p>
+						</>
+					)
+				}
+				<p class="back small"><a href={url(lang, '/shop/')}>← {t('shop.back')}</a></p>
+			</div>
+		</article>
+	</div>
+</Base>
+
+<style>
+	.crumbs {
+		padding-top: 1.5rem;
+		color: var(--ink-soft);
+	}
+	.item {
+		display: grid;
+		grid-template-columns: 1.2fr 1fr;
+		gap: clamp(1.5rem, 5vw, 3.5rem);
+		margin-top: 1.25rem;
+		align-items: start;
+	}
+	.photos {
+		display: grid;
+		gap: 0.75rem;
+	}
+	.photos :global(img),
+	.placeholder {
+		width: 100%;
+		aspect-ratio: 4 / 5;
+		object-fit: cover;
+		border-radius: var(--radius-sm);
+		background: var(--bg-sunken);
+	}
+	.photos :global(img.sold) {
+		filter: grayscale(1);
+	}
+	.placeholder {
+		display: grid;
+		place-items: center;
+		background: var(--sand-tint);
+		color: var(--sand);
+	}
+	.info {
+		position: sticky;
+		top: 6rem;
+	}
+	h1 {
+		margin-top: 0.4rem;
+		font-size: var(--step-3);
+		text-transform: uppercase;
+	}
+	.price {
+		margin-top: 0.75rem;
+		font-size: var(--step-2);
+		font-weight: 700;
+	}
+	dl {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: 0.4rem 1.25rem;
+		margin-top: 1.5rem;
+		padding-block: 1rem;
+		border-block: 1px solid var(--line);
+	}
+	dt {
+		font-weight: 700;
+		font-size: var(--step--1);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--ink-soft);
+	}
+	.desc {
+		margin-top: 1.25rem;
+	}
+	.actions {
+		margin-top: 1.75rem;
+		margin-bottom: 0.6rem;
+	}
+	.btn.big {
+		padding: 0.9em 1.6em;
+		font-size: var(--step-0);
+	}
+	.sold-note {
+		margin-top: 1.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--ink-soft);
+	}
+	.back {
+		margin-top: 2rem;
+	}
+	@media (max-width: 48rem) {
+		.item {
+			grid-template-columns: 1fr;
+		}
+		.info {
+			position: static;
+		}
+	}
+</style>

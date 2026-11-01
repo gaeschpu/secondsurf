@@ -1,0 +1,295 @@
+// UI strings. Add a key to `de` first; `fr` and `en` fall back to German when a key is missing.
+// TODO: the texts below are a first draft — adjust them to how secondsurf should sound.
+
+const de = {
+	'site.tagline': 'Second-Hand Surfkleidung',
+	'site.description':
+		'secondsurf: handverlesene Second-Hand Surfkleidung aus der Schweiz. Hoodies, Tees, Boardshorts und Neoprenanzüge mit zweitem Leben.',
+
+	'nav.home': 'Start',
+	'nav.new': '☆ Neuer Drop ☆',
+	'nav.shop': 'Shop',
+	'nav.shopAll': 'Alles verfügbar',
+	'nav.sell': 'Verkaufen',
+	'nav.stockist': 'Stockist werden (regelmässig)',
+	'nav.sellOnce': 'Einmalig verkaufen',
+	'nav.about': 'Über uns',
+	'nav.contact': 'Kontakt',
+	'nav.menu': 'Menü',
+	'nav.main': 'Hauptnavigation',
+	'nav.skip': 'Zum Inhalt springen',
+
+	'theme.toggle': 'Hell/Dunkel umschalten',
+	'lang.switchLabel': 'Sprache',
+
+	'home.heroTitle': 'Surfkleidung mit zweitem Leben',
+	'home.heroText':
+		'Handverlesene Second-Hand Pieces von Surfern und kleinen Shops aus der ganzen Schweiz. Jedes Teil gibt es nur einmal.',
+	'home.shopNew': 'Neuen Drop ansehen',
+	'home.shopAll': 'Alles ansehen',
+	'home.categories': 'Kategorien',
+	'home.staffPicks': 'Staff Picks ☆',
+	'home.sellTitle': 'Du hast Surfkleidung, die rumliegt?',
+	'home.sellText':
+		'Wir fotografieren, listen, verkaufen und versenden. Du bekommst deinen Anteil. Für Shops und Reseller mit regelmässigem Nachschub, oder einmalig für deinen Kleiderschrank.',
+	'home.newsletter': 'Neue Drops zuerst erfahren',
+	'home.newsletterText': 'Folge uns auf Instagram, dort kündigen wir jeden Drop an.',
+
+	'shop.title': 'Alles verfügbar',
+	'shop.intro': 'Alle Pieces, die gerade zu haben sind. Jedes gibt es nur einmal.',
+	'shop.newTitle': '☆ Neuer Drop ☆',
+	'shop.newIntro': 'Frisch reingekommen.',
+	'shop.empty': 'Gerade ist hier nichts verfügbar. Der nächste Drop kommt bald.',
+	'shop.size': 'Grösse',
+	'shop.allSizes': 'Alle',
+	'shop.categories': 'Kategorien',
+	'shop.noMatch': 'Nichts in dieser Grösse. Versuch eine andere.',
+	'shop.sold': 'Verkauft',
+	'shop.condition': 'Zustand',
+	'shop.brand': 'Marke',
+	'shop.measurements': 'Masse',
+	'shop.buy': 'Kaufen',
+	'shop.inquire': 'Anfragen',
+	'shop.inquireNote': 'Schreib uns, wir reservieren dir das Teil und schicken dir die Zahlungsinfos.',
+	'shop.back': 'Zurück zum Shop',
+	'shop.example': 'Beispiel, nur in der Vorschau sichtbar',
+
+	'stockist.title': 'Stockist werden',
+	'stockist.intro':
+		'Für Surfshops, Reseller und alle mit regelmässigem Nachschub. Du lieferst die Ware, wir kümmern uns um den Rest.',
+	'sellOnce.title': 'Einmalig verkaufen',
+	'sellOnce.intro':
+		'Dein Schrank ist voll mit Surfkleidung, die du nicht mehr trägst? Schick uns Fotos, wir sagen dir, was wir übernehmen.',
+	'sell.how': 'So funktioniert’s',
+	'sell.weCover': 'Das übernehmen wir',
+	'sell.apply': 'Jetzt anfragen',
+
+	'about.title': 'Über uns',
+	'about.intro': 'Warum secondsurf?',
+
+	'contact.title': 'Kontakt',
+	'contact.intro': 'Fragen zu einem Piece, einer Bestellung oder zum Verkaufen? Schreib uns. Wir antworten meist innert einem Tag.',
+	'contact.form': 'Schreib uns',
+	'contact.orEmail': 'Oder per E-Mail',
+	'contact.instagram': 'Instagram',
+	'contact.instagramText': 'Neue Drops und Behind the Scenes. Du kannst uns auch dort schreiben.',
+	'contact.showEmail': 'E-Mail-Adresse anzeigen',
+	'contact.name': 'Name',
+	'contact.email': 'E-Mail',
+	'contact.message': 'Nachricht',
+	'contact.company': 'Shop / Firma',
+	'contact.website': 'Website oder Instagram',
+	'contact.amount': 'Wie viele Pieces ungefähr?',
+	'contact.photos': 'Link zu Fotos (Google Drive, Dropbox …)',
+	'contact.send': 'Senden',
+	'contact.sending': 'Wird gesendet …',
+	'contact.sent': 'Danke! Die Nachricht wurde gesendet.',
+	'contact.error': 'Etwas ist schiefgelaufen. Schreib uns direkt per E-Mail.',
+	'contact.formNote': 'Nachrichten werden über Web3Forms zugestellt. Deine Angaben werden nur für die Antwort verwendet.',
+
+	'legal.terms': 'AGB',
+	'legal.privacy': 'Datenschutz',
+	'legal.imprint': 'Impressum',
+
+	'footer.shop': 'Shop',
+	'footer.sell': 'Verkaufen',
+	'footer.info': 'Info',
+	'footer.made': 'Getragen, geliebt, weitergegeben',
+
+	'404.title': 'Seite nicht gefunden',
+	'404.text': 'Diese Seite gibt es nicht.',
+	'404.home': 'Zur Startseite',
+};
+
+export type UiKey = keyof typeof de;
+
+const fr: Partial<Record<UiKey, string>> = {
+	'site.tagline': 'Vêtements de surf de seconde main',
+	'site.description':
+		'secondsurf : vêtements de surf de seconde main sélectionnés en Suisse. Sweats, t-shirts, boardshorts et combinaisons pour une deuxième vie.',
+
+	'nav.home': 'Accueil',
+	'nav.new': '☆ Nouveau drop ☆',
+	'nav.shop': 'Shop',
+	'nav.shopAll': 'Tout le disponible',
+	'nav.sell': 'Vendre',
+	'nav.stockist': 'Devenir stockist (régulier)',
+	'nav.sellOnce': 'Vendre une fois',
+	'nav.about': 'À propos',
+	'nav.contact': 'Contact',
+	'nav.menu': 'Menu',
+	'nav.main': 'Navigation principale',
+	'nav.skip': 'Aller au contenu',
+
+	'theme.toggle': 'Thème clair/sombre',
+	'lang.switchLabel': 'Langue',
+
+	'home.heroTitle': 'Des vêtements de surf pour une deuxième vie',
+	'home.heroText':
+		'Des pièces de seconde main choisies à la main, de surfeurs et de petits shops de toute la Suisse. Chaque pièce est unique.',
+	'home.shopNew': 'Voir le nouveau drop',
+	'home.shopAll': 'Tout voir',
+	'home.categories': 'Catégories',
+	'home.sellTitle': 'Tu as des vêtements de surf qui dorment ?',
+	'home.sellText':
+		'Nous photographions, publions, vendons et expédions. Tu reçois ta part. Pour les shops et revendeurs réguliers, ou une seule fois pour ton armoire.',
+	'home.newsletter': 'Sois le premier informé des drops',
+	'home.newsletterText': 'Suis-nous sur Instagram, nous y annonçons chaque drop.',
+
+	'shop.title': 'Tout le disponible',
+	'shop.intro': 'Toutes les pièces disponibles en ce moment. Chacune est unique.',
+	'shop.newTitle': '☆ Nouveau drop ☆',
+	'shop.newIntro': 'Fraîchement arrivé.',
+	'shop.empty': 'Rien de disponible pour l’instant. Le prochain drop arrive bientôt.',
+	'shop.size': 'Taille',
+	'shop.allSizes': 'Toutes',
+	'shop.categories': 'Catégories',
+	'shop.noMatch': 'Rien dans cette taille. Essaie une autre.',
+	'shop.sold': 'Vendu',
+	'shop.condition': 'État',
+	'shop.brand': 'Marque',
+	'shop.measurements': 'Mesures',
+	'shop.buy': 'Acheter',
+	'shop.inquire': 'Demander',
+	'shop.inquireNote': 'Écris-nous, nous te réservons la pièce et t’envoyons les infos de paiement.',
+	'shop.back': 'Retour au shop',
+	'shop.example': 'Exemple, visible seulement en aperçu',
+
+	'stockist.title': 'Devenir stockist',
+	'stockist.intro':
+		'Pour les surf shops, revendeurs et tous ceux qui ont du stock régulier. Tu fournis la marchandise, nous nous occupons du reste.',
+	'sellOnce.title': 'Vendre une fois',
+	'sellOnce.intro':
+		'Ton armoire déborde de vêtements de surf que tu ne portes plus ? Envoie-nous des photos, nous te disons ce que nous reprenons.',
+	'sell.how': 'Comment ça marche',
+	'sell.weCover': 'Ce que nous prenons en charge',
+	'sell.apply': 'Faire une demande',
+
+	'about.title': 'À propos',
+	'about.intro': 'Pourquoi secondsurf ?',
+
+	'contact.title': 'Contact',
+	'contact.intro': 'Une question sur une pièce, une commande ou la vente ? Écris-nous. Nous répondons en général en un jour.',
+	'contact.form': 'Écris-nous',
+	'contact.orEmail': 'Ou par e-mail',
+	'contact.instagramText': 'Nouveaux drops et coulisses. Tu peux aussi nous écrire là-bas.',
+	'contact.showEmail': 'Afficher l’adresse e-mail',
+	'contact.name': 'Nom',
+	'contact.email': 'E-mail',
+	'contact.message': 'Message',
+	'contact.company': 'Shop / entreprise',
+	'contact.website': 'Site web ou Instagram',
+	'contact.amount': 'Combien de pièces environ ?',
+	'contact.photos': 'Lien vers des photos (Google Drive, Dropbox …)',
+	'contact.send': 'Envoyer',
+	'contact.sending': 'Envoi en cours …',
+	'contact.sent': 'Merci ! Le message a été envoyé.',
+	'contact.error': 'Quelque chose n’a pas fonctionné. Écris-nous directement par e-mail.',
+	'contact.formNote': 'Les messages sont transmis par Web3Forms. Tes données servent uniquement à te répondre.',
+
+	'legal.terms': 'CGV',
+	'legal.privacy': 'Protection des données',
+	'legal.imprint': 'Mentions légales',
+
+	'footer.sell': 'Vendre',
+	'footer.made': 'Porté, aimé, transmis',
+
+	'404.title': 'Page introuvable',
+	'404.text': 'Cette page n’existe pas.',
+	'404.home': 'Retour à l’accueil',
+};
+
+const en: Partial<Record<UiKey, string>> = {
+	'site.tagline': 'Second-hand surf clothing',
+	'site.description':
+		'secondsurf: hand-picked second-hand surf clothing from Switzerland. Hoodies, tees, boardshorts and wetsuits with a second life.',
+
+	'nav.home': 'Home',
+	'nav.new': '☆ New drop ☆',
+	'nav.shopAll': 'All available',
+	'nav.sell': 'Sell',
+	'nav.stockist': 'Become a stockist (regular)',
+	'nav.sellOnce': 'Sell once',
+	'nav.about': 'About',
+	'nav.contact': 'Contact',
+	'nav.menu': 'Menu',
+	'nav.main': 'Main navigation',
+	'nav.skip': 'Skip to content',
+
+	'theme.toggle': 'Toggle light/dark theme',
+	'lang.switchLabel': 'Language',
+
+	'home.heroTitle': 'Surf clothing with a second life',
+	'home.heroText':
+		'Hand-picked second-hand pieces from surfers and small shops all over Switzerland. Every piece is one of a kind.',
+	'home.shopNew': 'Shop the new drop',
+	'home.shopAll': 'See everything',
+	'home.categories': 'Categories',
+	'home.sellTitle': 'Got surf clothing lying around?',
+	'home.sellText':
+		'We photograph, list, sell and ship. You get your share. For shops and resellers with regular stock, or once for your own wardrobe.',
+	'home.newsletter': 'Hear about new drops first',
+	'home.newsletterText': 'Follow us on Instagram, we announce every drop there.',
+
+	'shop.title': 'All available',
+	'shop.intro': 'Every piece available right now. Each one is one of a kind.',
+	'shop.newTitle': '☆ New drop ☆',
+	'shop.newIntro': 'Fresh in.',
+	'shop.empty': 'Nothing available right now. The next drop is coming soon.',
+	'shop.size': 'Size',
+	'shop.allSizes': 'All',
+	'shop.categories': 'Categories',
+	'shop.noMatch': 'Nothing in this size. Try another one.',
+	'shop.sold': 'Sold',
+	'shop.condition': 'Condition',
+	'shop.brand': 'Brand',
+	'shop.measurements': 'Measurements',
+	'shop.buy': 'Buy',
+	'shop.inquire': 'Ask about it',
+	'shop.inquireNote': 'Message us, we reserve the piece for you and send you the payment details.',
+	'shop.back': 'Back to the shop',
+	'shop.example': 'Example, only visible in the preview',
+
+	'stockist.title': 'Become a stockist',
+	'stockist.intro': 'For surf shops, resellers and anyone with regular stock. You supply the pieces, we take care of the rest.',
+	'sellOnce.title': 'Sell once',
+	'sellOnce.intro': 'Wardrobe full of surf clothing you no longer wear? Send us photos and we tell you what we take.',
+	'sell.how': 'How it works',
+	'sell.weCover': 'What we cover',
+	'sell.apply': 'Apply now',
+
+	'about.title': 'About',
+	'about.intro': 'Why secondsurf?',
+
+	'contact.title': 'Contact',
+	'contact.intro': 'Questions about a piece, an order or selling? Message us. We usually answer within a day.',
+	'contact.form': 'Message us',
+	'contact.orEmail': 'Or by email',
+	'contact.instagramText': 'New drops and behind the scenes. You can message us there too.',
+	'contact.showEmail': 'Show email address',
+	'contact.name': 'Name',
+	'contact.email': 'Email',
+	'contact.message': 'Message',
+	'contact.company': 'Shop / company',
+	'contact.website': 'Website or Instagram',
+	'contact.amount': 'Roughly how many pieces?',
+	'contact.photos': 'Link to photos (Google Drive, Dropbox …)',
+	'contact.send': 'Send',
+	'contact.sending': 'Sending …',
+	'contact.sent': 'Thanks! Your message has been sent.',
+	'contact.error': 'Something went wrong. Please email us directly.',
+	'contact.formNote': 'Messages are delivered by Web3Forms. Your details are only used to answer you.',
+
+	'legal.terms': 'Terms',
+	'legal.privacy': 'Privacy',
+	'legal.imprint': 'Imprint',
+
+	'footer.sell': 'Sell',
+	'footer.made': 'Worn, loved, passed on',
+
+	'404.title': 'Page not found',
+	'404.text': 'This page doesn’t exist.',
+	'404.home': 'Back to the home page',
+};
+
+export const ui = { de, fr, en };

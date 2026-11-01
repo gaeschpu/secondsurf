@@ -1,0 +1,119 @@
+---
+// Grid of product cards with an optional size filter (works without a page reload).
+import ProductCard from './ProductCard.astro';
+import { useT, type Lang } from '../i18n';
+import { SIZES } from '../config';
+import type { Product } from '../lib/products';
+
+interface Props {
+	lang: Lang;
+	products: Product[];
+	/** Show the size filter above the grid. */
+	filter?: boolean;
+}
+
+const { lang, products, filter = false } = Astro.props;
+const t = useT(lang);
+const sizesInUse = SIZES.filter((s) => products.some((p) => p.data.size === s));
+---
+
+<div class="product-grid-wrap">
+	{
+		filter && sizesInUse.length > 1 && (
+			<div class="size-filter" role="group" aria-label={t('shop.size')}>
+				<span class="label">{t('shop.size')}</span>
+				<button type="button" data-size="" aria-pressed="true">
+					{t('shop.allSizes')}
+				</button>
+				{sizesInUse.map((s) => (
+					<button type="button" data-size={s} aria-pressed="false">
+						{s}
+					</button>
+				))}
+			</div>
+		)
+	}
+	{
+		products.length > 0 ? (
+			<ul class="product-grid">
+				{products.map((p) => (
+					<ProductCard lang={lang} product={p} />
+				))}
+			</ul>
+		) : (
+			<p class="empty muted">{t('shop.empty')}</p>
+		)
+	}
+	<p class="no-match muted" hidden>{t('shop.noMatch')}</p>
+</div>
+
+<script>
+	document.querySelectorAll<HTMLElement>('.product-grid-wrap').forEach((wrap) => {
+		const buttons = wrap.querySelectorAll<HTMLButtonElement>('.size-filter button');
+		const items = wrap.querySelectorAll<HTMLElement>('.product');
+		const noMatch = wrap.querySelector<HTMLElement>('.no-match')!;
+		const apply = (size: string) => {
+			let shown = 0;
+			items.forEach((item) => {
+				const match = !size || item.dataset.size === size;
+				item.hidden = !match;
+				if (match) shown++;
+			});
+			noMatch.hidden = shown > 0;
+			buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.size === size)));
+			const u = new URL(location.href);
+			if (size) u.searchParams.set('size', size);
+			else u.searchParams.delete('size');
+			history.replaceState(null, '', u);
+		};
+		buttons.forEach((b) => b.addEventListener('click', () => apply(b.dataset.size ?? '')));
+		const initial = new URL(location.href).searchParams.get('size');
+		if (initial && [...buttons].some((b) => b.dataset.size === initial)) apply(initial);
+	});
+</script>
+
+<style>
+	.product-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(45%, 14rem), 1fr));
+		gap: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2vw, 1.5rem);
+		padding: 0;
+		list-style: none;
+	}
+	.size-filter {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem;
+		margin-bottom: 1.5rem;
+	}
+	.size-filter .label {
+		margin-right: 0.4rem;
+		font-size: var(--step--1);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	.size-filter button {
+		min-width: 2.75rem;
+		padding: 0.35em 0.85em;
+		border: 1.5px solid var(--line);
+		border-radius: 999px;
+		background: var(--bg-raised);
+		font-size: var(--step--1);
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.size-filter button:hover {
+		border-color: var(--accent);
+	}
+	.size-filter button[aria-pressed='true'] {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: var(--on-accent);
+	}
+	.empty,
+	.no-match {
+		padding-block: 2rem;
+	}
+</style>

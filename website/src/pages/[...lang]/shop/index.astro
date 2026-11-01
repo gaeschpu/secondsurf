@@ -1,0 +1,23 @@
+---
+import Base from '../../../layouts/Base.astro';
+import ProductGrid from '../../../components/ProductGrid.astro';
+import CategoryNav from '../../../components/CategoryNav.astro';
+import { availableFirst, getProducts } from '../../../lib/products';
+import { langPaths, useT, type Lang } from '../../../i18n';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+const products = availableFirst(await getProducts());
+---
+
+<Base lang={lang} title={t('shop.title')} description={t('shop.intro')}>
+	<div class="container-wide">
+		<header class="page-head">
+			<h1>{t('shop.title')}</h1>
+			<p>{t('shop.intro')}</p>
+		</header>
+		<CategoryNav lang={lang} />
+		<ProductGrid lang={lang} products={products} filter />
+	</div>
+</Base>
