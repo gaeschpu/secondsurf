@@ -10,9 +10,11 @@ export default defineConfig({
 	build: { inlineStylesheets: 'always' },
 	integrations: [
 		sitemap({
+			// The start pages redirect to the New Drop (see public/_redirects).
+			filter: (page) => !/^https:\/\/secondsurf\.ch\/((fr|it|en)\/)?$/.test(page),
 			i18n: {
 				defaultLocale: 'de',
-				locales: { de: 'de-CH', fr: 'fr-CH', en: 'en' },
+				locales: { de: 'de-CH', fr: 'fr-CH', it: 'it-CH', en: 'en' },
 			},
 		}),
 	],

@@ -1,10 +1,10 @@
 /* ---------------------------------------------------------------
    Design tokens — palette "Ocean & Sand"
    Each colour is defined once with light-dark(light, dark).
-   The theme follows the system unless the toggle sets data-theme.
+   Light by default; the toggle sets data-theme for dark mode.
 ---------------------------------------------------------------- */
 :root {
-	color-scheme: light dark;
+	color-scheme: light;
 
 	--bg: light-dark(#f5f2ea, #0b1416);
 	--bg-raised: light-dark(#fffdf8, #122024);

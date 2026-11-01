@@ -1,8 +1,8 @@
 # secondsurf
 
 Shop for second-hand surf clothing, built with [Astro](https://astro.build).
-German lives at `/`, French at `/fr/`, English at `/en/`. No cookies, no tracking.
-When you change a text, change it in all three languages (`de`, `fr`, `en`). A missing text falls back to German.
+German lives at `/`, French at `/fr/`, Italian at `/it/`, English at `/en/`. No cookies, no tracking.
+When you change a text, change it in all four languages (`de`, `fr`, `it`, `en`). A missing text falls back to German.
 
 All commands below are for **PowerShell on Windows**, run inside this folder:
 
@@ -27,7 +27,7 @@ Anything marked **TODO** on the site or in the files is placeholder content wait
 | Page | Address | Content |
 | --- | --- | --- |
 | Start | `/` | Hero, new drop, categories, staff picks, "sell with us", Instagram |
-| Neuer Drop | `/new/` | All pieces with `drop:` = `currentDrop` in `src/config.ts` |
+| New Drop | `/new/` | All pieces with `drop:` = `currentDrop` in `src/settings/site.json`. The site opens here: `/`, `/fr/`, `/it/` and `/en/` redirect to it (`public/_redirects`), so the start page is not shown |
 | Shop | `/shop/` and `/shop/<category>/` | All available pieces, category chips, size filter |
 | Product | `/item/<folder-name>/` | Photos, brand, size, condition, measurements, price, buy / ask button |
 | Stockist werden | `/sell/stockist/` | For shops and resellers with regular stock (consignment), with application form |
@@ -46,7 +46,7 @@ src/settings/site.json     email, owner, address, shipping prices, banners, curr
 src/settings/texts.json    texts on the start and about pages
 src/config.ts              categories, sizes, conditions
 functions/api/             server code: dashboard and forms
-src/i18n/ui.ts             all short texts (menus, buttons, headings) in DE, FR, EN
+src/i18n/ui.ts             all short texts (menus, buttons, headings) in DE, FR, IT, EN
 src/pages/[...lang]/       the pages
 src/pages/[...lang]/sell/  the two "sell" pages: steps, what you cover, your share (TODO: your real deal)
 src/components/            header, footer, product card, product grid, forms
@@ -63,18 +63,18 @@ src/styles/global.css      colours, fonts, buttons, cards
    ```yaml
    ---
    brand: O'Neill
-   title: { de: "T-Shirt weiss", fr: "T-shirt blanc", en: "White tee" }
+   title: { de: "T-Shirt weiss", fr: "T-shirt blanc", it: "T-shirt bianca", en: "White tee" }
    category: tees            # one of the ids in CATEGORIES in src/config.ts
    size: M                   # XS, S, M, L, XL, XXL or One size
    sizeNote: "fällt klein aus"   # optional
    condition: veryGood       # new, likeNew, veryGood or good
    price: 25                 # CHF
    measurements: "Achsel zu Achsel 52 cm, Länge 70 cm"   # optional
-   description: { de: "…", fr: "…", en: "…" }            # optional
+   description: { de: "…", fr: "…", it: "…", en: "…" }            # optional
    photos:
      - ./1.jpg
      - ./2.jpg
-   drop: 1                   # shows under "Neuer Drop" when it matches currentDrop
+   drop: 1                   # shows under "New Drop" when it matches currentDrop
    staffPick: true           # optional: shows in Staff Picks on the start page
    stockist: "Surfshop XY"   # optional, never shown: who supplied it
    ---
@@ -89,7 +89,7 @@ Big phone photos are fine: they are resized and compressed automatically. Strip 
 
 Log in at `/admin/` to add a piece with photos, mark it as sold, or delete it. Saving makes a commit to `main`,
 so the piece appears after Cloudflare has rebuilt the site (usually within 2 minutes). Run `git pull` before working locally.
-Texts typed in the dashboard show in all three languages; edit `index.md` to translate them.
+Texts typed in the dashboard show in all four languages; edit `index.md` to translate them.
 Photos are shrunk in the browser, which also removes the location. The dashboard only works on Cloudflare, not with `npm run dev`.
 
 Setup, once. In **Cloudflare → Workers & Pages → secondsurf → Settings → Variables and Secrets**, add these as secrets for Production, then redeploy:

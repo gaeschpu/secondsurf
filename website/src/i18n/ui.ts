@@ -7,7 +7,7 @@ const de = {
 		'secondsurf: handverlesene Second-Hand Surfkleidung aus der Schweiz. Hoodies, Tees, Boardshorts und Neoprenanzüge mit zweitem Leben.',
 
 	'nav.home': 'Start',
-	'nav.new': '☆ Neuer Drop ☆',
+	'nav.new': '☆ New Drop ☆',
 	'nav.shop': 'Shop',
 	'nav.shopAll': 'Alles verfügbar',
 	'nav.sell': 'Verkaufen',
@@ -31,7 +31,7 @@ const de = {
 
 	'shop.title': 'Alles verfügbar',
 	'shop.intro': 'Alle Pieces, die gerade zu haben sind. Jedes gibt es nur einmal.',
-	'shop.newTitle': '☆ Neuer Drop ☆',
+	'shop.newTitle': '☆ New Drop ☆',
 	'shop.newIntro': 'Frisch reingekommen.',
 	'shop.empty': 'Gerade ist hier nichts verfügbar. Der nächste Drop kommt bald.',
 	'shop.size': 'Grösse',
@@ -74,11 +74,11 @@ const de = {
 	'contact.website': 'Website oder Instagram',
 	'contact.amount': 'Wie viele Pieces ungefähr?',
 	'contact.photos': 'Link zu Fotos (Google Drive, Dropbox …)',
-	'contact.send': 'Senden',
+	'contact.send': 'Nachricht senden',
 	'contact.sending': 'Wird gesendet …',
 	'contact.sent': 'Danke! Die Nachricht wurde gesendet.',
 	'contact.error': 'Etwas ist schiefgelaufen. Schreib uns direkt per E-Mail.',
-	'contact.phone': 'Telefon (optional)',
+	'contact.subject': 'Betreff',
 	'contact.formNote': 'Der Spam-Schutz läuft über Cloudflare Turnstile, der Versand über Resend. Deine Angaben werden nur für die Antwort verwendet.',
 
 	'form.required': 'Bitte fülle dieses Feld aus.',
@@ -132,7 +132,7 @@ const fr: Partial<Record<UiKey, string>> = {
 		'secondsurf : vêtements de surf de seconde main sélectionnés en Suisse. Sweats, t-shirts, boardshorts et combinaisons pour une deuxième vie.',
 
 	'nav.home': 'Accueil',
-	'nav.new': '☆ Nouveau drop ☆',
+	'nav.new': '☆ New Drop ☆',
 	'nav.shop': 'Shop',
 	'nav.shopAll': 'Tout le disponible',
 	'nav.sell': 'Vendre',
@@ -155,7 +155,7 @@ const fr: Partial<Record<UiKey, string>> = {
 
 	'shop.title': 'Tout le disponible',
 	'shop.intro': 'Toutes les pièces disponibles en ce moment. Chacune est unique.',
-	'shop.newTitle': '☆ Nouveau drop ☆',
+	'shop.newTitle': '☆ New Drop ☆',
 	'shop.newIntro': 'Fraîchement arrivé.',
 	'shop.empty': 'Rien de disponible pour l’instant. Le prochain drop arrive bientôt.',
 	'shop.size': 'Taille',
@@ -197,11 +197,11 @@ const fr: Partial<Record<UiKey, string>> = {
 	'contact.website': 'Site web ou Instagram',
 	'contact.amount': 'Combien de pièces environ ?',
 	'contact.photos': 'Lien vers des photos (Google Drive, Dropbox …)',
-	'contact.send': 'Envoyer',
+	'contact.send': 'Envoyer le message',
 	'contact.sending': 'Envoi en cours …',
 	'contact.sent': 'Merci ! Le message a été envoyé.',
 	'contact.error': 'Quelque chose n’a pas fonctionné. Écris-nous directement par e-mail.',
-	'contact.phone': 'Téléphone (facultatif)',
+	'contact.subject': 'Objet',
 	'contact.formNote': 'La protection anti-spam passe par Cloudflare Turnstile, l’envoi par Resend. Tes données servent uniquement à te répondre.',
 
 	'form.required': 'Merci de remplir ce champ.',
@@ -244,13 +244,134 @@ const fr: Partial<Record<UiKey, string>> = {
 	'404.home': 'Retour à l’accueil',
 };
 
+const it: Partial<Record<UiKey, string>> = {
+	'site.tagline': 'Abbigliamento da surf di seconda mano',
+	'site.description':
+		'secondsurf: abbigliamento da surf di seconda mano scelto a mano in Svizzera. Felpe, t-shirt, boardshort e mute con una seconda vita.',
+
+	'nav.home': 'Home',
+	'nav.new': '☆ New Drop ☆',
+	'nav.shop': 'Shop',
+	'nav.shopAll': 'Tutto il disponibile',
+	'nav.sell': 'Vendere',
+	'nav.stockist': 'Diventa stockist (regolare)',
+	'nav.sellOnce': 'Vendi una volta',
+	'nav.about': 'Chi siamo',
+	'nav.contact': 'Contatto',
+	'nav.menu': 'Menu',
+	'nav.main': 'Navigazione principale',
+	'nav.skip': 'Vai al contenuto',
+
+	'theme.toggle': 'Tema chiaro/scuro',
+	'lang.switchLabel': 'Lingua',
+
+	'home.shopNew': 'Scopri il nuovo drop',
+	'home.shopAll': 'Vedi tutto',
+	'home.categories': 'Categorie',
+	'home.staffPicks': 'Staff Picks ☆',
+	'home.newsletter': 'Scopri per primo i nuovi drop',
+	'home.newsletterText': 'Seguici su Instagram, lì annunciamo ogni drop.',
+
+	'shop.title': 'Tutto il disponibile',
+	'shop.intro': 'Tutti i pezzi disponibili in questo momento. Ognuno è unico.',
+	'shop.newTitle': '☆ New Drop ☆',
+	'shop.newIntro': 'Appena arrivati.',
+	'shop.empty': 'Al momento non c’è nulla di disponibile. Il prossimo drop arriva presto.',
+	'shop.size': 'Taglia',
+	'shop.allSizes': 'Tutte',
+	'shop.categories': 'Categorie',
+	'shop.noMatch': 'Niente in questa taglia. Provane un’altra.',
+	'shop.sold': 'Venduto',
+	'shop.condition': 'Stato',
+	'shop.brand': 'Marca',
+	'shop.measurements': 'Misure',
+	'shop.buy': 'Acquista',
+	'shop.inquire': 'Chiedi info',
+	'shop.inquireNote': 'Scrivici e ti mandiamo i dati di pagamento. Paghi subito: il pezzo è tuo appena riceviamo il pagamento.',
+	'shop.back': 'Torna allo shop',
+	'shop.example': 'Esempio, visibile solo nell’anteprima',
+
+	'stockist.title': 'Diventa stockist',
+	'stockist.intro': 'Per surf shop, rivenditori e chiunque abbia merce regolarmente. Tu fornisci i pezzi, noi pensiamo al resto.',
+	'sellOnce.title': 'Vendi una volta',
+	'sellOnce.intro': 'Hai l’armadio pieno di abbigliamento da surf che non porti più? Mandaci delle foto e ti diciamo cosa prendiamo.',
+	'sell.how': 'Come funziona',
+	'sell.weCover': 'Di cosa ci occupiamo noi',
+	'sell.apply': 'Fai una richiesta',
+
+	'about.title': 'Chi siamo',
+
+	'contact.title': 'Contatto',
+	'contact.intro': 'Domande su un pezzo, un ordine o la vendita? Scrivici. Di solito rispondiamo entro un giorno.',
+	'contact.form': 'Scrivici',
+	'contact.orEmail': 'Oppure via e-mail',
+	'contact.instagram': 'Instagram',
+	'contact.instagramText': 'Nuovi drop e dietro le quinte. Puoi scriverci anche lì.',
+	'contact.showEmail': 'Mostra l’indirizzo e-mail',
+	'contact.name': 'Nome',
+	'contact.email': 'E-mail',
+	'contact.message': 'Messaggio',
+	'contact.company': 'Shop / azienda',
+	'contact.website': 'Sito web o Instagram',
+	'contact.amount': 'Quanti pezzi circa?',
+	'contact.photos': 'Link alle foto (Google Drive, Dropbox …)',
+	'contact.send': 'Invia messaggio',
+	'contact.sending': 'Invio in corso …',
+	'contact.sent': 'Grazie! Il messaggio è stato inviato.',
+	'contact.error': 'Qualcosa è andato storto. Scrivici direttamente via e-mail.',
+	'contact.subject': 'Oggetto',
+	'contact.formNote': 'La protezione antispam è di Cloudflare Turnstile, l’invio di Resend. I tuoi dati servono solo per risponderti.',
+
+	'form.required': 'Compila questo campo.',
+	'form.email': 'Inserisci un indirizzo e-mail valido.',
+	'form.privacy': 'Conferma di aver letto l’informativa sulla protezione dei dati.',
+	'form.privacyLabel': 'Ho letto l’informativa sulla protezione dei dati',
+	'form.captcha': 'Il controllo antispam non è ancora finito. Attendi un momento e riprova.',
+
+	'shop.priceNote': 'Prezzi finali in CHF, senza IVA.',
+	'shop.shippingFree': 'Spedizione gratuita in Svizzera.',
+	'shop.shippingCost': 'Spedizione in Svizzera: {small} fino a 2 kg, {big} fino a 10 kg, gratuita per ordini da {free}.',
+	'shop.shippingAbroad': 'Spedizione all’estero: contattaci.',
+
+	'returns.title': 'Resi',
+	'returns.intro': 'Qualcosa non va con il tuo pezzo? Segnalacelo con questo modulo.',
+	'returns.form': 'Segnala un reso',
+	'returns.piece': 'Quale pezzo?',
+	'returns.orderDate': 'Data dell’ordine',
+	'returns.reason': 'Motivo',
+	'returns.choose': 'Scegli …',
+	'returns.reasonWrong': 'Ricevuto il pezzo sbagliato',
+	'returns.reasonDamaged': 'Danneggiato durante la spedizione',
+	'returns.reasonNotAsDescribed': 'Non corrisponde alla descrizione',
+	'returns.reasonOther': 'Altro motivo',
+	'returns.orEmail': 'Puoi anche scriverci direttamente:',
+
+	'news.title': 'News',
+	'news.intro': 'Le novità di secondsurf.',
+	'news.empty': 'Al momento non ci sono news.',
+
+	'legal.template': 'Modello: da far verificare dal titolare o da uno specialista.',
+	'legal.terms': 'Condizioni generali',
+	'legal.privacy': 'Protezione dei dati',
+	'legal.imprint': 'Note legali',
+
+	'footer.shop': 'Shop',
+	'footer.sell': 'Vendere',
+	'footer.info': 'Info',
+	'footer.made': 'Indossato, amato, passato di mano',
+
+	'404.title': 'Pagina non trovata',
+	'404.text': 'Questa pagina non esiste.',
+	'404.home': 'Torna alla pagina iniziale',
+};
+
 const en: Partial<Record<UiKey, string>> = {
 	'site.tagline': 'Second-hand surf clothing',
 	'site.description':
 		'secondsurf: hand-picked second-hand surf clothing from Switzerland. Hoodies, tees, boardshorts and wetsuits with a second life.',
 
 	'nav.home': 'Home',
-	'nav.new': '☆ New drop ☆',
+	'nav.new': '☆ New Drop ☆',
 	'nav.shopAll': 'All available',
 	'nav.sell': 'Sell',
 	'nav.stockist': 'Become a stockist (regular)',
@@ -272,7 +393,7 @@ const en: Partial<Record<UiKey, string>> = {
 
 	'shop.title': 'All available',
 	'shop.intro': 'Every piece available right now. Each one is one of a kind.',
-	'shop.newTitle': '☆ New drop ☆',
+	'shop.newTitle': '☆ New Drop ☆',
 	'shop.newIntro': 'Fresh in.',
 	'shop.empty': 'Nothing available right now. The next drop is coming soon.',
 	'shop.size': 'Size',
@@ -312,11 +433,11 @@ const en: Partial<Record<UiKey, string>> = {
 	'contact.website': 'Website or Instagram',
 	'contact.amount': 'Roughly how many pieces?',
 	'contact.photos': 'Link to photos (Google Drive, Dropbox …)',
-	'contact.send': 'Send',
+	'contact.send': 'Send message',
 	'contact.sending': 'Sending …',
 	'contact.sent': 'Thanks! Your message has been sent.',
 	'contact.error': 'Something went wrong. Please email us directly.',
-	'contact.phone': 'Phone (optional)',
+	'contact.subject': 'Subject',
 	'contact.formNote': 'Spam protection is by Cloudflare Turnstile, delivery by Resend. Your details are only used to answer you.',
 
 	'form.required': 'Please fill in this field.',
@@ -359,4 +480,4 @@ const en: Partial<Record<UiKey, string>> = {
 	'404.home': 'Back to the home page',
 };
 
-export const ui = { de, fr, en };
+export const ui = { de, fr, it, en };

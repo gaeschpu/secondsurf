@@ -1,7 +1,7 @@
 ---
 import Icon from './Icon.astro';
 import { htmlLang, l, langLabel, languages, stripLang, url, useT, type Lang } from '../i18n';
-import { ANNOUNCEMENT, CATEGORIES, HOLIDAY_BANNER, SITE } from '../config';
+import { ANNOUNCEMENT, HOLIDAY_BANNER, SITE } from '../config';
 
 interface Props {
 	lang: Lang;
@@ -16,11 +16,7 @@ const current = stripLang(Astro.url.pathname);
 type NavItem = { href: string; label: string; children?: { href: string; label: string }[] };
 const nav: NavItem[] = [
 	{ href: '/new/', label: t('nav.new') },
-	{
-		href: '/shop/',
-		label: t('nav.shop'),
-		children: [{ href: '/shop/', label: t('nav.shopAll') }, ...CATEGORIES.map((c) => ({ href: `/shop/${c.id}/`, label: l(c.label, lang) }))],
-	},
+	{ href: '/shop/', label: t('nav.shop') },
 	{
 		href: '/sell/',
 		label: t('nav.sell'),
@@ -41,7 +37,7 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 {announcement && <p class="announcement">{announcement}</p>}
 <header class="site-header">
 	<div class="container-wide bar">
-		<a class="brand" href={url(lang, '/')}>
+		<a class="brand" href={url(lang, '/new/')}>
 			<span class="brand-mark" aria-hidden="true"><Icon name="wave" size={20} /></span>
 			<span class="brand-text">
 				<span class="brand-name">{SITE.name}</span>
@@ -115,8 +111,7 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 
 <script>
 	const root = document.documentElement;
-	const isDark = () =>
-		root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+	const isDark = () => root.dataset.theme === 'dark';
 
 	document.querySelector('.theme-toggle')?.addEventListener('click', () => {
 		const next = isDark() ? 'light' : 'dark';
@@ -373,14 +368,6 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 	}
 	:global(:root[data-theme='dark']) .theme-toggle :global(.moon) {
 		display: none;
-	}
-	@media (prefers-color-scheme: dark) {
-		:global(:root:not([data-theme='light'])) .theme-toggle :global(.sun) {
-			display: block;
-		}
-		:global(:root:not([data-theme='light'])) .theme-toggle :global(.moon) {
-			display: none;
-		}
 	}
 
 	.menu-toggle,

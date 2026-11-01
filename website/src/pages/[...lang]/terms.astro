@@ -19,6 +19,7 @@ const contactHref = url(lang, '/contact/');
 	description={{
 		de: 'AGB von secondsurf: Bestellung, Preise, Zahlung, Versand, Rückgabe und Gewährleistung.',
 		fr: 'CGV de secondsurf : commande, prix, paiement, livraison, retour et garantie.',
+		it: 'Condizioni generali di secondsurf: ordine, prezzi, pagamento, spedizione, resi e garanzia.',
 		en: 'Terms of secondsurf: ordering, prices, payment, shipping, returns and warranty.',
 	}[lang]}
 >
@@ -70,6 +71,31 @@ const contactHref = url(lang, '/contact/');
 			<p>Sauf indication contraire, nos pièces sont d’occasion. Les traces d’usure décrites ou visibles sur les photos ne constituent pas un défaut. Pour le reste, les droits légaux de garantie s’appliquent (art. 197 ss CO).</p>
 			<h2>8. Droit applicable</h2>
 			<p>Le droit suisse s’applique. Les fors impératifs pour les consommatrices et consommateurs sont réservés.</p>
+		</>
+	)}
+	{lang === 'it' && (
+		<>
+			<h2>1. Campo di applicazione</h2>
+			<p>Queste condizioni generali valgono per tutti gli acquisti presso {SITE.name}, {OWNER.legalForm}, titolare {OWNER.name} (di seguito «noi»).</p>
+			<h2>2. Richiesta e conclusione del contratto</h2>
+			<p>I pezzi presentati sul sito non sono un’offerta vincolante. Chiedi informazioni su un pezzo con il pulsante «Chiedi info» e noi ti mandiamo i dati di pagamento. Il contratto di vendita è concluso quando riceviamo il tuo pagamento. Fino ad allora il pezzo non è riservato. Se qualcun altro paga per primo, ti informiamo e rimborsiamo l’eventuale pagamento già effettuato.</p>
+			<h2>3. Prezzi</h2>
+			<p>Tutti i prezzi sono prezzi finali in franchi svizzeri (CHF). {SITE.name} non è assoggettato all’IVA. Le spese di spedizione si aggiungono secondo il punto 5.</p>
+			<h2>4. Pagamento</h2>
+			<p>Paghi subito e in anticipo. Ricevi i dati di pagamento via e-mail. Spediamo dopo aver ricevuto il pagamento.</p>
+			<h2>5. Consegna e spese di spedizione</h2>
+			<p>In Svizzera spediamo con la Posta Svizzera, di regola entro 2 giorni lavorativi dal ricevimento del pagamento.</p>
+			<ul>
+				<li>Ordini da {free}: gratuita</li>
+				<li>Ordini sotto {free}: {small} fino a 2 kg, {big} fino a 10 kg (Posta, PostPac Economy)</li>
+			</ul>
+			<p>Per spedizioni all’estero <a href={contactHref}>contattaci</a>: ti indichiamo i costi in anticipo.</p>
+			<h2>6. Resi e cambi</h2>
+			<p>Un reso è possibile in questi casi: hai ricevuto il pezzo sbagliato, il pezzo è stato danneggiato durante la spedizione o non corrisponde alla descrizione. Segnalacelo entro 14 giorni dal ricevimento con il <a href={returnsHref}>modulo per i resi</a>. Il pezzo non deve essere stato indossato e deve essere nello stato in cui l’hai ricevuto. Se l’errore è nostro, paghiamo noi la spedizione di ritorno, altrimenti la paghi tu. In caso di reso non ricevi denaro, ma un buono del valore del prezzo d’acquisto. Ogni pezzo è unico, quindi non sono possibili cambi.</p>
+			<h2>7. Garanzia</h2>
+			<p>Salvo indicazione contraria, i nostri pezzi sono usati. I segni d’uso descritti o visibili nelle foto non costituiscono un difetto. Per il resto valgono i diritti legali di garanzia (art. 197 segg. CO).</p>
+			<h2>8. Diritto applicabile</h2>
+			<p>Si applica il diritto svizzero. Sono fatti salvi i fori imperativi per i consumatori.</p>
 		</>
 	)}
 	{lang === 'en' && (

@@ -1,14 +1,14 @@
-// Tiny i18n helper. German lives at "/", French at "/fr/", English at "/en/".
+// Tiny i18n helper. German lives at "/", French at "/fr/", Italian at "/it/", English at "/en/".
 // Anything missing in a language falls back to German.
 // Every page is a single file under src/pages/[...lang]/ that is built once per language.
 
 import { ui, type UiKey } from './ui';
 
-export const languages = { de: 'Deutsch', fr: 'Français', en: 'English' } as const;
+export const languages = { de: 'Deutsch', fr: 'Français', it: 'Italiano', en: 'English' } as const;
 export type Lang = keyof typeof languages;
 export const defaultLang: Lang = 'de';
-export const htmlLang: Record<Lang, string> = { de: 'de-CH', fr: 'fr-CH', en: 'en' };
-export const langLabel: Record<Lang, string> = { de: 'DE', fr: 'FR', en: 'EN' };
+export const htmlLang: Record<Lang, string> = { de: 'de-CH', fr: 'fr-CH', it: 'it-CH', en: 'en' };
+export const langLabel: Record<Lang, string> = { de: 'DE', fr: 'FR', it: 'IT', en: 'EN' };
 const langs = Object.keys(languages) as Lang[];
 
 /** Text that is either the same in every language, or given per language (missing languages fall back to German). */
@@ -30,7 +30,7 @@ export function url(lang: Lang, path = '/'): string {
 
 /** Remove the language prefix from a pathname: '/fr/contact/' -> '/contact/'. */
 export function stripLang(pathname: string): string {
-	const stripped = pathname.replace(/^\/(fr|en)(?=\/|$)/, '');
+	const stripped = pathname.replace(/^\/(fr|it|en)(?=\/|$)/, '');
 	return stripped === '' ? '/' : stripped;
 }
 

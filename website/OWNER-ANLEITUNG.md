@@ -16,7 +16,7 @@ Nach jedem Speichern baut sich die Website neu auf. Änderungen sind meist nach 
 3. Fülle Marke, Titel, Kategorie, Grösse, Preis und Zustand aus.
 4. Tippe auf **Publish**.
 
-Was du eintippst, erscheint in allen drei Sprachen gleich.
+Was du eintippst, erscheint in allen vier Sprachen gleich.
 
 ## Ein Piece als verkauft markieren
 
@@ -52,7 +52,7 @@ Nach den Ferien schaltest du **Anzeigen** wieder aus.
 
 ## Texte ändern
 
-In Pages CMS unter **Texte Start und Über uns**. Deutsch ist Pflicht. Lässt du Französisch oder Englisch leer, erscheint dort der deutsche Text. Das gilt auch für **News**.
+In Pages CMS unter **Texte Start und Über uns**. Deutsch ist Pflicht. Lässt du Französisch, Italienisch oder Englisch leer, erscheint dort der deutsche Text. Das gilt auch für **News**.
 
 ## News schreiben
 

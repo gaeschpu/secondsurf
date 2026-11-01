@@ -34,7 +34,7 @@ export const SHIPPING = {
 export const ANNOUNCEMENT: Localized = settings.announcement;
 
 /** Holiday notice above the announcement bar, switched on and off in the settings. */
-export const HOLIDAY_BANNER: Localized = settings.holidayBanner.enabled ? { de: settings.holidayBanner.de, fr: settings.holidayBanner.fr || undefined, en: settings.holidayBanner.en || undefined } : '';
+export const HOLIDAY_BANNER: Localized = settings.holidayBanner.enabled ? { de: settings.holidayBanner.de, fr: settings.holidayBanner.fr || undefined, it: settings.holidayBanner.it || undefined, en: settings.holidayBanner.en || undefined } : '';
 
 export const SOCIALS = [{ label: 'Instagram', handle: settings.instagramHandle, href: settings.instagramUrl, icon: 'instagram' }] as const;
 
@@ -43,15 +43,15 @@ export const SOCIALS = [{ label: 'Instagram', handle: settings.instagramHandle, 
  * Add, remove or rename freely; the menu and the shop pages follow automatically.
  */
 export const CATEGORIES = [
-	{ id: 'hoodies', label: { de: 'Hoodies & Pullover', fr: 'Sweats & pulls', en: 'Hoodies & jumpers' } },
-	{ id: 'tees', label: { de: 'T-Shirts', fr: 'T-shirts', en: 'Tees' } },
-	{ id: 'longsleeves', label: { de: 'Longsleeves', fr: 'Manches longues', en: 'Longsleeves' } },
-	{ id: 'jackets', label: { de: 'Jacken', fr: 'Vestes', en: 'Jackets' } },
-	{ id: 'boardshorts', label: { de: 'Boardshorts', fr: 'Boardshorts', en: 'Boardshorts' } },
-	{ id: 'swim', label: { de: 'Bikinis & Badehosen', fr: 'Bikinis & maillots', en: 'Bikinis & swim' } },
-	{ id: 'wetsuits', label: { de: 'Neoprenanzüge', fr: 'Combinaisons', en: 'Wetsuits' } },
-	{ id: 'headwear', label: { de: 'Caps & Mützen', fr: 'Casquettes & bonnets', en: 'Caps & beanies' } },
-	{ id: 'accessories', label: { de: 'Accessoires', fr: 'Accessoires', en: 'Accessories' } },
+	{ id: 'hoodies', label: { de: 'Hoodies & Pullover', fr: 'Sweats & pulls', it: 'Felpe & maglioni', en: 'Hoodies & jumpers' } },
+	{ id: 'tees', label: { de: 'T-Shirts', fr: 'T-shirts', it: 'T-shirt', en: 'Tees' } },
+	{ id: 'longsleeves', label: { de: 'Longsleeves', fr: 'Manches longues', it: 'Maniche lunghe', en: 'Longsleeves' } },
+	{ id: 'jackets', label: { de: 'Jacken', fr: 'Vestes', it: 'Giacche', en: 'Jackets' } },
+	{ id: 'boardshorts', label: { de: 'Boardshorts', fr: 'Boardshorts', it: 'Boardshort', en: 'Boardshorts' } },
+	{ id: 'swim', label: { de: 'Bikinis & Badehosen', fr: 'Bikinis & maillots', it: 'Bikini & costumi', en: 'Bikinis & swim' } },
+	{ id: 'wetsuits', label: { de: 'Neoprenanzüge', fr: 'Combinaisons', it: 'Mute', en: 'Wetsuits' } },
+	{ id: 'headwear', label: { de: 'Caps & Mützen', fr: 'Casquettes & bonnets', it: 'Cappellini & berretti', en: 'Caps & beanies' } },
+	{ id: 'accessories', label: { de: 'Accessoires', fr: 'Accessoires', it: 'Accessori', en: 'Accessories' } },
 ] as const satisfies readonly { id: string; label: Localized }[];
 
 export type CategoryId = (typeof CATEGORIES)[number]['id'];
@@ -61,8 +61,8 @@ export const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One size'] as const;
 
 /** Condition grades for second-hand pieces. */
 export const CONDITIONS = {
-	new: { de: 'Neu mit Etikett', fr: 'Neuf avec étiquette', en: 'New with tags' },
-	likeNew: { de: 'Wie neu', fr: 'Comme neuf', en: 'Like new' },
-	veryGood: { de: 'Sehr gut', fr: 'Très bon état', en: 'Very good' },
-	good: { de: 'Gut, mit Gebrauchsspuren', fr: 'Bon, traces d’usure', en: 'Good, some wear' },
+	new: { de: 'Neu mit Etikett', fr: 'Neuf avec étiquette', it: 'Nuovo con etichetta', en: 'New with tags' },
+	likeNew: { de: 'Wie neu', fr: 'Comme neuf', it: 'Come nuovo', en: 'Like new' },
+	veryGood: { de: 'Sehr gut', fr: 'Très bon état', it: 'Molto buono', en: 'Very good' },
+	good: { de: 'Gut, mit Gebrauchsspuren', fr: 'Bon, traces d’usure', it: 'Buono, con segni d’uso', en: 'Good, some wear' },
 } as const satisfies Record<string, Localized>;

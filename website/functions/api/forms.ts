@@ -4,14 +4,14 @@ import { SITE } from '../../src/config.ts';
 import { json, type Env, type Handler } from '../_lib/auth.ts';
 
 const FORMS = {
-	contact: { subject: 'Nachricht', fields: ['phone'], required: ['message'] },
+	contact: { subject: 'Nachricht', fields: ['subject'], required: ['message', 'subject'] },
 	stockist: { subject: 'Stockist-Anfrage', fields: ['company', 'website', 'amount', 'photos'], required: ['message', 'company'] },
 	sellOnce: { subject: 'Einmal verkaufen', fields: ['amount', 'photos'], required: ['message'] },
 	returns: { subject: 'Rückgabe', fields: ['piece', 'orderDate', 'reason'], required: ['message', 'piece', 'orderDate', 'reason'] },
 } as const;
 
 const LABELS: Record<string, string> = {
-	phone: 'Telefon',
+	subject: 'Betreff',
 	company: 'Shop / Firma',
 	website: 'Website',
 	amount: 'Anzahl Pieces',
@@ -30,6 +30,10 @@ const CONFIRMATION = {
 	fr: {
 		subject: 'Merci pour ton message à secondsurf',
 		text: 'Bonjour\n\nMerci, ton message nous est bien parvenu. Nous répondons en général en un jour.\n\nMerci de ne pas répondre à cet e-mail.\n\nsecondsurf',
+	},
+	it: {
+		subject: 'Grazie per il tuo messaggio a secondsurf',
+		text: 'Ciao\n\nGrazie, abbiamo ricevuto il tuo messaggio. Di solito rispondiamo entro un giorno.\n\nNon rispondere a questa e-mail.\n\nsecondsurf',
 	},
 	en: {
 		subject: 'Thanks for your message to secondsurf',

@@ -16,7 +16,8 @@
 
 - [ ] **Returns:** the reasons, the 14-day limit, and who pays return shipping. Decide how long gift cards stay valid.
 - [ ] **Delivery time:** the 2 business days in the top bar and terms.
-- [ ] **Sell pages:** the 50 % share, monthly payout and other deal details.
+- [ ] **Sell pages:** the 50 % stockist share, the 40 % share for one-off sellers, monthly payout and other deal details.
+- [ ] **Italian texts:** written by Claude, so have a native speaker read them, the legal pages especially.
 - [ ] **Shipping:** Swiss Post PostPac Economy prices, as of 2026. Priority costs CHF 1.50 more.
 - [ ] **Instagram:** that `@secondsurf.ch` is the real handle.
 - [ ] **About and start page texts:** first drafts, ideally in your own words.

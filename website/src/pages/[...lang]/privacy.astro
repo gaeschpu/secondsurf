@@ -15,6 +15,7 @@ const mail = `mailto:${SITE.email}`;
 	description={{
 		de: 'Datenschutzerklärung von secondsurf: welche Daten wir bearbeiten, wofür, und welche Dienste beteiligt sind.',
 		fr: 'Protection des données chez secondsurf : quelles données nous traitons, pourquoi et avec quels services.',
+		it: 'Protezione dei dati presso secondsurf: quali dati trattiamo, perché e con quali servizi.',
 		en: 'Privacy policy of secondsurf: what data we process, why, and which services are involved.',
 	}[lang]}
 >
@@ -25,7 +26,7 @@ const mail = `mailto:${SITE.email}`;
 			<p>{SITE.name}, {OWNER.name}, <a href={mail}>{SITE.email}</a>. Die Adresse steht im Impressum.</p>
 			<h2>Welche Daten wir bearbeiten</h2>
 			<ul>
-				<li><strong>Formulare:</strong> Name, E-Mail, Nachricht und deine weiteren Angaben (z.&nbsp;B. Telefon oder Bestelldatum), um deine Anfrage zu beantworten.</li>
+				<li><strong>Formulare:</strong> Name, E-Mail, Nachricht und deine weiteren Angaben (z.&nbsp;B. Betreff oder Bestelldatum), um deine Anfrage zu beantworten.</li>
 				<li><strong>Bestellungen:</strong> Name, Lieferadresse und Zahlungsangaben, die du uns schickst, um die Bestellung abzuwickeln.</li>
 				<li><strong>Website-Besuch:</strong> Beim Aufruf fallen technisch nötige Daten an, z.&nbsp;B. IP-Adresse, Zeitpunkt und aufgerufene Seite.</li>
 			</ul>
@@ -55,7 +56,7 @@ const mail = `mailto:${SITE.email}`;
 			<p>{SITE.name}, {OWNER.name}, <a href={mail}>{SITE.email}</a>. L’adresse figure dans les mentions légales.</p>
 			<h2>Données que nous traitons</h2>
 			<ul>
-				<li><strong>Formulaires :</strong> nom, e-mail, message et tes autres indications (p.&nbsp;ex. téléphone ou date de commande), pour répondre à ta demande.</li>
+				<li><strong>Formulaires :</strong> nom, e-mail, message et tes autres indications (p.&nbsp;ex. objet ou date de commande), pour répondre à ta demande.</li>
 				<li><strong>Commandes :</strong> nom, adresse de livraison et données de paiement que tu nous envoies, pour traiter la commande.</li>
 				<li><strong>Visite du site :</strong> des données techniques sont nécessaires, p.&nbsp;ex. adresse IP, heure et page consultée.</li>
 			</ul>
@@ -78,6 +79,36 @@ const mail = `mailto:${SITE.email}`;
 			<p>Les bases légales sont l’exécution du contrat (art. 6 par. 1 let. b RGPD), ton consentement (let. a) et notre intérêt légitime à un site sûr (let. f). Tu peux aussi déposer une plainte auprès de l’autorité de contrôle de ton pays.</p>
 		</>
 	)}
+	{lang === 'it' && (
+		<>
+			<p>Questa informativa si basa sulla legge svizzera sulla protezione dei dati (nLPD) e, se applicabile, sul regolamento generale europeo sulla protezione dei dati (RGPD).</p>
+			<h2>Responsabile</h2>
+			<p>{SITE.name}, {OWNER.name}, <a href={mail}>{SITE.email}</a>. L’indirizzo si trova nelle note legali.</p>
+			<h2>Quali dati trattiamo</h2>
+			<ul>
+				<li><strong>Moduli:</strong> nome, e-mail, messaggio e le altre indicazioni che fornisci (p.&nbsp;es. oggetto o data dell’ordine), per rispondere alla tua richiesta.</li>
+				<li><strong>Ordini:</strong> nome, indirizzo di consegna e dati di pagamento che ci invii, per gestire l’ordine.</li>
+				<li><strong>Visita del sito:</strong> dati tecnicamente necessari, p.&nbsp;es. indirizzo IP, ora e pagina visitata.</li>
+			</ul>
+			<h2>Servizi che utilizziamo</h2>
+			<ul>
+				<li><strong>Cloudflare</strong> (hosting e sicurezza): tratta i dati della visita del sito.</li>
+				<li><strong>Cloudflare Turnstile</strong> (protezione antispam dei moduli): verifica, con dati tecnici del tuo browser e l’indirizzo IP, che il modulo sia inviato da una persona.</li>
+				<li><strong>Resend</strong> (invio di e-mail): recapita i messaggi dei moduli e le conferme.</li>
+				<li><strong>Google Gmail</strong> (la nostra casella e-mail): conserva le e-mail che riceviamo.</li>
+			</ul>
+			<p>Questi fornitori possono trattare dati anche fuori dalla Svizzera, in particolare negli Stati Uniti. In tal caso ci basiamo sulle garanzie da loro previste, come le clausole contrattuali standard.</p>
+			<p>I caratteri sono ospitati sul nostro server. Instagram viene contattato solo se clicchi sul link.</p>
+			<h2>Cookie e tracciamento</h2>
+			<p>Non utilizziamo cookie di tracciamento o pubblicitari né strumenti di analisi. La tua scelta del tema chiaro o scuro viene salvata solo nel tuo browser.</p>
+			<h2>Conservazione</h2>
+			<p>Conserviamo i dati solo per il tempo necessario allo scopo. I documenti relativi agli ordini e alla contabilità sono conservati per 10 anni, come previsto dalla legge.</p>
+			<h2>I tuoi diritti</h2>
+			<p>Puoi chiedere l’accesso ai tuoi dati, la loro rettifica o cancellazione e puoi opporti al loro trattamento. Scrivici a <a href={mail}>{SITE.email}</a>. Puoi anche presentare un reclamo all’Incaricato federale della protezione dei dati e della trasparenza (IFPDT).</p>
+			<h2>Persone nello SEE</h2>
+			<p>Le basi giuridiche sono l’esecuzione del contratto (art. 6 par. 1 lett. b RGPD), il tuo consenso (lett. a) e il nostro interesse legittimo a un sito sicuro (lett. f). Puoi anche presentare un reclamo all’autorità di controllo del tuo paese.</p>
+		</>
+	)}
 	{lang === 'en' && (
 		<>
 			<p>This policy follows the Swiss Federal Act on Data Protection (revFADP) and, where it applies, the EU General Data Protection Regulation (GDPR).</p>
@@ -85,7 +116,7 @@ const mail = `mailto:${SITE.email}`;
 			<p>{SITE.name}, {OWNER.name}, <a href={mail}>{SITE.email}</a>. The address is in the imprint.</p>
 			<h2>What data we process</h2>
 			<ul>
-				<li><strong>Forms:</strong> name, email, message and any other details you give (such as phone or order date), to answer your request.</li>
+				<li><strong>Forms:</strong> name, email, message and any other details you give (such as subject or order date), to answer your request.</li>
 				<li><strong>Orders:</strong> name, delivery address and payment details you send us, to handle the order.</li>
 				<li><strong>Visiting the website:</strong> technically necessary data, such as IP address, time and page visited.</li>
 			</ul>

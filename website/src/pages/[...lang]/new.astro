@@ -1,8 +1,10 @@
 ---
 import Base from '../../layouts/Base.astro';
+import JsonLd from '../../components/JsonLd.astro';
 import ProductGrid from '../../components/ProductGrid.astro';
 import { getNewDrop } from '../../lib/products';
 import { langPaths, useT, type Lang } from '../../i18n';
+import { OWNER, SITE, SOCIALS } from '../../config';
 
 export const getStaticPaths = langPaths;
 const { lang } = Astro.props as { lang: Lang };
@@ -10,7 +12,19 @@ const t = useT(lang);
 const products = await getNewDrop();
 ---
 
-<Base lang={lang} title={t('shop.newTitle')} description={t('shop.newIntro')}>
+<Base lang={lang} title={t('shop.newTitle')} description={`${t('site.tagline')}: ${t('shop.newIntro')} ${t('shop.intro')}`}>
+	<JsonLd
+		slot="head"
+		data={{
+			'@type': 'Organization',
+			name: SITE.name,
+			url: SITE.url,
+			logo: `${SITE.url}/apple-touch-icon.png`,
+			email: SITE.email,
+			founder: { '@type': 'Person', name: OWNER.name },
+			sameAs: SOCIALS.map((s) => s.href),
+		}}
+	/>
 	<div class="container-wide">
 		<header class="page-head">
 			<h1>{t('shop.newTitle')}</h1>

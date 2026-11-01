@@ -2,31 +2,37 @@
 	"heroTitle": {
 		"de": "Surfkleidung mit zweitem Leben",
 		"fr": "Des vêtements de surf pour une deuxième vie",
+		"it": "Abbigliamento da surf con una seconda vita",
 		"en": "Surf clothing with a second life"
 	},
 	"heroText": {
 		"de": "Handverlesene Second-Hand Pieces von Surfern und kleinen Shops aus der ganzen Schweiz. Jedes Teil gibt es nur einmal.",
 		"fr": "Des pièces de seconde main choisies à la main, de surfeurs et de petits shops de toute la Suisse. Chaque pièce est unique.",
+		"it": "Pezzi di seconda mano scelti a mano, da surfisti e piccoli shop di tutta la Svizzera. Ogni pezzo è unico.",
 		"en": "Hand-picked second-hand pieces from surfers and small shops all over Switzerland. Every piece is one of a kind."
 	},
 	"sellTitle": {
 		"de": "Du hast Surfkleidung, die rumliegt?",
 		"fr": "Tu as des vêtements de surf qui dorment ?",
+		"it": "Hai abbigliamento da surf che non usi?",
 		"en": "Got surf clothing lying around?"
 	},
 	"sellText": {
 		"de": "Wir fotografieren, listen, verkaufen und versenden. Du bekommst deinen Anteil. Für Shops und Reseller mit regelmässigem Nachschub, oder einmalig für deinen Kleiderschrank.",
 		"fr": "Nous photographions, publions, vendons et expédions. Tu reçois ta part. Pour les shops et revendeurs réguliers, ou une seule fois pour ton armoire.",
+		"it": "Fotografiamo, pubblichiamo, vendiamo e spediamo. Tu ricevi la tua parte. Per shop e rivenditori con merce regolare, oppure una volta sola per il tuo armadio.",
 		"en": "We photograph, list, sell and ship. You get your share. For shops and resellers with regular stock, or once for your own wardrobe."
 	},
 	"aboutTitle": {
 		"de": "Warum secondsurf?",
 		"fr": "Pourquoi secondsurf ?",
+		"it": "Perché secondsurf?",
 		"en": "Why secondsurf?"
 	},
 	"aboutText": {
 		"de": "secondsurf ist ein Online-Shop für handverlesene Second-Hand Surfkleidung aus der Schweiz.\n\nGute Surfkleidung hält ewig, landet aber viel zu oft ungetragen im Schrank. Wir suchen die besten Pieces bei Surfern, Surfshops und Resellern und geben ihnen ein zweites Leben.\n\nJedes Teil wird geprüft, fotografiert und gibt es nur einmal. Weniger Fast Fashion, mehr Stil.",
 		"fr": "secondsurf est une boutique en ligne de vêtements de surf de seconde main, sélectionnés à la main en Suisse.\n\nLes bons vêtements de surf durent une éternité, mais finissent trop souvent au fond d’une armoire. Nous dénichons les meilleures pièces chez des surfeurs, des surf shops et des revendeurs, et leur donnons une deuxième vie.\n\nChaque pièce est contrôlée, photographiée et unique. Moins de fast fashion, plus de style.",
+		"it": "secondsurf è un negozio online di abbigliamento da surf di seconda mano, scelto a mano in Svizzera.\n\nIl buon abbigliamento da surf dura per sempre, ma troppo spesso finisce dimenticato in un armadio. Cerchiamo i pezzi migliori tra surfisti, surf shop e rivenditori e diamo loro una seconda vita.\n\nOgni pezzo è controllato, fotografato e unico. Meno fast fashion, più stile.",
 		"en": "secondsurf is an online shop for hand-picked second-hand surf clothing from Switzerland.\n\nGood surf clothing lasts forever, but far too often ends up unworn in a wardrobe. We find the best pieces from surfers, surf shops and resellers and give them a second life.\n\nEvery piece is checked, photographed and one of a kind. Less fast fashion, more style."
 	}
 }

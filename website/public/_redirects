@@ -1,0 +1,8 @@
+# The site opens on the New Drop. Delete these lines to bring back the start page (src/pages/[...lang]/index.astro).
+/ /new/ 302
+/fr /fr/new/ 302
+/fr/ /fr/new/ 302
+/it /it/new/ 302
+/it/ /it/new/ 302
+/en /en/new/ 302
+/en/ /en/new/ 302

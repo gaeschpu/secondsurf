@@ -25,6 +25,7 @@ content:
         fields:
           - { name: de, label: Deutsch, type: string }
           - { name: fr, label: Französisch, type: string }
+          - { name: it, label: Italienisch, type: string }
           - { name: en, label: Englisch, type: string }
       - name: holidayBanner
         label: Ferien-Hinweis
@@ -33,6 +34,7 @@ content:
           - { name: enabled, label: Anzeigen, type: boolean }
           - { name: de, label: Deutsch, type: string }
           - { name: fr, label: Französisch, type: string }
+          - { name: it, label: Italienisch, type: string }
           - { name: en, label: Englisch, type: string }
 
   - name: texts
@@ -41,21 +43,23 @@ content:
     path: website/src/settings/texts.json
     fields:
       - name: heroTitle
-        label: Start, Titel
+        label: Start, Titel (zurzeit nicht sichtbar)
         type: object
         fields: &short
           - { name: de, label: Deutsch, type: string, required: true }
           - { name: fr, label: Französisch, type: string }
+          - { name: it, label: Italienisch, type: string }
           - { name: en, label: Englisch, type: string }
       - name: heroText
-        label: Start, Text
+        label: Start, Text (zurzeit nicht sichtbar)
         type: object
         fields: &long
           - { name: de, label: Deutsch, type: text, required: true }
           - { name: fr, label: Französisch, type: text }
+          - { name: it, label: Italienisch, type: text }
           - { name: en, label: Englisch, type: text }
-      - { name: sellTitle, label: "Start, Titel Verkaufen", type: object, fields: *short }
-      - { name: sellText, label: "Start, Text Verkaufen", type: object, fields: *long }
+      - { name: sellTitle, label: "Start, Titel Verkaufen (zurzeit nicht sichtbar)", type: object, fields: *short }
+      - { name: sellText, label: "Start, Text Verkaufen (zurzeit nicht sichtbar)", type: object, fields: *long }
       - { name: aboutTitle, label: "Über uns, Titel", type: object, fields: *short }
       - { name: aboutText, label: "Über uns, Text (Leerzeile für neuen Absatz)", type: object, fields: *long }
 

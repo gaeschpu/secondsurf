@@ -1,6 +1,6 @@
 /* Same "Ocean & Sand" colours as src/styles/global.css. Phone first. */
 :root {
-	color-scheme: light dark;
+	color-scheme: light;
 	--bg: light-dark(#f5f2ea, #0b1416);
 	--bg-raised: light-dark(#fffdf8, #122024);
 	--ink: light-dark(#14262b, #e6efee);

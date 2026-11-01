@@ -10,7 +10,7 @@ import { CATEGORIES, CONDITIONS, SIZES } from './config';
 const optionalText = z.string().nullish().transform((text) => text || undefined);
 
 /** A text that is the same in all languages ("Foo") or translated ({ de: "Foo", fr: …, en: … }). */
-const localized = z.union([z.string(), z.object({ de: z.string(), fr: optionalText, en: optionalText })]);
+const localized = z.union([z.string(), z.object({ de: z.string(), fr: optionalText, it: optionalText, en: optionalText })]);
 
 const categoryIds = CATEGORIES.map((c) => c.id) as [string, ...string[]];
 const conditionIds = Object.keys(CONDITIONS) as [keyof typeof CONDITIONS, ...(keyof typeof CONDITIONS)[]];
