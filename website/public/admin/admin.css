@@ -1,0 +1,299 @@
+/* Same "Ocean & Sand" colours as src/styles/global.css. Phone first. */
+:root {
+	color-scheme: light dark;
+	--bg: light-dark(#f5f2ea, #0b1416);
+	--bg-raised: light-dark(#fffdf8, #122024);
+	--ink: light-dark(#14262b, #e6efee);
+	--ink-soft: light-dark(#4a5f63, #a3b8b9);
+	--line: light-dark(#dcd4c3, #23363a);
+	--accent: light-dark(#0e5f6e, #6cc6cf);
+	--accent-tint: light-dark(#d9ecee, #12343a);
+	--on-accent: light-dark(#ffffff, #06191c);
+	--danger: light-dark(#b42318, #fda29b);
+	--focus: light-dark(#c2410c, #fdba74);
+}
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+* {
+	margin: 0;
+}
+[hidden] {
+	display: none !important;
+}
+html {
+	-webkit-text-size-adjust: 100%;
+}
+body {
+	min-height: 100dvh;
+	background: var(--bg);
+	color: var(--ink);
+	font: 1rem/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+h1 {
+	font-size: 1.35rem;
+}
+h2 {
+	font-size: 1.15rem;
+	margin-bottom: 0.75rem;
+}
+:focus-visible {
+	outline: 2px solid var(--focus);
+	outline-offset: 2px;
+}
+
+.bar {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.5rem 1rem;
+	padding-top: max(0.5rem, env(safe-area-inset-top));
+	background: var(--bg-raised);
+	border-bottom: 1px solid var(--line);
+}
+main {
+	display: grid;
+	gap: 1.5rem;
+	max-width: 36rem;
+	margin-inline: auto;
+	padding: 1rem;
+	padding-bottom: max(2rem, env(safe-area-inset-bottom));
+}
+.card {
+	display: grid;
+	gap: 1rem;
+	padding: 1rem;
+	background: var(--bg-raised);
+	border: 1px solid var(--line);
+	border-radius: 14px;
+}
+.login {
+	max-width: 24rem;
+	margin: 20dvh 1rem 0;
+}
+@media (min-width: 26rem) {
+	.login {
+		margin-inline: auto;
+	}
+}
+.login form {
+	display: grid;
+	gap: 1rem;
+}
+
+label {
+	display: grid;
+	gap: 0.25rem;
+	font-weight: 600;
+	font-size: 0.9rem;
+}
+/* 16px or more, so iPhones don't zoom in when a field gets focus. */
+input,
+select,
+textarea {
+	width: 100%;
+	min-height: 2.75rem;
+	padding: 0.5rem 0.75rem;
+	font: inherit;
+	font-size: 1rem;
+	font-weight: 400;
+	color: inherit;
+	background: var(--bg);
+	border: 1px solid var(--line);
+	border-radius: 8px;
+}
+.row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.75rem;
+}
+details {
+	display: grid;
+	gap: 1rem;
+}
+details[open] > label {
+	margin-top: 0.75rem;
+}
+summary {
+	min-height: 2.75rem;
+	padding-block: 0.5rem;
+	font-weight: 600;
+	cursor: pointer;
+}
+label.check {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-weight: 400;
+	font-size: 1rem;
+}
+.check input {
+	width: 1.25rem;
+	min-height: 1.25rem;
+}
+
+button,
+.button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 2.75rem;
+	padding: 0.5rem 0.9rem;
+	font: inherit;
+	font-weight: 600;
+	color: var(--accent);
+	text-align: center;
+	background: var(--accent-tint);
+	border: 0;
+	border-radius: 8px;
+	cursor: pointer;
+}
+button:disabled {
+	opacity: 0.6;
+	cursor: progress;
+}
+.primary {
+	width: 100%;
+	min-height: 3.25rem;
+	font-size: 1.05rem;
+	color: var(--on-accent);
+	background: var(--accent);
+}
+.link {
+	color: var(--accent);
+	background: none;
+}
+.danger {
+	color: var(--danger);
+	background: none;
+}
+.photo-buttons {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.75rem;
+}
+.photo-buttons .button {
+	position: relative;
+	display: flex;
+	font-size: 1rem;
+}
+/* Invisible but still focusable and tappable. */
+.file {
+	position: absolute;
+	inset: 0;
+	min-height: 0;
+	padding: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+.button:focus-within {
+	outline: 2px solid var(--focus);
+	outline-offset: 2px;
+}
+
+.previews {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+	gap: 0.5rem;
+	padding: 0;
+	list-style: none;
+}
+.previews:empty {
+	display: none;
+}
+.previews li {
+	position: relative;
+}
+.previews img {
+	display: block;
+	width: 100%;
+	aspect-ratio: 3 / 4;
+	object-fit: cover;
+	border-radius: 8px;
+}
+.previews li:first-child img {
+	outline: 3px solid var(--accent);
+	outline-offset: -3px;
+}
+.previews button {
+	position: absolute;
+	top: 0.25rem;
+	min-height: 2.75rem;
+	width: 2.75rem;
+	padding: 0;
+	color: #fff;
+	background: rgb(0 0 0 / 0.6);
+}
+.previews .cover {
+	left: 0.25rem;
+}
+.previews .remove {
+	right: 0.25rem;
+}
+.hint {
+	font-size: 0.85rem;
+	color: var(--ink-soft);
+}
+.error {
+	color: var(--danger);
+	font-weight: 600;
+}
+.status {
+	color: var(--accent);
+	font-weight: 600;
+}
+
+.products {
+	display: grid;
+	gap: 0.75rem;
+	padding: 0;
+	list-style: none;
+}
+.product {
+	display: grid;
+	grid-template-columns: 4.5rem 1fr;
+	gap: 0.75rem;
+	padding: 0.75rem;
+	background: var(--bg-raised);
+	border: 1px solid var(--line);
+	border-radius: 14px;
+}
+.thumb {
+	width: 4.5rem;
+	height: 6rem;
+	object-fit: cover;
+	background: var(--line);
+	border-radius: 8px;
+}
+.product.sold .thumb {
+	opacity: 0.5;
+}
+.meta {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+.meta small {
+	display: block;
+	color: var(--ink-soft);
+}
+.tag {
+	display: inline-block;
+	margin-right: 0.25rem;
+	padding: 0 0.4rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--accent);
+	background: var(--accent-tint);
+	border-radius: 4px;
+}
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-top: 0.5rem;
+}

@@ -79,6 +79,26 @@ For a new drop, raise `currentDrop` in `src/config.ts` and give the new pieces t
 The four example pieces (`0001`–`0004`) are drafts: they only show in `npm run dev`. Delete them once you have real ones.
 Big phone photos are fine: they are resized and compressed automatically. Strip the location from photos first.
 
+## Dashboard (add pieces from your phone)
+
+Log in at `/admin/` to add a piece with photos, mark it as sold, or delete it. Saving makes a commit to `main`,
+so the piece appears after Cloudflare has rebuilt the site (usually within 2 minutes). Run `git pull` before working locally.
+Texts typed in the dashboard show in all three languages; edit `index.md` to translate them.
+Photos are shrunk in the browser, which also removes the location. The dashboard only works on Cloudflare, not with `npm run dev`.
+
+Setup, once. In **Cloudflare → Workers & Pages → secondsurf → Settings → Variables and Secrets**, add these as secrets for Production, then redeploy:
+
+| Name | Value |
+| --- | --- |
+| `ADMIN_PASSWORD` | Your login password, at least 12 characters |
+| `SESSION_SECRET` | A random text of at least 32 characters |
+| `GITHUB_TOKEN` | A [fine-grained token](https://github.com/settings/personal-access-tokens/new) for only this repository, with **Contents: Read and write** |
+
+Changing `ADMIN_PASSWORD` or `SESSION_SECRET` logs out every device. Fine-grained tokens expire, so renew `GITHUB_TOKEN` when the dashboard reports a GitHub error.
+
+To test locally, put the same values in `.dev.vars` (git-ignored), then run `npm run build` and `npx wrangler pages dev dist`.
+Careful: with a real token, this changes the real shop.
+
 ## Selling: how people pay
 
 Right now each product has an **Anfragen** button: it opens the contact form with the piece already filled in,
