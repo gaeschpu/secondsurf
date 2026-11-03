@@ -34,7 +34,7 @@ export default defineConfig({
 			provider: fontProviders.fontsource(),
 			name: 'Inter',
 			cssVariable: '--font-sans',
-			weights: ['400 700'],
+			weights: ['400 900'],
 			styles: ['normal'],
 			subsets: ['latin'],
 			fallbacks: ['system-ui', 'sans-serif'],
