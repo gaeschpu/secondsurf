@@ -14,10 +14,10 @@
 	"shippingUpTo2kg": 9,
 	"shippingUpTo10kg": 12,
 	"announcement": {
-		"de": "☆ Versand innert 2 Arbeitstagen in der ganzen Schweiz ☆",
-		"fr": "☆ Envoi sous 2 jours ouvrables dans toute la Suisse ☆",
-		"it": "☆ Spedizione entro 2 giorni lavorativi in tutta la Svizzera ☆",
-		"en": "☆ We ship within 2 business days all over Switzerland ☆"
+		"de": "☆ Versand innert 48H in der ganzen Schweiz ☆",
+		"fr": "☆ Envoi sous 48H dans toute la Suisse ☆",
+		"it": "☆ Spedizione entro 48H in tutta la Svizzera ☆",
+		"en": "☆ We ship within 48H all over Switzerland ☆"
 	},
 	"holidayBanner": {
 		"enabled": false,
