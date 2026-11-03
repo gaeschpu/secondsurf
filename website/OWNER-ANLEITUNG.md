@@ -50,7 +50,7 @@ Nach 1 bis 2 Minuten steht der neue Preis im Shop.
 
 ## Eine Rückgabe abwickeln
 
-Rückgaben kommen per E-Mail über das Rückgabeformular. Akzeptierst du eine Rückgabe, schickst du der Kundin oder dem Kunden einen Gutschein im Wert des Kaufpreises, zum Beispiel per E-Mail mit einem Code. Notiere dir die Codes selbst: Die Website prüft oder verwaltet keine Gutscheine.
+Rückgaben kommen per E-Mail über das Rückgabeformular. Rückgaben gibt es nur, wenn etwas nicht stimmt (falsches Piece, Versandschaden, nicht wie beschrieben). Dann erstattest du den Kaufpreis samt Versandkosten zurück und zahlst den Rückversand. Möchte die Kundin oder der Kunde lieber einen Gutschein im gleichen Wert, schickst du ihn zum Beispiel per E-Mail mit einem Code. Notiere dir die Codes selbst: Die Website prüft oder verwaltet keine Gutscheine.
 
 ## Den Ferien-Hinweis einschalten
 

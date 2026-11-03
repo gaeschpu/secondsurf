@@ -4,7 +4,7 @@
 
 - [ ] **Contact address for the imprint.** Required by law; the imprint page shows a TODO until it's set. Use a business address or a c/o address rather than a home address, then fill in `addressLine1` and `addressLine2` in `src/settings/site.json`.
 - [ ] **Legal check.** Have the imprint, privacy policy, terms and returns text checked by a specialist, then set `legalReviewed` to `true` to hide the note on those pages.
-- [ ] **Gift card instead of money.** Ask the specialist specifically about wrong or faulty pieces: the terms give only a gift card, but also keep the statutory warranty rights (Art. 197 ff. OR), which can include money back. Those two points need to be reconciled.
+- [x] **Gift card instead of money.** Reconciled in the terms and returns page: for wrong, damaged or not-as-described pieces the customer gets the money back (or a gift card if they prefer); fault-free pieces can't be returned. Still worth confirming with the specialist.
 - [ ] **Commercial register.** Check whether the Einzelfirma must be registered. If it's registered, the imprint must say so, and may need the owner's surname in the company name.
 - [ ] **Domain.** `secondsurf.ch` must be active in Cloudflare and added to the Pages project.
 - [ ] **Forms.** Set up Turnstile and Resend (see README). Until then, forms are hidden and customers can only reach you by email or Instagram.
