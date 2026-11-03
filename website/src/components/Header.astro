@@ -35,7 +35,24 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 ---
 
 {holiday && <p class="announcement holiday">{holiday}</p>}
-{announcement && <p class="announcement">{announcement}</p>}
+{
+	announcement && (
+		<p class="announcement ticker">
+			<span class="sr-only">{announcement}</span>
+			{/* Two identical halves: sliding by one half loops without a jump. */}
+			<span class="ticker-track" aria-hidden="true">
+				{[0, 1].map(() => (
+					<span class="ticker-half">
+						{[0, 1, 2, 3, 4, 5].map(() => (
+							<span class="ticker-item">{announcement}</span>
+						))}
+					</span>
+				))}
+			</span>
+			<span class="ticker-still" aria-hidden="true">{announcement}</span>
+		</p>
+	)
+}
 <header class="site-header">
 	<div class="container-wide bar">
 		<a class="brand" href={url(lang, '/new/')}>
@@ -165,6 +182,50 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 	.holiday {
 		background: var(--sand-tint);
 		color: var(--ink);
+	}
+	/* The shipping banner scrolls from left to right. */
+	.ticker {
+		overflow: hidden;
+		padding-inline: 0;
+		white-space: nowrap;
+	}
+	.ticker-track {
+		display: flex;
+		width: max-content;
+		animation: ticker 60s linear infinite;
+	}
+	.ticker:hover .ticker-track {
+		animation-play-state: paused;
+	}
+	.ticker-half {
+		display: flex;
+	}
+	.ticker-item {
+		padding-inline: 2.5rem;
+	}
+	.ticker-still {
+		display: none;
+	}
+	@keyframes ticker {
+		from {
+			transform: translateX(-50%);
+		}
+		to {
+			transform: translateX(0);
+		}
+	}
+	/* People who turn off animations on their device get the text standing still. */
+	@media (prefers-reduced-motion: reduce) {
+		.ticker {
+			padding-inline: var(--gutter);
+			white-space: normal;
+		}
+		.ticker-track {
+			display: none;
+		}
+		.ticker-still {
+			display: block;
+		}
 	}
 	.site-header {
 		position: sticky;
