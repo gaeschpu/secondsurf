@@ -2,6 +2,7 @@
 import Icon from './Icon.astro';
 import { htmlLang, l, langLabel, languages, stripLang, url, useT, type Lang } from '../i18n';
 import { ANNOUNCEMENT, HOLIDAY_BANNER, SITE } from '../config';
+import { accountTexts } from '../i18n/account';
 
 interface Props {
 	lang: Lang;
@@ -97,6 +98,9 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 					</details>
 				)
 			}
+			<a class="icon-btn" href={url(lang, '/account/')} aria-label={accountTexts[lang].title} title={accountTexts[lang].title} aria-current={current === '/account/' ? 'page' : undefined}>
+				<Icon name="user" size={18} />
+			</a>
 			<button type="button" class="icon-btn theme-toggle" aria-label={t('theme.toggle')}>
 				<Icon name="moon" size={18} class="moon" />
 				<Icon name="sun" size={18} class="sun" />

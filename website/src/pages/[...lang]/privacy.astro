@@ -27,12 +27,13 @@ const mail = `mailto:${SITE.email}`;
 			<h2>Welche Daten wir bearbeiten</h2>
 			<ul>
 				<li><strong>Formulare:</strong> Name, E-Mail, Nachricht und deine weiteren Angaben (z.&nbsp;B. Betreff oder Bestelldatum), um deine Anfrage zu beantworten.</li>
+				<li><strong>Kundenkonto (freiwillig):</strong> Name, E-Mail, ein verschlüsselt gespeichertes Passwort, deine Wunschliste mit dem Preis beim Speichern, deine Lieferadressen und ob du Preisalarme willst. Damit führen wir dein Konto und schicken dir, wenn du es willst, eine E-Mail, wenn ein gespeichertes Piece günstiger wird.</li>
 				<li><strong>Bestellungen:</strong> Name, Lieferadresse und Zahlungsangaben, die du uns schickst, um die Bestellung abzuwickeln.</li>
 				<li><strong>Website-Besuch:</strong> Beim Aufruf fallen technisch nötige Daten an, z.&nbsp;B. IP-Adresse, Zeitpunkt und aufgerufene Seite.</li>
 			</ul>
 			<h2>Dienste, die wir nutzen</h2>
 			<ul>
-				<li><strong>Cloudflare</strong> (Hosting und Sicherheit): verarbeitet die Daten des Website-Besuchs.</li>
+				<li><strong>Cloudflare</strong> (Hosting, Sicherheit und Datenbank): verarbeitet die Daten des Website-Besuchs und speichert die Kundenkonten.</li>
 				<li><strong>Cloudflare Turnstile</strong> (Spam-Schutz in den Formularen): prüft mit technischen Daten deines Browsers und der IP-Adresse, ob ein Mensch das Formular sendet.</li>
 				<li><strong>Resend</strong> (E-Mail-Versand): stellt Formularnachrichten und Bestätigungen zu.</li>
 				<li><strong>Google Gmail</strong> (unser E-Mail-Postfach): speichert die E-Mails, die uns erreichen.</li>
@@ -40,9 +41,9 @@ const mail = `mailto:${SITE.email}`;
 			<p>Diese Anbieter können Daten auch ausserhalb der Schweiz bearbeiten, insbesondere in den USA. Dabei stützen wir uns auf die von den Anbietern vorgesehenen Garantien, etwa die Standardvertragsklauseln.</p>
 			<p>Schriften liegen auf unserem eigenen Server. Instagram wird nur aufgerufen, wenn du auf den Link klickst.</p>
 			<h2>Cookies und Tracking</h2>
-			<p>Wir nutzen keine Tracking- oder Werbe-Cookies und keine Analyse-Tools. Deine Wahl von hellem oder dunklem Design wird nur in deinem Browser gespeichert.</p>
+			<p>Wir nutzen keine Tracking- oder Werbe-Cookies und keine Analyse-Tools. Deine Wahl von hellem oder dunklem Design wird nur in deinem Browser gespeichert. Wenn du dich in dein Konto einloggst, setzen wir ein technisch nötiges Cookie, das dich 60 Tage angemeldet hält, und dein Browser merkt sich deine Wunschliste. Beim Abmelden wird beides gelöscht.</p>
 			<h2>Aufbewahrung</h2>
-			<p>Wir bewahren Daten nur so lange auf, wie es für den Zweck nötig ist. Bestell- und Buchhaltungsunterlagen bewahren wir 10 Jahre auf, wie gesetzlich vorgeschrieben.</p>
+			<p>Wir bewahren Daten nur so lange auf, wie es für den Zweck nötig ist. Bestell- und Buchhaltungsunterlagen bewahren wir 10 Jahre auf, wie gesetzlich vorgeschrieben. Dein Kundenkonto kannst du jederzeit im Profil selbst löschen. Dabei löschen wir sofort auch deine Wunschliste und deine Adressen.</p>
 			<h2>Deine Rechte</h2>
 			<p>Du kannst Auskunft, Berichtigung oder Löschung deiner Daten verlangen und der Bearbeitung widersprechen. Schreib uns an <a href={mail}>{SITE.email}</a>. Du kannst dich auch beim Eidgenössischen Datenschutz- und Öffentlichkeitsbeauftragten (EDÖB) beschweren.</p>
 			<h2>Personen im EWR</h2>
@@ -57,12 +58,13 @@ const mail = `mailto:${SITE.email}`;
 			<h2>Données que nous traitons</h2>
 			<ul>
 				<li><strong>Formulaires :</strong> nom, e-mail, message et tes autres indications (p.&nbsp;ex. objet ou date de commande), pour répondre à ta demande.</li>
+				<li><strong>Compte client (facultatif) :</strong> nom, e-mail, un mot de passe enregistré sous forme chiffrée, ta liste d’envies avec le prix au moment de l’enregistrement, tes adresses de livraison et ton choix pour les alertes de prix. Nous les utilisons pour gérer ton compte et, si tu le souhaites, pour t’envoyer un e-mail quand une pièce enregistrée devient moins chère.</li>
 				<li><strong>Commandes :</strong> nom, adresse de livraison et données de paiement que tu nous envoies, pour traiter la commande.</li>
 				<li><strong>Visite du site :</strong> des données techniques sont nécessaires, p.&nbsp;ex. adresse IP, heure et page consultée.</li>
 			</ul>
 			<h2>Services utilisés</h2>
 			<ul>
-				<li><strong>Cloudflare</strong> (hébergement et sécurité) : traite les données de visite du site.</li>
+				<li><strong>Cloudflare</strong> (hébergement, sécurité et base de données) : traite les données de visite du site et enregistre les comptes clients.</li>
 				<li><strong>Cloudflare Turnstile</strong> (protection anti-spam des formulaires) : vérifie, avec des données techniques de ton navigateur et l’adresse IP, qu’un humain envoie le formulaire.</li>
 				<li><strong>Resend</strong> (envoi d’e-mails) : transmet les messages des formulaires et les confirmations.</li>
 				<li><strong>Google Gmail</strong> (notre boîte e-mail) : conserve les e-mails qui nous parviennent.</li>
@@ -70,9 +72,9 @@ const mail = `mailto:${SITE.email}`;
 			<p>Ces prestataires peuvent aussi traiter des données hors de Suisse, notamment aux États-Unis. Nous nous appuyons alors sur les garanties qu’ils prévoient, comme les clauses contractuelles types.</p>
 			<p>Les polices sont hébergées sur notre propre serveur. Instagram n’est appelé que si tu cliques sur le lien.</p>
 			<h2>Cookies et suivi</h2>
-			<p>Nous n’utilisons ni cookies de suivi ou publicitaires, ni outils d’analyse. Ton choix de thème clair ou sombre est enregistré uniquement dans ton navigateur.</p>
+			<p>Nous n’utilisons ni cookies de suivi ou publicitaires, ni outils d’analyse. Ton choix de thème clair ou sombre est enregistré uniquement dans ton navigateur. Quand tu te connectes à ton compte, nous plaçons un cookie techniquement nécessaire qui te garde connecté·e pendant 60 jours, et ton navigateur garde ta liste d’envies en mémoire. Les deux sont effacés à la déconnexion.</p>
 			<h2>Conservation</h2>
-			<p>Nous conservons les données seulement le temps nécessaire. Les documents de commande et de comptabilité sont conservés 10 ans, comme l’exige la loi.</p>
+			<p>Nous conservons les données seulement le temps nécessaire. Les documents de commande et de comptabilité sont conservés 10 ans, comme l’exige la loi. Tu peux supprimer toi-même ton compte client à tout moment dans ton profil. Ta liste d’envies et tes adresses sont alors effacées immédiatement.</p>
 			<h2>Tes droits</h2>
 			<p>Tu peux demander l’accès à tes données, leur rectification ou leur suppression, et t’opposer à leur traitement. Écris-nous à <a href={mail}>{SITE.email}</a>. Tu peux aussi déposer une plainte auprès du Préposé fédéral à la protection des données et à la transparence (PFPDT).</p>
 			<h2>Personnes dans l’EEE</h2>
@@ -87,12 +89,13 @@ const mail = `mailto:${SITE.email}`;
 			<h2>Quali dati trattiamo</h2>
 			<ul>
 				<li><strong>Moduli:</strong> nome, e-mail, messaggio e le altre indicazioni che fornisci (p.&nbsp;es. oggetto o data dell’ordine), per rispondere alla tua richiesta.</li>
+				<li><strong>Account cliente (facoltativo):</strong> nome, e-mail, una password salvata in forma cifrata, la tua lista dei desideri con il prezzo al momento del salvataggio, i tuoi indirizzi di consegna e la tua scelta sugli avvisi di prezzo. Li usiamo per gestire il tuo account e, se lo desideri, per mandarti un’e-mail quando un pezzo salvato costa meno.</li>
 				<li><strong>Ordini:</strong> nome, indirizzo di consegna e dati di pagamento che ci invii, per gestire l’ordine.</li>
 				<li><strong>Visita del sito:</strong> dati tecnicamente necessari, p.&nbsp;es. indirizzo IP, ora e pagina visitata.</li>
 			</ul>
 			<h2>Servizi che utilizziamo</h2>
 			<ul>
-				<li><strong>Cloudflare</strong> (hosting e sicurezza): tratta i dati della visita del sito.</li>
+				<li><strong>Cloudflare</strong> (hosting, sicurezza e banca dati): tratta i dati della visita del sito e salva gli account dei clienti.</li>
 				<li><strong>Cloudflare Turnstile</strong> (protezione antispam dei moduli): verifica, con dati tecnici del tuo browser e l’indirizzo IP, che il modulo sia inviato da una persona.</li>
 				<li><strong>Resend</strong> (invio di e-mail): recapita i messaggi dei moduli e le conferme.</li>
 				<li><strong>Google Gmail</strong> (la nostra casella e-mail): conserva le e-mail che riceviamo.</li>
@@ -100,9 +103,9 @@ const mail = `mailto:${SITE.email}`;
 			<p>Questi fornitori possono trattare dati anche fuori dalla Svizzera, in particolare negli Stati Uniti. In tal caso ci basiamo sulle garanzie da loro previste, come le clausole contrattuali standard.</p>
 			<p>I caratteri sono ospitati sul nostro server. Instagram viene contattato solo se clicchi sul link.</p>
 			<h2>Cookie e tracciamento</h2>
-			<p>Non utilizziamo cookie di tracciamento o pubblicitari né strumenti di analisi. La tua scelta del tema chiaro o scuro viene salvata solo nel tuo browser.</p>
+			<p>Non utilizziamo cookie di tracciamento o pubblicitari né strumenti di analisi. La tua scelta del tema chiaro o scuro viene salvata solo nel tuo browser. Quando accedi al tuo account, impostiamo un cookie tecnicamente necessario che ti mantiene connesso/a per 60 giorni, e il tuo browser ricorda la tua lista dei desideri. Entrambi vengono cancellati quando esci.</p>
 			<h2>Conservazione</h2>
-			<p>Conserviamo i dati solo per il tempo necessario allo scopo. I documenti relativi agli ordini e alla contabilità sono conservati per 10 anni, come previsto dalla legge.</p>
+			<p>Conserviamo i dati solo per il tempo necessario allo scopo. I documenti relativi agli ordini e alla contabilità sono conservati per 10 anni, come previsto dalla legge. Puoi eliminare tu stesso/a il tuo account cliente in qualsiasi momento nel profilo. In quel caso cancelliamo subito anche la lista dei desideri e gli indirizzi.</p>
 			<h2>I tuoi diritti</h2>
 			<p>Puoi chiedere l’accesso ai tuoi dati, la loro rettifica o cancellazione e puoi opporti al loro trattamento. Scrivici a <a href={mail}>{SITE.email}</a>. Puoi anche presentare un reclamo all’Incaricato federale della protezione dei dati e della trasparenza (IFPDT).</p>
 			<h2>Persone nello SEE</h2>
@@ -117,12 +120,13 @@ const mail = `mailto:${SITE.email}`;
 			<h2>What data we process</h2>
 			<ul>
 				<li><strong>Forms:</strong> name, email, message and any other details you give (such as subject or order date), to answer your request.</li>
+				<li><strong>Customer account (optional):</strong> name, email, a password stored in hashed form, your wishlist with the price at the time you saved each piece, your shipping addresses and whether you want price alerts. We use them to run your account and, if you want, to email you when a saved piece gets cheaper.</li>
 				<li><strong>Orders:</strong> name, delivery address and payment details you send us, to handle the order.</li>
 				<li><strong>Visiting the website:</strong> technically necessary data, such as IP address, time and page visited.</li>
 			</ul>
 			<h2>Services we use</h2>
 			<ul>
-				<li><strong>Cloudflare</strong> (hosting and security): processes website visit data.</li>
+				<li><strong>Cloudflare</strong> (hosting, security and database): processes website visit data and stores customer accounts.</li>
 				<li><strong>Cloudflare Turnstile</strong> (spam protection on forms): uses technical data from your browser and your IP address to check that a person is sending the form.</li>
 				<li><strong>Resend</strong> (email delivery): delivers form messages and confirmations.</li>
 				<li><strong>Google Gmail</strong> (our mailbox): stores the emails that reach us.</li>
@@ -130,9 +134,9 @@ const mail = `mailto:${SITE.email}`;
 			<p>These providers may also process data outside Switzerland, particularly in the USA. For this we rely on the safeguards they provide, such as standard contractual clauses.</p>
 			<p>Fonts are hosted on our own server. Instagram is only contacted if you click the link.</p>
 			<h2>Cookies and tracking</h2>
-			<p>We use no tracking or advertising cookies and no analytics tools. Your choice of light or dark theme is stored only in your browser.</p>
+			<p>We use no tracking or advertising cookies and no analytics tools. Your choice of light or dark theme is stored only in your browser. When you log in to your account, we set a strictly necessary cookie that keeps you logged in for 60 days, and your browser remembers your wishlist. Both are removed when you log out.</p>
 			<h2>Retention</h2>
-			<p>We keep data only as long as needed for its purpose. Order and accounting records are kept for 10 years, as the law requires.</p>
+			<p>We keep data only as long as needed for its purpose. Order and accounting records are kept for 10 years, as the law requires. You can delete your customer account yourself at any time in your profile. Your wishlist and addresses are then deleted straight away.</p>
 			<h2>Your rights</h2>
 			<p>You can ask for access to your data, its correction or its deletion, and you can object to its processing. Write to <a href={mail}>{SITE.email}</a>. You can also complain to the Federal Data Protection and Information Commissioner (FDPIC).</p>
 			<h2>People in the EEA</h2>

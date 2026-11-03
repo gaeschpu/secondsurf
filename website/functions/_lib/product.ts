@@ -17,9 +17,24 @@ export interface NewProduct {
 	description: string;
 	staffPick: boolean;
 	photos: string[];
+	/** From the AI: the same title and description in the other languages. */
+	titleTranslations?: Translations;
+	descriptionTranslations?: Translations;
 }
 
+type Translations = Partial<Record<'fr' | 'it' | 'en', string>>;
+
 const text = (value: unknown, max: number) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
+
+function translations(value: unknown, max: number): Translations | undefined {
+	if (!value || typeof value !== 'object') return undefined;
+	const result: Translations = {};
+	for (const lang of ['fr', 'it', 'en'] as const) {
+		const translated = text((value as Record<string, unknown>)[lang], max);
+		if (translated) result[lang] = translated;
+	}
+	return Object.keys(result).length ? result : undefined;
+}
 
 /** Returns the cleaned piece, or a message saying what is wrong with it. */
 export function parseNewProduct(body: any): NewProduct | string {
@@ -34,6 +49,8 @@ export function parseNewProduct(body: any): NewProduct | string {
 		description: text(body?.description, 2000),
 		staffPick: body?.staffPick === true,
 		photos: Array.isArray(body?.photos) ? body.photos : [],
+		titleTranslations: translations(body?.translations?.title, 120),
+		descriptionTranslations: translations(body?.translations?.description, 2000),
 	};
 	if (!product.brand) return 'Brand is missing.';
 	if (!product.title) return 'Title is missing.';
@@ -63,18 +80,20 @@ export function nextNumber(names: string[]) {
 	return Math.max(0, ...names.map((name) => Number(name.match(/^(\d+)-/)?.[1] ?? 0))) + 1;
 }
 
-/** JSON strings are valid YAML, so quotes and colons in a title can't break the file. */
+/** JSON is valid YAML, so quotes and colons in a title can't break the file. */
+const localizedYaml = (german: string, other?: Translations) => JSON.stringify(other ? { de: german, ...other } : german);
+
 export function toMarkdown(product: NewProduct, drop: number) {
 	const lines = [
 		'---',
 		`brand: ${JSON.stringify(product.brand)}`,
-		`title: ${JSON.stringify(product.title)}`,
+		`title: ${localizedYaml(product.title, product.titleTranslations)}`,
 		`category: ${product.category}`,
 		`size: ${JSON.stringify(product.size)}`,
 		`condition: ${product.condition}`,
 		`price: ${product.price}`,
 		...(product.measurements ? [`measurements: ${JSON.stringify(product.measurements)}`] : []),
-		...(product.description ? [`description: ${JSON.stringify(product.description)}`] : []),
+		...(product.description ? [`description: ${localizedYaml(product.description, product.descriptionTranslations)}`] : []),
 		'photos:',
 		...product.photos.map((_, i) => `  - ./${i + 1}.jpg`),
 		`drop: ${drop}`,
@@ -117,7 +136,7 @@ export function summarize(id: string, markdown: string) {
 	const body = markdown.match(FRONTMATTER)?.[1] ?? '';
 	const scalar = (key: string) => body.match(new RegExp(`^${key}:[ \\t]*(.+)$`, 'm'))?.[1];
 	const titleLine = scalar('title') ?? '';
-	const german = /de:\s*("(?:[^"\\]|\\.)*"|[^,}\n]+)/;
+	const german = /"?de"?:\s*("(?:[^"\\]|\\.)*"|[^,}\n]+)/;
 	const title = titleLine.startsWith('{')
 		? titleLine.match(german)?.[1]
 		: titleLine || body.match(/^title:\s*\n\s+de:\s*(.+)$/m)?.[1];

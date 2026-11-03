@@ -9,6 +9,7 @@
 - [ ] **Domain.** `secondsurf.ch` must be active in Cloudflare and added to the Pages project.
 - [ ] **Forms.** Set up Turnstile and Resend (see README). Until then, forms are hidden and customers can only reach you by email or Instagram.
 - [ ] **Dashboard.** Add the three secrets in Cloudflare (see README).
+- [ ] **Customer accounts.** Create the D1 database and bind it as `DB` (see README). Accounts need Resend for confirmation, password and price-alert emails. The privacy policy now describes accounts; include that in the legal check.
 - [ ] **Pages CMS.** Connect it to the repository and try saving once.
 - [ ] **Test on a real phone.** Add a test piece, mark it sold, delete it, and send each form once.
 

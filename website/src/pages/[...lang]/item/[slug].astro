@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import { getImage, Image } from 'astro:assets';
 import Base from '../../../layouts/Base.astro';
 import Icon from '../../../components/Icon.astro';
+import WishButton from '../../../components/WishButton.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { chf, l, langPaths, url, useT, type Lang } from '../../../i18n';
 import { CATEGORIES, CONDITIONS, SHIPPING, SITE } from '../../../config';
@@ -118,6 +119,7 @@ const shippingNote =
 						</>
 					)
 				}
+				{!p.sold && <p class="wish-row"><WishButton lang={lang} id={product.id} withLabel /></p>}
 				<p class="back small"><a href={url(lang, '/shop/')}>← {t('shop.back')}</a></p>
 			</div>
 		</article>
@@ -203,6 +205,9 @@ const shippingNote =
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		color: var(--ink-soft);
+	}
+	.wish-row {
+		margin-top: 1rem;
 	}
 	.back {
 		margin-top: 2rem;

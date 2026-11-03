@@ -100,10 +100,27 @@ Setup, once. In **Cloudflare → Workers & Pages → secondsurf → Settings →
 | `SESSION_SECRET` | A random text of at least 32 characters |
 | `GITHUB_TOKEN` | A [fine-grained token](https://github.com/settings/personal-access-tokens/new) for only this repository, with **Contents: Read and write** |
 
+Optional, for the **✨ Fill in with AI** button: under **Settings → Bindings → Add → Workers AI**, add a binding with the variable name `AI` (for Production), then redeploy. It sends up to four photos to Llama 4 Scout on Cloudflare Workers AI (see `functions/api/admin/describe.ts`), which suggests brand, title, category, size, condition and a description in all four languages. It's free: Workers AI includes 10,000 neurons a day, which is roughly 30 or more pieces, and on the free Workers plan it stops with a message instead of charging. Without the binding, the button shows a setup message and everything else works.
+
 Changing `ADMIN_PASSWORD` or `SESSION_SECRET` logs out every device. Fine-grained tokens expire, so renew `GITHUB_TOKEN` when the dashboard reports a GitHub error.
 
 To test locally, put the same values in `.dev.vars` (git-ignored), then run `npm run build` and `npx wrangler pages dev dist`.
 Careful: with a real token, this changes the real shop.
+
+## Customer accounts (wishlist, addresses, price alerts)
+
+Customers create an account at `/account/` (the person icon in the header) with email and password. They save pieces with the heart on cards and product pages, store up to 5 shipping addresses, and get an email when a saved piece gets cheaper. All code is in `functions/api/account/[[path]].ts` and `functions/_lib/accounts.ts`, the page in `src/pages/[...lang]/account.astro`, the texts in `src/i18n/account.ts`.
+
+- **Data:** a Cloudflare D1 database (free plan: 5 GB, 5 million reads a day). The tables create themselves on the first request.
+- **Passwords:** PBKDF2-SHA256 with 50,000 rounds (the most that fits the free plan's 10 ms CPU limit). On Workers Paid, raise `ROUNDS` in `functions/_lib/accounts.ts`; passwords upgrade at the next login.
+- **Protection:** Turnstile on sign-up and "forgot password"; at most 10 login tries per email and 30 per IP in 15 minutes.
+- **Emails** (confirmation, new password, price alert) go through Resend, so `RESEND_API_KEY` must be set. Price alerts go only to confirmed addresses.
+- **Price alerts** are sent when the price is lowered in the dashboard at `/admin/`, not when `index.md` is edited by hand. One email per lower price.
+- `/products.json` lists all pieces with their price; the profile page and the wishlist API read it.
+
+Setup, once: in **Cloudflare → Workers & Pages → D1 SQL Database → Create**, name it `secondsurf-accounts`. Then in **secondsurf → Settings → Bindings → Add → D1 database**, use the variable name `DB` and pick that database, then redeploy. Without it, the profile page shows "accounts aren't available".
+
+To test locally: `npm run build`, then `npx wrangler pages dev dist --d1 DB=accounts-test`.
 
 ## Selling: how people pay
 

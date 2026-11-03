@@ -1,3 +1,4 @@
+import { notifyPriceDrop } from '../../../_lib/accounts.ts';
 import { json, type Handler } from '../../../_lib/auth.ts';
 import { commit, listDir, PRODUCTS_DIR, readText } from '../../../_lib/github.ts';
 import { isValidPrice, PRODUCT_ID, setPrice, setSold } from '../../../_lib/product.ts';
@@ -8,7 +9,7 @@ const validId = (params: Record<string, string | string[]>) => {
 };
 
 /** Change the price, or mark as sold or available again. */
-export const onRequestPatch: Handler = async ({ request, env, params }) => {
+export const onRequestPatch: Handler = async ({ request, env, params, waitUntil }) => {
 	const id = validId(params);
 	if (!id) return json({ error: 'Not found.' }, 404);
 	const body = (await request.json().catch(() => null)) as { sold?: unknown; price?: unknown } | null;
@@ -18,6 +19,10 @@ export const onRequestPatch: Handler = async ({ request, env, params }) => {
 		if (!isValidPrice(body.price)) return json({ error: 'Enter a price above 0.' }, 400);
 		const content = setPrice(await readText(env, path), body.price);
 		await commit(env, `Price ${body.price}: ${id}`, [{ path, mode: '100644', type: 'blob', content }]);
+		// Customers who saved the piece hear about a lower price. A failure here never blocks the price change.
+		const alerts = notifyPriceDrop(env, id, content, body.price).catch((error) => console.error('Price alerts failed', error));
+		if (waitUntil) waitUntil(alerts);
+		else await alerts;
 		return json({ ok: true });
 	}
 

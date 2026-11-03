@@ -44,6 +44,8 @@
 					</div>
 					<ul id="previews" class="previews"></ul>
 					<p class="hint">The first photo is the one on the shop card. Tap ★ to make another one first.</p>
+					<button id="ai-fill" class="ai" type="button" hidden>✨ Fill in with AI</button>
+					<p id="ai-note" class="hint" hidden>The AI filled in the form from your photos. Check everything, especially the size, then add the price.</p>
 
 					<label>Brand <input name="brand" maxlength="80" autocomplete="off" required /></label>
 					<label>Title <input name="title" maxlength="120" autocomplete="off" placeholder="White logo tee" required /></label>
@@ -54,7 +56,7 @@
 					</div>
 					<label>Condition <select name="condition" required></select></label>
 
-					<details>
+					<details id="more">
 						<summary>More details (optional)</summary>
 						<label>Measurements <input name="measurements" maxlength="200" placeholder="Pit to pit 52 cm, length 70 cm" /></label>
 						<label>Description <textarea name="description" rows="3" maxlength="2000"></textarea></label>

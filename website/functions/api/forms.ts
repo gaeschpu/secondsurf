@@ -1,7 +1,8 @@
 // Contact, sell and returns forms: checks for bots, then emails the owner and confirms to the customer.
 
 import { SITE } from '../../src/config.ts';
-import { json, type Env, type Handler } from '../_lib/auth.ts';
+import { json, type Handler } from '../_lib/auth.ts';
+import { EMAIL, isHuman, sendMail } from '../_lib/mail.ts';
 
 const FORMS = {
 	contact: { subject: 'Nachricht', fields: ['subject'], required: ['message', 'subject'] },
@@ -41,29 +42,10 @@ const CONFIRMATION = {
 	},
 };
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_FIELD = 300;
 const MAX_MESSAGE = 5000;
 
 const clean = (value: unknown, max = MAX_FIELD) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
-
-async function isHuman(env: Env, token: string, ip: string | null) {
-	const body = new URLSearchParams({ secret: env.TURNSTILE_SECRET_KEY!, response: token });
-	if (ip) body.set('remoteip', ip);
-	const verifyUrl = env.FORMS_TEST_API ? `${env.FORMS_TEST_API}/siteverify` : 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-	const res = await fetch(verifyUrl, { method: 'POST', body });
-	const data = (await res.json()) as { success?: boolean };
-	return data.success === true;
-}
-
-async function sendMail(env: Env, mail: { to: string; subject: string; text: string; reply_to?: string }) {
-	const res = await fetch(`${env.FORMS_TEST_API ?? 'https://api.resend.com'}/emails`, {
-		method: 'POST',
-		headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-		body: JSON.stringify({ from: env.MAIL_FROM ?? 'secondsurf <noreply@secondsurf.ch>', ...mail }),
-	});
-	if (!res.ok) throw new Error(`Resend answered ${res.status}`);
-}
 
 export const onRequestPost: Handler = async ({ request, env }) => {
 	if (request.headers.get('Origin') !== new URL(request.url).origin) return json({ error: 'origin' }, 403);

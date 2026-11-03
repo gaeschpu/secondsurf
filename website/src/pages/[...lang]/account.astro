@@ -1,0 +1,721 @@
+---
+// Customer profile: log in or create an account, then wishlist, price alerts, shipping addresses and settings.
+// Everything is filled in by the script below through /api/account/ (functions/api/account/[[path]].ts).
+import Base from '../../layouts/Base.astro';
+import { langPaths, url, useT, type Lang } from '../../i18n';
+import { accountTexts } from '../../i18n/account';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+const a = accountTexts[lang];
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
+---
+
+<Base lang={lang} title={a.title} description={a.intro} noindex>
+	<div
+		class="container account"
+		data-texts={JSON.stringify(a)}
+		data-lang={lang}
+		data-item={url(lang, '/item/')}
+		data-sitekey={siteKey}
+	>
+		<h1>{a.title}</h1>
+		<p class="notice" role="status" hidden></p>
+
+		<section id="guest" hidden>
+			<p class="intro">{a.intro}</p>
+			<div class="tabs">
+				<button type="button" class="tab" data-tab="login" aria-pressed="true">{a.tabLogin}</button>
+				<button type="button" class="tab" data-tab="register" aria-pressed="false">{a.tabRegister}</button>
+			</div>
+
+			<form id="login-form" class="stack" novalidate>
+				<label><span>{a.email}</span><input name="email" type="email" autocomplete="email" required maxlength="200" /></label>
+				<label><span>{a.password}</span><input name="password" type="password" autocomplete="current-password" required maxlength="200" /></label>
+				<div class="foot">
+					<button class="btn" type="submit">{a.login}</button>
+					<button type="button" class="link" data-show="forgot">{a.forgot}</button>
+				</div>
+				<p class="status" role="status" aria-live="polite"></p>
+			</form>
+
+			<form id="register-form" class="stack" novalidate hidden>
+				<label><span>{a.name}</span><input name="name" autocomplete="name" required maxlength="120" /></label>
+				<label><span>{a.email}</span><input name="email" type="email" autocomplete="email" required maxlength="200" /></label>
+				<label>
+					<span>{a.password} <small class="muted">({a.passwordHint})</small></span>
+					<input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="200" />
+				</label>
+				<div class="captcha"></div>
+				<p class="small muted">{a.privacyNote} <a href={url(lang, '/privacy/')}>{t('legal.privacy')}</a>.</p>
+				<div class="foot"><button class="btn" type="submit">{a.register}</button></div>
+				<p class="status" role="status" aria-live="polite"></p>
+			</form>
+
+			<form id="forgot-form" class="stack" novalidate hidden>
+				<h2>{a.forgotTitle}</h2>
+				<p>{a.forgotIntro}</p>
+				<label><span>{a.email}</span><input name="email" type="email" autocomplete="email" required maxlength="200" /></label>
+				<div class="captcha"></div>
+				<div class="foot">
+					<button class="btn" type="submit">{a.forgotSend}</button>
+					<button type="button" class="link" data-show="login">{a.backToLogin}</button>
+				</div>
+				<p class="status" role="status" aria-live="polite"></p>
+			</form>
+		</section>
+
+		<section id="reset" hidden>
+			<form id="reset-form" class="stack" novalidate>
+				<h2>{a.resetTitle}</h2>
+				<label>
+					<span>{a.newPassword} <small class="muted">({a.passwordHint})</small></span>
+					<input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="200" />
+				</label>
+				<div class="foot"><button class="btn" type="submit">{a.resetSave}</button></div>
+				<p class="status" role="status" aria-live="polite"></p>
+			</form>
+		</section>
+
+		<section id="profile" hidden>
+			<div class="hello-row">
+				<p class="hello"></p>
+				<button type="button" class="btn-line" id="logout">{a.logout}</button>
+			</div>
+			<p class="verify" hidden>
+				<span class="verify-text"></span>
+				<button type="button" class="link" id="verify-resend">{a.verifyResend}</button>
+			</p>
+
+			<section class="block" aria-labelledby="wish-title">
+				<h2 id="wish-title">{a.wishlist}</h2>
+				<ul class="wish-grid"></ul>
+				<p class="wish-empty muted" hidden>{a.wishEmpty}</p>
+				<label class="check alerts">
+					<input type="checkbox" id="price-alerts" />
+					<span>{a.priceAlerts} <small class="muted alerts-verify" hidden>{a.priceAlertsVerify}</small></span>
+				</label>
+			</section>
+
+			<section class="block" aria-labelledby="address-title">
+				<h2 id="address-title">{a.addresses}</h2>
+				<ul class="address-list"></ul>
+				<p class="address-empty muted" hidden>{a.addressEmpty}</p>
+				<button type="button" class="btn-line" id="address-add">+ {a.addAddress}</button>
+				<form id="address-form" class="stack" novalidate hidden>
+					<label><span>{a.fullName}</span><input name="name" autocomplete="name" required maxlength="120" /></label>
+					<label><span>{a.street}</span><input name="street" autocomplete="address-line1" required maxlength="200" /></label>
+					<label><span>{a.extra}</span><input name="extra" autocomplete="address-line2" maxlength="200" /></label>
+					<div class="row">
+						<label class="zip"><span>{a.zip}</span><input name="zip" autocomplete="postal-code" required maxlength="20" /></label>
+						<label><span>{a.city}</span><input name="city" autocomplete="address-level2" required maxlength="120" /></label>
+					</div>
+					<div class="row">
+						<label><span>{a.country}</span><input name="country" autocomplete="country-name" required maxlength="80" value={a.countryDefault} /></label>
+						<label><span>{a.phone}</span><input name="phone" type="tel" autocomplete="tel" maxlength="40" /></label>
+					</div>
+					<div class="foot">
+						<button class="btn" type="submit">{a.save}</button>
+						<button type="button" class="link" id="address-cancel">{a.cancel}</button>
+					</div>
+					<p class="status" role="status" aria-live="polite"></p>
+				</form>
+			</section>
+
+			<section class="block" aria-labelledby="settings-title">
+				<h2 id="settings-title">{a.settings}</h2>
+				<form id="name-form" class="stack" novalidate>
+					<p class="small muted account-email"></p>
+					<label><span>{a.name}</span><input name="name" autocomplete="name" required maxlength="120" /></label>
+					<div class="foot"><button class="btn-line" type="submit">{a.save}</button></div>
+					<p class="status" role="status" aria-live="polite"></p>
+				</form>
+				<details>
+					<summary>{a.changePassword}</summary>
+					<form id="password-form" class="stack" novalidate>
+						<label><span>{a.currentPassword}</span><input name="current" type="password" autocomplete="current-password" required maxlength="200" /></label>
+						<label>
+							<span>{a.newPassword} <small class="muted">({a.passwordHint})</small></span>
+							<input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="200" />
+						</label>
+						<div class="foot"><button class="btn-line" type="submit">{a.save}</button></div>
+						<p class="status" role="status" aria-live="polite"></p>
+					</form>
+				</details>
+				<details>
+					<summary>{a.deleteAccount}</summary>
+					<form id="delete-form" class="stack" novalidate>
+						<p>{a.deleteIntro}</p>
+						<label><span>{a.password}</span><input name="password" type="password" autocomplete="current-password" required maxlength="200" /></label>
+						<div class="foot"><button class="btn danger" type="submit">{a.deleteConfirm}</button></div>
+						<p class="status" role="status" aria-live="polite"></p>
+					</form>
+				</details>
+			</section>
+		</section>
+	</div>
+</Base>
+
+{siteKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>}
+
+<script>
+	import { api, ApiError, forgetLogin, rememberLogin, seemsLoggedIn } from '../../scripts/account';
+	import type { AccountTexts } from '../../i18n/account';
+
+	type Localized = string | Record<string, string | undefined>;
+	type Piece = { id: string; brand: string; title: Localized; size: string; price: number; sold: boolean; photo: string | null };
+	type Address = { name: string; street: string; extra: string; zip: string; city: string; country: string; phone: string };
+	type Profile = {
+		email: string;
+		name: string;
+		lang: string;
+		verified: boolean;
+		priceAlerts: boolean;
+		canEmail: boolean;
+		wishlist: { id: string; savedPrice: number }[];
+		addresses: Address[];
+	};
+	declare const turnstile: { render: (el: HTMLElement, options: object) => string; getResponse: (id: string) => string; reset: (id: string) => void } | undefined;
+
+	const root = document.querySelector<HTMLElement>('.account')!;
+	const a: AccountTexts = JSON.parse(root.dataset.texts!);
+	const lang = root.dataset.lang!;
+	const $ = <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
+	const params = new URLSearchParams(location.search);
+	let me: Profile | null = null;
+
+	const chf = (amount: number) => (Number.isInteger(amount) ? `CHF ${amount}.–` : `CHF ${amount.toFixed(2)}`);
+	const local = (value: Localized) => (typeof value === 'string' ? value : value[lang] || value.de || '');
+	const message = (error: unknown) => a.errors[(error as ApiError).code as keyof AccountTexts['errors']] ?? a.errors.generic;
+	const el = <K extends keyof HTMLElementTagNameMap>(tag: K, props: Partial<HTMLElementTagNameMap[K]> = {}, ...children: (Node | string)[]) => {
+		const node = Object.assign(document.createElement(tag), props);
+		node.append(...children);
+		return node;
+	};
+
+	function notice(text: string) {
+		const box = $('.notice');
+		box.textContent = text;
+		box.hidden = !text;
+	}
+
+	// ------------------------------------------------ forms
+
+	/** Checks the fields with our own messages, then runs `submit` and shows its errors under the form. */
+	function handle(form: HTMLFormElement, submit: (data: Record<string, string>) => Promise<string | void>) {
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			const status = form.querySelector<HTMLElement>('.status')!;
+			const invalid = [...form.querySelectorAll<HTMLInputElement>('input')].find((input) => !input.checkValidity());
+			if (invalid) {
+				status.textContent = invalid.validity.tooShort ? a.errors['weak-password'] : invalid.validity.typeMismatch ? a.errors.invalid : a.required;
+				invalid.focus();
+				return;
+			}
+			const button = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
+			button.disabled = true;
+			status.textContent = '…';
+			try {
+				status.textContent = (await submit(Object.fromEntries(new FormData(form)) as Record<string, string>)) ?? '';
+			} catch (error) {
+				status.textContent = message(error);
+			} finally {
+				button.disabled = false;
+			}
+		});
+	}
+
+	const captchas = new Map<HTMLFormElement, string>();
+	function showCaptcha(form: HTMLFormElement) {
+		const sitekey = root.dataset.sitekey;
+		if (!sitekey || captchas.has(form)) return;
+		const box = form.querySelector<HTMLElement>('.captcha')!;
+		const render = () => {
+			if (typeof turnstile === 'undefined') return setTimeout(render, 200);
+			captchas.set(form, turnstile.render(box, { sitekey, language: lang, theme: 'light' }));
+		};
+		render();
+	}
+	function captchaToken(form: HTMLFormElement) {
+		const id = captchas.get(form);
+		if (!root.dataset.sitekey) return {};
+		const token = id && typeof turnstile !== 'undefined' ? turnstile.getResponse(id) : '';
+		if (!token) throw new ApiError('captcha', 400);
+		return { 'cf-turnstile-response': token };
+	}
+	const resetCaptcha = (form: HTMLFormElement) => {
+		const id = captchas.get(form);
+		if (id && typeof turnstile !== 'undefined') turnstile.reset(id);
+	};
+
+	// ------------------------------------------------ logged out
+
+	const forms = { login: $<HTMLFormElement>('#login-form'), register: $<HTMLFormElement>('#register-form'), forgot: $<HTMLFormElement>('#forgot-form') };
+	function showGuest(which: keyof typeof forms = 'login') {
+		$('#profile').hidden = true;
+		$('#reset').hidden = true;
+		$('#guest').hidden = false;
+		for (const [name, form] of Object.entries(forms)) form.hidden = name !== which;
+		root.querySelectorAll<HTMLButtonElement>('.tab').forEach((tab) => tab.setAttribute('aria-pressed', String(tab.dataset.tab === which)));
+		$('.tabs').hidden = which === 'forgot';
+		if (which !== 'login') showCaptcha(forms[which]);
+	}
+	root.querySelectorAll<HTMLButtonElement>('[data-tab], [data-show]').forEach((button) =>
+		button.addEventListener('click', () => showGuest((button.dataset.tab ?? button.dataset.show) as keyof typeof forms)),
+	);
+
+	/** After logging in: save the piece the customer tapped, then go back to it. */
+	async function loggedIn(profile: Profile) {
+		const save = params.get('save');
+		const back = params.get('back');
+		if (save) {
+			await api(`wishlist/${encodeURIComponent(save)}`, 'PUT').catch(() => {});
+			profile = await api<Profile>('me');
+		}
+		rememberLogin(profile.wishlist.map((item) => item.id));
+		if (save && back?.startsWith('/') && !back.startsWith('//')) return location.assign(back);
+		history.replaceState(null, '', location.pathname);
+		await showProfile(profile);
+	}
+
+	handle(forms.login, async (data) => loggedIn(await api<Profile>('login', 'POST', data)));
+	handle(forms.register, async (data) => {
+		try {
+			await loggedIn(await api<Profile>('register', 'POST', { ...data, lang, ...captchaToken(forms.register) }));
+		} finally {
+			resetCaptcha(forms.register);
+		}
+	});
+	handle(forms.forgot, async (data) => {
+		try {
+			await api('forgot', 'POST', { ...data, lang, ...captchaToken(forms.forgot) });
+			return a.forgotSent;
+		} finally {
+			resetCaptcha(forms.forgot);
+		}
+	});
+	handle($<HTMLFormElement>('#reset-form'), async (data) => loggedIn(await api<Profile>('reset', 'POST', { token: params.get('reset'), password: data.password })));
+
+	// ------------------------------------------------ logged in
+
+	let pieces: Promise<Piece[]> | null = null;
+	const allPieces = () => (pieces ??= fetch('/products.json').then((res) => (res.ok ? (res.json() as Promise<Piece[]>) : [])).catch(() => []));
+
+	async function renderWishlist() {
+		const list = $('.wish-grid');
+		const byId = new Map((await allPieces()).map((piece) => [piece.id, piece] as const));
+		list.replaceChildren(
+			...me!.wishlist.map(({ id, savedPrice }) => {
+				const piece = byId.get(id);
+				const remove = el('button', { type: 'button', className: 'link', textContent: a.remove });
+				remove.addEventListener('click', async () => {
+					remove.disabled = true;
+					try {
+						await api(`wishlist/${encodeURIComponent(id)}`, 'DELETE');
+						me!.wishlist = me!.wishlist.filter((item) => item.id !== id);
+						rememberLogin(me!.wishlist.map((item) => item.id));
+						renderWishlist();
+					} catch (error) {
+						remove.disabled = false;
+						notice(message(error));
+					}
+				});
+				if (!piece) return el('li', { className: 'wish-item gone' }, el('p', { className: 'small muted' }, a.wishGone), remove);
+				const price = el('p', { className: 'price' }, chf(piece.price));
+				if (piece.price < savedPrice) price.append(' ', el('s', { className: 'muted' }, chf(savedPrice)));
+				const photo = piece.photo ? el('img', { src: piece.photo, alt: '', loading: 'lazy' }) : el('span', { className: 'no-photo' });
+				const link = el(
+					'a',
+					{ href: `${root.dataset.item}${id}/`, className: piece.sold ? 'sold' : '' },
+					photo,
+					el('p', { className: 'name' }, el('strong', {}, piece.brand), ` ${local(piece.title)}`),
+					el('p', { className: 'small muted' }, piece.sold ? a.sold : piece.size),
+				);
+				return el('li', { className: 'wish-item' }, link, price, remove);
+			}),
+		);
+		$('.wish-empty').hidden = me!.wishlist.length > 0;
+	}
+
+	function renderAddresses() {
+		const list = $('.address-list');
+		list.replaceChildren(
+			...me!.addresses.map((address, index) => {
+				const lines = [address.name, address.street, address.extra, `${address.zip} ${address.city}`, address.country, address.phone].filter(Boolean);
+				const edit = el('button', { type: 'button', className: 'link', textContent: a.edit });
+				const remove = el('button', { type: 'button', className: 'link', textContent: a.delete });
+				edit.addEventListener('click', () => openAddress(index));
+				remove.addEventListener('click', async () => {
+					remove.disabled = true;
+					try {
+						await saveAddresses(me!.addresses.filter((_, i) => i !== index));
+					} catch (error) {
+						remove.disabled = false;
+						notice(message(error));
+					}
+				});
+				const text = el('address');
+				lines.forEach((line, i) => text.append(...(i ? [el('br'), line] : [line])));
+				return el('li', {}, text, el('p', { className: 'actions' }, edit, remove));
+			}),
+		);
+		$('.address-empty').hidden = me!.addresses.length > 0;
+		$('#address-add').hidden = me!.addresses.length >= 5 || !$('#address-form').hidden;
+	}
+
+	async function saveAddresses(addresses: Address[]) {
+		me = await api<Profile>('addresses', 'PUT', { addresses });
+		renderAddresses();
+	}
+
+	let editing = -1;
+	const addressForm = $<HTMLFormElement>('#address-form');
+	function openAddress(index: number) {
+		editing = index;
+		addressForm.reset();
+		const address = me!.addresses[index];
+		if (address) for (const [key, value] of Object.entries(address)) (addressForm.elements.namedItem(key) as HTMLInputElement).value = value;
+		else (addressForm.elements.namedItem('name') as HTMLInputElement).value = me!.name;
+		addressForm.querySelector('.status')!.textContent = '';
+		addressForm.hidden = false;
+		$('#address-add').hidden = true;
+		addressForm.querySelector('input')!.focus();
+	}
+	function closeAddress() {
+		addressForm.hidden = true;
+		renderAddresses();
+	}
+	$('#address-add').addEventListener('click', () => openAddress(me!.addresses.length));
+	$('#address-cancel').addEventListener('click', closeAddress);
+	handle(addressForm, async (data) => {
+		const list = [...me!.addresses];
+		list[editing] = data as Address;
+		await saveAddresses(list);
+		closeAddress();
+	});
+
+	async function showProfile(profile: Profile) {
+		me = profile;
+		$('#guest').hidden = true;
+		$('#reset').hidden = true;
+		$('#profile').hidden = false;
+		$('.hello').textContent = a.hello.replace('{name}', me.name);
+		$('.account-email').textContent = me.email;
+		(document.querySelector('#name-form input[name=name]') as HTMLInputElement).value = me.name;
+		const unverified = !me.verified && me.canEmail;
+		$('.verify').hidden = !unverified;
+		$('.verify-text').textContent = a.verifyNote.replace('{email}', me.email);
+		$('.alerts').hidden = !me.canEmail;
+		$('.alerts-verify').hidden = !unverified;
+		$<HTMLInputElement>('#price-alerts').checked = me.priceAlerts;
+		renderAddresses();
+		await renderWishlist();
+		// Emails come in the language the customer last used the site in.
+		if (me.lang !== lang) api('me', 'PATCH', { lang }).catch(() => {});
+	}
+
+	$('#logout').addEventListener('click', async () => {
+		await api('logout', 'POST').catch(() => {});
+		forgetLogin();
+		me = null;
+		showGuest();
+	});
+	$('#verify-resend').addEventListener('click', async (event) => {
+		const button = event.currentTarget as HTMLButtonElement;
+		button.disabled = true;
+		try {
+			await api('verify/resend', 'POST');
+			notice(a.verifySent);
+		} catch (error) {
+			notice(message(error));
+		}
+	});
+	$<HTMLInputElement>('#price-alerts').addEventListener('change', async (event) => {
+		const box = event.currentTarget as HTMLInputElement;
+		try {
+			me = await api<Profile>('me', 'PATCH', { priceAlerts: box.checked });
+		} catch (error) {
+			box.checked = !box.checked;
+			notice(message(error));
+		}
+	});
+	handle($<HTMLFormElement>('#name-form'), async (data) => {
+		me = await api<Profile>('me', 'PATCH', { name: data.name });
+		$('.hello').textContent = a.hello.replace('{name}', me.name);
+		return a.saved;
+	});
+	handle($<HTMLFormElement>('#password-form'), async (data) => {
+		await api('password', 'POST', data);
+		$<HTMLFormElement>('#password-form').reset();
+		return a.passwordChanged;
+	});
+	handle($<HTMLFormElement>('#delete-form'), async (data) => {
+		if (!confirm(a.deleteIntro)) return;
+		await api('me', 'DELETE', data);
+		forgetLogin();
+		me = null;
+		showGuest();
+		notice(a.deleted);
+	});
+
+	// ------------------------------------------------ start
+
+	if (params.get('verified')) notice(params.get('verified') === '1' ? a.verifiedOk : a.verifiedFail);
+	if (params.has('reset')) {
+		$('#reset').hidden = false;
+	} else if (seemsLoggedIn()) {
+		api<Profile>('me')
+			.then(showProfile)
+			.catch((error) => {
+				if ((error as ApiError).status !== 401) notice(message(error));
+				showGuest();
+			});
+	} else {
+		showGuest();
+	}
+</script>
+
+<style>
+	.account {
+		padding-top: clamp(2rem, 5vw, 3.5rem);
+	}
+	/* The script shows and hides parts; layout rules like display: grid must not override that. */
+	.account :global([hidden]) {
+		display: none !important;
+	}
+	h1 {
+		font-size: var(--step-3);
+		text-transform: uppercase;
+	}
+	h2 {
+		font-size: var(--step-1);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+	.intro {
+		margin-top: 0.75rem;
+		color: var(--ink-soft);
+	}
+	.notice {
+		margin-top: 1rem;
+		padding: 0.8rem 1rem;
+		background: var(--accent-tint);
+		font-weight: 600;
+	}
+	.tabs {
+		display: flex;
+		gap: 0;
+		margin-top: 1.5rem;
+		border-bottom: 1px solid var(--line);
+	}
+	.tab {
+		padding: 0.8rem 1.1rem;
+		border: 0;
+		border-bottom: 3px solid transparent;
+		background: none;
+		color: var(--ink-soft);
+		font-weight: 700;
+		font-size: var(--step-0);
+		cursor: pointer;
+	}
+	.tab[aria-pressed='true'] {
+		border-bottom-color: var(--ink);
+		color: var(--ink);
+	}
+	.stack {
+		display: grid;
+		gap: 1rem;
+		margin-top: 1.5rem;
+		max-width: 32rem;
+	}
+	.row {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+		gap: 1rem;
+	}
+	.row .zip {
+		max-width: 10rem;
+	}
+	label {
+		display: grid;
+		gap: 0.4rem;
+		font-weight: 700;
+	}
+	label small {
+		font-weight: 400;
+	}
+	input:not([type='checkbox']) {
+		width: 100%;
+		min-height: 3.25rem;
+		padding: 0.7rem 0.85rem;
+		border: 1px solid var(--line);
+		border-radius: 0;
+		background: var(--bg-raised);
+		font-weight: 400;
+		font-size: max(1rem, var(--step-0));
+	}
+	input:focus {
+		border-color: var(--accent);
+	}
+	.check {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		align-items: start;
+		gap: 0.6rem;
+		font-weight: 400;
+	}
+	.check input {
+		width: 1.25rem;
+		height: 1.25rem;
+		margin-top: 0.15rem;
+	}
+	.foot {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 1rem 1.5rem;
+	}
+	.btn {
+		padding: 1rem 2.2rem;
+		border-color: var(--ink);
+		border-radius: 0;
+		background: var(--ink);
+		color: var(--bg);
+		font-weight: 700;
+	}
+	.btn:hover {
+		border-color: var(--ink-soft);
+		background: var(--ink-soft);
+		color: var(--bg);
+	}
+	.btn:disabled {
+		opacity: 0.55;
+	}
+	.btn.danger {
+		border-color: var(--focus);
+		background: var(--focus);
+	}
+	.btn-line {
+		padding: 0.7rem 1.2rem;
+		border: 1px solid var(--ink);
+		background: none;
+		color: var(--ink);
+		font-weight: 700;
+		cursor: pointer;
+	}
+	.btn-line:hover {
+		background: var(--bg-sunken);
+	}
+	.account :global(.link) {
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--accent);
+		text-decoration: underline;
+		cursor: pointer;
+		font: inherit;
+	}
+	.status:empty {
+		display: none;
+	}
+	.status {
+		font-weight: 600;
+	}
+	.hello-row {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+		margin-top: 1rem;
+	}
+	.hello {
+		font-size: var(--step-1);
+		font-weight: 700;
+	}
+	.verify {
+		margin-top: 1rem;
+		padding: 0.8rem 1rem;
+		background: var(--sand-tint);
+	}
+	.verify .link {
+		margin-left: 0.4rem;
+	}
+	.block {
+		margin-top: 2.5rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--line);
+	}
+	.wish-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(45%, 10rem), 1fr));
+		gap: 1.25rem 1rem;
+		margin-top: 1rem;
+		padding: 0;
+		list-style: none;
+	}
+	.wish-grid :global(a) {
+		display: block;
+		color: var(--ink);
+		text-decoration: none;
+	}
+	.wish-grid :global(img),
+	.wish-grid :global(.no-photo) {
+		display: block;
+		width: 100%;
+		aspect-ratio: 4 / 5;
+		object-fit: cover;
+		background: var(--bg-sunken);
+	}
+	.wish-grid :global(.sold img) {
+		filter: grayscale(1);
+		opacity: 0.55;
+	}
+	.wish-grid :global(.name) {
+		margin-top: 0.5rem;
+		font-size: var(--step--1);
+		text-transform: uppercase;
+	}
+	.wish-grid :global(.price) {
+		font-weight: 700;
+	}
+	.wish-grid :global(.price s) {
+		font-weight: 400;
+	}
+	.wish-empty,
+	.address-empty {
+		margin-top: 0.75rem;
+	}
+	.alerts {
+		margin-top: 1.5rem;
+	}
+	.address-list {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+		gap: 1rem;
+		margin: 1rem 0;
+		padding: 0;
+		list-style: none;
+	}
+	.address-list :global(li) {
+		padding: 1rem;
+		border: 1px solid var(--line);
+		background: var(--bg-raised);
+	}
+	.address-list :global(address) {
+		font-style: normal;
+	}
+	.address-list :global(.actions) {
+		display: flex;
+		gap: 1rem;
+		margin-top: 0.75rem;
+	}
+	details {
+		margin-top: 1.5rem;
+	}
+	summary {
+		font-weight: 700;
+		cursor: pointer;
+	}
+</style>

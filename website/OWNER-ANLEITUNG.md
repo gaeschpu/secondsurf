@@ -13,10 +13,21 @@ Nach jedem Speichern baut sich die Website neu auf. Änderungen sind meist nach 
 
 1. Öffne `/admin/` und melde dich an.
 2. Tippe auf **Take photo** oder **Choose photos**. Das erste Foto erscheint im Shop auf der Karte. Mit ★ machst du ein anderes Foto zum ersten.
-3. Fülle Marke, Titel, Kategorie, Grösse, Preis und Zustand aus.
-4. Tippe auf **Publish**.
+3. Tippe auf **✨ Fill in with AI**. Nach 10 bis 30 Sekunden hat die KI Marke, Titel, Kategorie, Grösse, Zustand und Beschreibung ausgefüllt.
+4. Kontrolliere alles, vor allem die Grösse, und tippe den Preis ein.
+5. Tippe auf **Publish**.
 
-Was du eintippst, erscheint in allen vier Sprachen gleich.
+Die KI schreibt den Text auch auf Französisch, Italienisch und Englisch. Änderst du den deutschen Titel oder die Beschreibung, erscheint in den anderen Sprachen dein deutscher Text. Ohne KI füllst du einfach alles selbst aus.
+
+Die KI ist gratis: Sie läuft bei Cloudflare, das pro Tag ein Gratis-Kontingent hat (reicht für ungefähr 30 Pieces). Ist es aufgebraucht, sagt das Dashboard Bescheid, und am nächsten Tag geht es wieder. Kosten entstehen keine.
+
+## Kundenkonten und Preisalarm
+
+Kundinnen und Kunden können unter **Profil** (Personen-Symbol oben) ein Konto mit E-Mail und Passwort erstellen. Darin speichern sie Pieces mit dem Herz auf ihrer Wunschliste und hinterlegen ihre Lieferadressen.
+
+**Preisalarm:** Senkst du im Dashboard den Preis eines Pieces, bekommen alle eine E-Mail, die es auf der Wunschliste haben, ihre E-Mail-Adresse bestätigt und den Preisalarm eingeschaltet haben. Du musst dafür nichts tun. Senkst du denselben Preis zweimal, geht nur eine E-Mail raus.
+
+Kundendaten siehst du nicht im Dashboard. Will jemand sein Konto löschen, kann er das selbst im Profil tun.
 
 ## Ein Piece als verkauft markieren
 

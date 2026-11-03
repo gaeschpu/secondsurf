@@ -235,6 +235,12 @@ button:disabled {
 .previews .remove {
 	right: 0.25rem;
 }
+.ai {
+	width: 100%;
+	min-height: 3rem;
+	color: var(--on-accent);
+	background: var(--accent);
+}
 .hint {
 	font-size: 0.85rem;
 	color: var(--ink-soft);

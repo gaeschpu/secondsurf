@@ -2,6 +2,7 @@
 // One product tile, Jamdrobe style: photo (second photo on hover), BRAND + name, size, price.
 import { Image } from 'astro:assets';
 import Icon from './Icon.astro';
+import WishButton from './WishButton.astro';
 import { chf, l, url, useT, type Lang } from '../i18n';
 import type { Product } from '../lib/products';
 
@@ -41,9 +42,18 @@ const name = l(p.title, lang);
 			<span class="price">{chf(p.price)}</span>
 		</p>
 	</a>
+	{!p.sold && <WishButton lang={lang} id={product.id} class="card-wish" />}
 </li>
 
 <style>
+	.product {
+		position: relative;
+	}
+	.product :global(.card-wish) {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+	}
 	.card-link {
 		display: block;
 		color: var(--ink);

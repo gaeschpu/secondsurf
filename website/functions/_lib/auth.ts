@@ -17,6 +17,24 @@ export interface Env {
 	MAIL_FROM?: string;
 	/** Only for local testing against fake Resend and Turnstile. */
 	FORMS_TEST_API?: string;
+	/** Workers AI binding (free daily allowance): writes the listing from the photos. */
+	AI?: { run: (model: string, input: Record<string, unknown>) => Promise<unknown> };
+	/** D1 database binding for customer accounts. */
+	DB?: D1Database;
+	/** The built site, provided by Cloudflare Pages. */
+	ASSETS?: { fetch: (input: URL | string) => Promise<Response> };
+}
+
+/** The part of Cloudflare's D1 API we use. */
+export interface D1PreparedStatement {
+	bind(...values: unknown[]): D1PreparedStatement;
+	first<T = Record<string, unknown>>(): Promise<T | null>;
+	all<T = Record<string, unknown>>(): Promise<{ results: T[] }>;
+	run(): Promise<{ meta: { changes: number; last_row_id: number } }>;
+}
+export interface D1Database {
+	prepare(query: string): D1PreparedStatement;
+	batch(statements: D1PreparedStatement[]): Promise<unknown[]>;
 }
 
 export type Handler = (context: {
@@ -24,6 +42,8 @@ export type Handler = (context: {
 	env: Env;
 	params: Record<string, string | string[]>;
 	next: () => Promise<Response>;
+	/** Keeps the function running for work after the response, e.g. sending emails. */
+	waitUntil?: (promise: Promise<unknown>) => void;
 }) => Response | Promise<Response>;
 
 const COOKIE = 'secondsurf_admin';

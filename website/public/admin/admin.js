@@ -2,7 +2,12 @@
 
 const MAX_PHOTOS = 8;
 const MAX_SIDE = 1600; // the site makes its own smaller versions from this
+const AI_SIDE = 1024; // enough for the AI to read labels, small enough to send quickly
+const AI_PHOTOS = 4;
 const JPEG_QUALITY = 0.85;
+
+/** What the AI wrote, so its translations are only used while the German text is unchanged. */
+let aiTexts = null;
 
 const $ = (id) => document.getElementById(id);
 const form = $('add-form');
@@ -58,13 +63,13 @@ $('logout').addEventListener('click', async () => {
 // ---------- Photos ----------
 
 /** Redraws the photo smaller. A redrawn JPEG has no metadata, so the GPS location is gone too. */
-async function shrink(file) {
+async function shrink(file, maxSide = MAX_SIDE) {
 	const url = URL.createObjectURL(file);
 	try {
 		const image = new Image();
 		image.src = url;
 		await image.decode();
-		const scale = Math.min(1, MAX_SIDE / Math.max(image.naturalWidth, image.naturalHeight));
+		const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
 		const canvas = document.createElement('canvas');
 		canvas.width = Math.round(image.naturalWidth * scale);
 		canvas.height = Math.round(image.naturalHeight * scale);
@@ -78,6 +83,7 @@ async function shrink(file) {
 }
 
 function renderPreviews() {
+	$('ai-fill').hidden = photos.length === 0;
 	$('previews').replaceChildren(
 		...photos.map((photo, index) => {
 			const item = document.createElement('li');
@@ -144,6 +150,45 @@ const toBase64 = (blob) =>
 		reader.readAsDataURL(blob);
 	});
 
+// ---------- AI ----------
+
+$('ai-fill').addEventListener('click', async () => {
+	const button = $('ai-fill');
+	button.disabled = true;
+	show($('add-error'));
+	show($('add-status'), 'The AI is looking at your photos… (about 10 to 30 seconds)');
+	try {
+		const small = await Promise.all(photos.slice(0, AI_PHOTOS).map((photo) => shrink(photo.blob, AI_SIDE).then(toBase64)));
+		const piece = await api('describe', { method: 'POST', body: { photos: small } });
+		const set = (name, value) => {
+			if (value) form.elements[name].value = value;
+		};
+		set('brand', piece.brand);
+		set('title', piece.title.de);
+		set('description', piece.description.de);
+		set('category', piece.category);
+		set('condition', piece.condition);
+		if (piece.size !== 'unknown') set('size', piece.size);
+		aiTexts = { title: piece.title, description: piece.description };
+		$('more').open = true;
+		$('ai-note').hidden = false;
+		show($('add-status'));
+		form.elements.price.focus();
+	} catch (error) {
+		show($('add-status'));
+		show($('add-error'), error.message);
+	} finally {
+		button.disabled = false;
+	}
+});
+
+/** The AI's French, Italian and English text, but only if the German text is still what the AI wrote. */
+function translationsFor(field, german) {
+	const ai = aiTexts?.[field];
+	if (!ai || ai.de.trim() !== String(german).trim()) return undefined;
+	return { fr: ai.fr, it: ai.it, en: ai.en };
+}
+
 // ---------- Publish ----------
 
 form.addEventListener('submit', async (event) => {
@@ -177,12 +222,18 @@ form.addEventListener('submit', async (event) => {
 				description: fields.get('description'),
 				staffPick: fields.get('staffPick') === 'on',
 				photos: shas,
+				translations: {
+					title: translationsFor('title', fields.get('title')),
+					description: translationsFor('description', fields.get('description')),
+				},
 			},
 		});
 		for (const photo of photos) URL.revokeObjectURL(photo.url);
 		photos = [];
 		renderPreviews();
 		form.reset();
+		aiTexts = null;
+		$('ai-note').hidden = true;
 		show($('add-status'), 'Published! It shows in the shop after the site rebuilds, usually within 2 minutes.');
 		await loadProducts();
 	} catch (error) {

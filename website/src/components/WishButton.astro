@@ -1,0 +1,114 @@
+---
+// Heart that saves a piece to the customer's wishlist. Logged out, it opens the profile page,
+// which saves the piece right after login and comes back here.
+import Icon from './Icon.astro';
+import { url, type Lang } from '../i18n';
+import { accountTexts } from '../i18n/account';
+
+interface Props {
+	lang: Lang;
+	id: string;
+	/** Show the text next to the heart (product page). */
+	withLabel?: boolean;
+	class?: string;
+}
+
+const { lang, id, withLabel = false, class: className } = Astro.props;
+const t = accountTexts[lang];
+---
+
+<button
+	type="button"
+	class:list={['wish', { 'with-label': withLabel }, className]}
+	data-wish={id}
+	data-add={t.wishAdd}
+	data-remove={t.wishRemove}
+	data-account={url(lang, '/account/')}
+	aria-pressed="false"
+	aria-label={withLabel ? undefined : t.wishAdd}
+	title={withLabel ? undefined : t.wishAdd}
+>
+	<Icon name="heart" size={withLabel ? 18 : 20} />
+	{withLabel && <span class="wish-label">{t.wishAdd}</span>}
+</button>
+
+<script>
+	import { api, seemsLoggedIn, savedPieces, setSaved } from '../scripts/account';
+
+	const buttons = [...document.querySelectorAll<HTMLButtonElement>('button[data-wish]')];
+
+	function show(button: HTMLButtonElement, saved: boolean) {
+		const text = saved ? button.dataset.remove! : button.dataset.add!;
+		button.setAttribute('aria-pressed', String(saved));
+		button.querySelector('.wish-label')?.replaceChildren(text);
+		if (button.hasAttribute('aria-label')) {
+			button.setAttribute('aria-label', text);
+			button.title = text;
+		}
+	}
+
+	const saved = seemsLoggedIn() ? savedPieces() : new Set<string>();
+	for (const button of buttons) {
+		show(button, saved.has(button.dataset.wish!));
+		button.addEventListener('click', async (event) => {
+			// The heart sits on top of a product link.
+			event.preventDefault();
+			event.stopPropagation();
+			const id = button.dataset.wish!;
+			const login = () => location.assign(`${button.dataset.account}?save=${encodeURIComponent(id)}&back=${encodeURIComponent(location.pathname)}`);
+			if (!seemsLoggedIn()) return login();
+
+			const save = button.getAttribute('aria-pressed') !== 'true';
+			show(button, save);
+			button.disabled = true;
+			try {
+				await api(`wishlist/${encodeURIComponent(id)}`, save ? 'PUT' : 'DELETE');
+				setSaved(id, save);
+			} catch (error) {
+				show(button, !save);
+				if ((error as { status?: number }).status === 401) login();
+			} finally {
+				button.disabled = false;
+			}
+		});
+	}
+</script>
+
+<style>
+	.wish {
+		display: inline-grid;
+		place-items: center;
+		width: 2.5rem;
+		height: 2.5rem;
+		padding: 0;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+		background: var(--bg-raised);
+		color: var(--ink);
+		cursor: pointer;
+	}
+	.wish:hover {
+		border-color: var(--ink);
+	}
+	.wish[aria-pressed='true'] {
+		color: var(--focus);
+	}
+	.wish[aria-pressed='true'] :global(svg) {
+		fill: currentColor;
+	}
+	.wish:disabled {
+		opacity: 0.7;
+	}
+	.with-label {
+		display: inline-flex;
+		gap: 0.5rem;
+		width: auto;
+		height: auto;
+		padding: 0.8em 1.3em;
+		border-radius: 0;
+		font-weight: 700;
+	}
+	.with-label[aria-pressed='true'] .wish-label {
+		color: var(--ink);
+	}
+</style>
