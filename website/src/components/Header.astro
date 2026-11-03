@@ -43,7 +43,7 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 			<span class="ticker-track" aria-hidden="true">
 				{[0, 1].map(() => (
 					<span class="ticker-half">
-						{[0, 1, 2, 3, 4, 5].map(() => (
+						{[0, 1, 2, 3].map(() => (
 							<span class="ticker-item">{announcement}</span>
 						))}
 					</span>
@@ -186,7 +186,9 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 	/* The shipping banner scrolls from left to right. */
 	.ticker {
 		overflow: hidden;
-		padding-inline: 0;
+		padding: 0.8rem 0;
+		font-size: clamp(0.95rem, 0.85rem + 0.5vw, 1.25rem);
+		letter-spacing: 0.14em;
 		white-space: nowrap;
 	}
 	.ticker-track {
@@ -201,7 +203,7 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 		display: flex;
 	}
 	.ticker-item {
-		padding-inline: 2.5rem;
+		padding-inline: clamp(4rem, 12vw, 9rem);
 	}
 	.ticker-still {
 		display: none;
