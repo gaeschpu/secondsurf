@@ -39,7 +39,6 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 <header class="site-header">
 	<div class="container-wide bar">
 		<a class="brand" href={url(lang, '/new/')}>
-			<span class="brand-mark" aria-hidden="true"><Icon name="wave" size={20} /></span>
 			<span class="brand-text">
 				<span class="brand-name">{SITE.name}</span>
 				<span class="brand-sub">{t('site.tagline')}</span>
@@ -206,17 +205,6 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 		font-weight: 500;
 		letter-spacing: 0.02em;
 		color: var(--ink-soft);
-	}
-	.brand-mark {
-		display: grid;
-		place-items: center;
-		width: 2.1rem;
-		height: 2.1rem;
-		border-radius: 50%;
-		background: var(--accent);
-		color: var(--on-accent);
-		font-size: 0.85rem;
-		letter-spacing: 0.02em;
 	}
 	.nav {
 		margin-left: auto;
@@ -441,17 +429,9 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 			padding-left: 0.9rem;
 		}
 	}
-	/* Visually hidden on tiny screens, but still the link's accessible name */
 	@media (max-width: 26rem) {
 		.brand-sub {
 			display: none;
-		}
-		.brand-name {
-			position: absolute;
-			width: 1px;
-			height: 1px;
-			overflow: hidden;
-			clip: rect(0, 0, 0, 0);
 		}
 	}
 </style>
