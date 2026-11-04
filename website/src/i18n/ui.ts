@@ -2,7 +2,7 @@
 // TODO: the texts below are a first draft — adjust them to how secondsurf should sound.
 
 const de = {
-	'site.tagline': 'Second-Hand Surfkleidung',
+	'site.tagline': 'Secondhand Surfmode',
 	'site.description':
 		'secondsurf: handverlesene Second-Hand Surfkleidung aus der Schweiz. Hoodies, Tees, Boardshorts und Neoprenanzüge mit zweitem Leben.',
 
