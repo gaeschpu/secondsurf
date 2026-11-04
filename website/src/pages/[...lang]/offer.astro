@@ -1,0 +1,162 @@
+---
+// /offer/?t=<token>: the customer follows their price offer here (link in their emails).
+// They can answer a counter-offer and pay an agreed price. Data from functions/api/offers/view.ts.
+import Base from '../../layouts/Base.astro';
+import { langPaths, url, useT, type Lang } from '../../i18n';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+const statuses = ['pending', 'accepted', 'declined', 'countered', 'agreed', 'rejected', 'paid'] as const;
+const texts = Object.fromEntries([
+	...statuses.map((s) => [`status.${s}`, t(`offer.status.${s}`)]),
+	...(['notFound', 'yourOffer', 'listPrice', 'ourCounter', 'agreedPrice', 'payByMail', 'payNote', 'soldMeanwhile', 'expired', 'toPiece'] as const).map(
+		(k) => [k, t(`offer.${k}`)],
+	),
+	['error', t('contact.error')],
+]);
+---
+
+<Base lang={lang} title={t('offer.title')} description={t('offer.title')} noindex>
+	<div class="container page-head offer-page" data-texts={JSON.stringify(texts)} data-lang={lang} data-prefix={url(lang, '/').replace(/\/$/, '')}>
+		<h1>{t('offer.title')}</h1>
+		<p id="reserved" class="checkout-msg small" role="status">{t('checkout.reserved')}</p>
+		<p id="checkout-error" class="checkout-msg small" role="status">{t('checkout.error')}</p>
+		<p class="state" data-state>{t('offer.loading')}</p>
+		<dl class="figures" data-figures hidden></dl>
+		<div class="actions" data-respond hidden>
+			<button class="btn" type="button" data-action="accept">{t('offer.acceptCounter')}</button>
+			<button class="btn btn-ghost" type="button" data-action="decline">{t('offer.declineCounter')}</button>
+		</div>
+		<form class="actions" method="post" action="/api/offers/checkout" data-pay hidden>
+			<input type="hidden" name="t" />
+			<button class="btn big" type="submit">{t('offer.pay')}</button>
+		</form>
+		<p class="small muted" data-note hidden></p>
+		<p class="small"><a data-piece hidden>{t('offer.toPiece')} →</a></p>
+	</div>
+</Base>
+
+<script>
+	const page = document.querySelector<HTMLElement>('.offer-page')!;
+	const texts = JSON.parse(page.dataset.texts!) as Record<string, string>;
+	const token = new URL(location.href).searchParams.get('t') ?? '';
+	const $ = <T extends HTMLElement>(sel: string) => page.querySelector<T>(sel)!;
+	const chf = (n: number) => `CHF ${n.toFixed(2).replace(/\.00$/, '.–')}`;
+
+	type View = {
+		status: string;
+		productId: string;
+		productName: string;
+		listPrice: number;
+		amount: number;
+		counter: number | null;
+		agreed: number | null;
+		sold: boolean;
+		expired: boolean;
+		canPay: boolean;
+	};
+
+	function render(v: View) {
+		$('[data-state]').textContent = `${v.productName}: ${texts[`status.${v.status}`] ?? ''}`;
+		const rows: [string, string][] = [
+			[texts.listPrice, chf(v.listPrice)],
+			[texts.yourOffer, chf(v.amount)],
+		];
+		if (v.counter) rows.push([texts.ourCounter, chf(v.counter)]);
+		if (v.agreed) rows.push([texts.agreedPrice, chf(v.agreed)]);
+		const figures = $('[data-figures]');
+		figures.replaceChildren(...rows.flatMap(([k, val]) => [Object.assign(document.createElement('dt'), { textContent: k }), Object.assign(document.createElement('dd'), { textContent: val })]));
+		figures.hidden = false;
+
+		const open = !v.sold && !v.expired;
+		$('[data-respond]').hidden = !(v.status === 'countered' && open);
+		$('[data-pay]').hidden = !v.canPay;
+		$<HTMLInputElement>('[data-pay] input[name=t]').value = token;
+
+		const note = $('[data-note]');
+		note.textContent =
+			v.status !== 'paid' && v.sold ? texts.soldMeanwhile
+			: v.expired && v.status !== 'paid' ? texts.expired
+			: v.canPay ? texts.payNote
+			: v.agreed !== null ? texts.payByMail
+			: '';
+		note.hidden = !note.textContent;
+
+		const piece = $<HTMLAnchorElement>('[data-piece]');
+		piece.href = `${page.dataset.prefix}/item/${v.productId}/`;
+		piece.hidden = false;
+	}
+
+	async function load() {
+		try {
+			const res = await fetch(`/api/offers/view?t=${encodeURIComponent(token)}`);
+			if (res.status === 404 || !token) return ($('[data-state]').textContent = texts.notFound);
+			if (!res.ok) throw new Error();
+			render(await res.json());
+		} catch {
+			$('[data-state]').textContent = texts.error;
+		}
+	}
+
+	for (const button of page.querySelectorAll<HTMLButtonElement>('[data-action]')) {
+		button.addEventListener('click', async () => {
+			button.disabled = true;
+			try {
+				const res = await fetch('/api/offers/respond', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ t: token, action: button.dataset.action }),
+				});
+				if (!res.ok) throw new Error();
+			} catch {
+				$('[data-state]').textContent = texts.error;
+			} finally {
+				button.disabled = false;
+				await load();
+			}
+		});
+	}
+
+	load();
+</script>
+
+<style>
+	.offer-page {
+		min-height: 50vh;
+	}
+	.state {
+		font-size: var(--step-1, 1.2rem);
+	}
+	.figures {
+		display: grid;
+		grid-template-columns: max-content 1fr;
+		gap: 0.4rem 1.5rem;
+		margin: 1.5rem 0;
+	}
+	.figures :global(dt) {
+		color: var(--ink-soft);
+	}
+	.figures :global(dd) {
+		margin: 0;
+		font-weight: 700;
+	}
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin: 1rem 0;
+	}
+	.actions[hidden],
+	.figures[hidden] {
+		display: none;
+	}
+	.checkout-msg {
+		display: none;
+		padding: 0.75rem 1rem;
+		border-left: 3px solid var(--accent, currentColor);
+	}
+	.checkout-msg:target {
+		display: block;
+	}
+</style>

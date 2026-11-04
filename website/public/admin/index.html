@@ -25,10 +25,31 @@
 		<div id="dashboard" hidden>
 			<header class="bar">
 				<strong>secondsurf</strong>
+				<nav class="tabs" aria-label="Dashboard pages">
+					<a href="#pieces" data-page="pieces" aria-current="page">Pieces</a>
+					<a href="#offers" data-page="offers">Offers <span id="offers-count" class="count" hidden></span></a>
+				</nav>
 				<button id="logout" class="link" type="button">Log out</button>
 			</header>
 
-			<main>
+			<main id="offers-page" hidden>
+				<section>
+					<h1>Price offers</h1>
+					<p class="hint">
+						Customers can offer up to 35 % below the price. Accept, decline or make a counter-offer: they get an email in their language.
+						<span id="offers-pay-note"></span>
+					</p>
+					<div class="filter" role="group" aria-label="Show">
+						<button type="button" data-filter="open" aria-pressed="true">Open</button>
+						<button type="button" data-filter="all" aria-pressed="false">All</button>
+					</div>
+					<p id="offers-error" class="error" role="alert" hidden></p>
+					<p id="offers-status" class="status" role="status" hidden></p>
+					<ul id="offers" class="offers"></ul>
+				</section>
+			</main>
+
+			<main id="pieces-page">
 				<form id="add-form" class="card" novalidate>
 					<h1>Add a piece</h1>
 

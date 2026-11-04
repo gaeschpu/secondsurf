@@ -370,9 +370,163 @@ async function loadDashboard() {
 	await loadProducts();
 	$('login').hidden = true;
 	$('dashboard').hidden = false;
+	showPage();
+	loadOffers().catch((error) => show($('offers-error'), error.message));
 }
 
 loadDashboard().catch((error) => {
 	showLogin();
 	if (error.message !== 'Please log in.') show($('login-error'), error.message);
 });
+
+// ---------- Pages ----------
+
+function showPage() {
+	const page = location.hash === '#offers' ? 'offers' : 'pieces';
+	$('pieces-page').hidden = page !== 'pieces';
+	$('offers-page').hidden = page !== 'offers';
+	for (const tab of document.querySelectorAll('.tabs a')) {
+		if (tab.dataset.page === page) tab.setAttribute('aria-current', 'page');
+		else tab.removeAttribute('aria-current');
+	}
+	if (page === 'offers' && !$('dashboard').hidden) loadOffers().catch((error) => show($('offers-error'), error.message));
+}
+window.addEventListener('hashchange', showPage);
+
+// ---------- Price offers ----------
+
+const OPEN = ['pending', 'agreed', 'countered', 'accepted'];
+const STATE = {
+	pending: 'New – your answer',
+	accepted: 'Accepted – waiting for payment',
+	declined: 'Declined',
+	countered: 'Counter-offer sent – waiting for the customer',
+	agreed: 'Customer accepted your counter-offer',
+	rejected: 'Customer declined your counter-offer',
+	paid: 'Paid ✓',
+};
+let offerFilter = 'open';
+let offerData = { offers: [], canPay: false };
+
+const chf = (n) => `CHF ${Number(n).toFixed(2).replace(/\.00$/, '.–')}`;
+const when = (seconds) => new Date(seconds * 1000).toLocaleString('de-CH', { dateStyle: 'medium', timeStyle: 'short' });
+const el = (tag, className, text) => {
+	const node = document.createElement(tag);
+	if (className) node.className = className;
+	if (text !== undefined) node.textContent = text;
+	return node;
+};
+
+for (const button of document.querySelectorAll('.filter button')) {
+	button.addEventListener('click', () => {
+		offerFilter = button.dataset.filter;
+		for (const b of document.querySelectorAll('.filter button')) b.setAttribute('aria-pressed', String(b === button));
+		renderOffers();
+	});
+}
+
+async function loadOffers() {
+	offerData = await api('offers');
+	const waiting = offerData.offers.filter((o) => o.status === 'pending' || o.status === 'agreed').length;
+	$('offers-count').textContent = String(waiting);
+	$('offers-count').hidden = waiting === 0;
+	$('offers-pay-note').textContent = offerData.canPay
+		? 'Once a price is agreed, the customer pays it online with Stripe.'
+		: 'Stripe checkout is off: once a price is agreed, send the customer the payment details yourself (reply to the email).';
+	renderOffers();
+}
+
+function renderOffers() {
+	const list = offerFilter === 'open' ? offerData.offers.filter((o) => OPEN.includes(o.status)) : offerData.offers;
+	if (!list.length) return $('offers').replaceChildren(el('li', 'hint', offerFilter === 'open' ? 'No open offers.' : 'No offers yet.'));
+	$('offers').replaceChildren(...list.map(renderOffer));
+}
+
+function renderOffer(offer) {
+	const item = el('li', OPEN.includes(offer.status) ? 'offer' : 'offer closed');
+	item.append(el('span', `state ${offer.status}`, STATE[offer.status] ?? offer.status));
+
+	const title = el('strong');
+	const link = el('a', '', offer.product_name);
+	link.href = `/item/${offer.product_id}/`;
+	link.target = '_blank';
+	title.append(link);
+	item.append(title);
+
+	const discount = Math.round((1 - offer.amount / offer.list_price) * 100);
+	const amounts = el('p', 'amounts');
+	amounts.append(el('strong', '', chf(offer.amount)), ' ', el('s', '', chf(offer.list_price)), ` (−${discount} %)`);
+	if (offer.counter) amounts.append(` · your counter-offer: ${chf(offer.counter)}`);
+	item.append(amounts);
+
+	const who = el('p', 'who');
+	const mail = el('a', '', offer.email);
+	mail.href = `mailto:${offer.email}`;
+	who.append(`${offer.name} · `, mail);
+	item.append(who);
+	if (offer.message) item.append(el('blockquote', '', offer.message));
+	item.append(el('p', 'when', `Received ${when(offer.created_at)}${offer.updated_at !== offer.created_at ? ` · updated ${when(offer.updated_at)}` : ''}`));
+
+	if (offer.status === 'pending') item.append(offerActions(offer));
+	else if (offer.status === 'countered') {
+		const actions = el('div', 'actions');
+		actions.append(offerButton('Withdraw counter-offer', 'danger', offer, { action: 'decline' }));
+		item.append(actions);
+	}
+	else if ((offer.status === 'accepted' || offer.status === 'agreed') && !offerData.canPay)
+		item.append(el('p', 'hint', `Send ${offer.name} the payment details for ${chf(offer.status === 'agreed' ? offer.counter : offer.amount)}.`));
+	return item;
+}
+
+function offerActions(offer) {
+	const box = el('div');
+	const actions = el('div', 'actions');
+	actions.append(
+		offerButton(`Accept ${chf(offer.amount)}`, 'primary', offer, { action: 'accept' }),
+		offerButton('Decline', 'danger', offer, { action: 'decline' }),
+	);
+
+	const row = el('div', 'counter-row');
+	const label = el('label', '', 'Counter-offer (CHF)');
+	const input = el('input');
+	input.type = 'number';
+	input.inputMode = 'decimal';
+	input.step = '0.05';
+	input.min = String(offer.amount + 0.05);
+	input.max = String(offer.list_price);
+	input.value = String(Math.round((offer.amount + offer.list_price) / 2));
+	label.append(input);
+	row.append(
+		label,
+		offerButton('Send counter-offer', '', offer, () => {
+			const amount = input.valueAsNumber;
+			if (!amount || amount <= offer.amount || amount > offer.list_price)
+				throw new Error(`Enter an amount above ${chf(offer.amount)} and at most ${chf(offer.list_price)}.`);
+			return { action: 'counter', amount };
+		}),
+	);
+	box.append(actions, row);
+	return box;
+}
+
+function offerButton(label, className, offer, body) {
+	const button = el('button', className, label);
+	button.type = 'button';
+	button.addEventListener('click', async () => {
+		show($('offers-error'));
+		show($('offers-status'));
+		try {
+			const payload = typeof body === 'function' ? body() : body;
+			if (payload.action === 'decline' && !confirm(`Decline the offer from ${offer.name}?`)) return;
+			button.disabled = true;
+			const result = await api(`offers/${offer.id}`, { method: 'PATCH', body: payload });
+			await loadOffers();
+			show($('offers-status'), result.warning ?? `Done. ${offer.name} got an email.`);
+		} catch (error) {
+			show($('offers-error'), error.message);
+		} finally {
+			button.disabled = false;
+		}
+	});
+	return button;
+}

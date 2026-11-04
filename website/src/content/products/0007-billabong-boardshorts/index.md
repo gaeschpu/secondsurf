@@ -7,10 +7,10 @@ sizeNote: "W32"
 condition: good
 price: 35
 description:
-  de: "Weiss mit türkisen Nadelstreifen, grossem Billabong-Schriftzug und türkisem Print am Bein, Cargotasche. Schnürung vorne. Die Fotos mit Model sind KI-generierte Illustrationen; Foto 3 und 4 zeigen das echte Teil."
-  fr: "Blanc à fines rayures turquoise, grand logo Billabong et motif turquoise sur la jambe, poche cargo. Laçage devant. Les photos portées sont des illustrations générées par IA ; les photos 3 et 4 montrent la vraie pièce."
-  it: "Bianco con gessato turchese, grande scritta Billabong e stampa turchese sulla gamba, tasca cargo. Laccio davanti. Le foto indossate sono illustrazioni generate con l’IA; le foto 3 e 4 mostrano il capo reale."
-  en: "White with turquoise pinstripes, a big Billabong script and turquoise print down the leg, cargo pocket. Lace-up front. The model photos are AI-generated illustrations; photos 3 and 4 show the actual piece."
+  de: "Billabong-Boardshort in Weiss mit feinen türkisen Nadelstreifen, grossem Schriftzug und türkisem Print am Bein. Mit Cargotasche. Der zeitlose Schnitt ist die perfekte Passform für alle, egal welches Alter oder Geschlecht, vom Surf-Spot bis zur Strandbar. Schnürung vorne."
+  fr: "Boardshort Billabong blanc à fines rayures turquoise, avec grand logo et motif turquoise sur la jambe. Poche cargo. Sa coupe intemporelle va parfaitement à tout le monde, quel que soit l’âge ou le genre, du spot de surf au bar de plage. Laçage devant."
+  it: "Boardshort Billabong bianco con sottile gessato turchese, grande scritta e stampa turchese sulla gamba. Tasca cargo. Il taglio senza tempo veste perfettamente tutti, a qualsiasi età e per ogni genere, dallo spot di surf al beach bar. Laccio davanti."
+  en: "A white Billabong boardshort with fine turquoise pinstripes, a big script and turquoise print down the leg. Cargo pocket. The timeless cut is the perfect fit for everyone, whatever your age or gender, from the surf spot to the beach bar. Lace-up front."
 photos:
   - ./1.jpg
   - ./2.jpg

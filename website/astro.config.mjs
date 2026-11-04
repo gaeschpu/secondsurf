@@ -11,7 +11,7 @@ export default defineConfig({
 	integrations: [
 		sitemap({
 			// The start pages redirect to the New Drop (see public/_redirects); profile pages are private.
-			filter: (page) => !/^https:\/\/secondsurf\.ch\/((fr|it|en)\/)?(account\/|thanks\/)?$/.test(page),
+			filter: (page) => !/^https:\/\/secondsurf\.ch\/((fr|it|en)\/)?(account\/|thanks\/|offer\/)?$/.test(page),
 			i18n: {
 				defaultLocale: 'de',
 				locales: { de: 'de-CH', fr: 'fr-CH', it: 'it-CH', en: 'en' },

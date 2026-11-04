@@ -6,6 +6,7 @@
 import { json, type Handler } from '../_lib/auth.ts';
 import { commit, PRODUCTS_DIR, readText } from '../_lib/github.ts';
 import { sendMail } from '../_lib/mail.ts';
+import { now, offersDb } from '../_lib/offers.ts';
 import { PRODUCT_ID, setSold } from '../_lib/product.ts';
 import { firstTime, forgetDone, holdSold, holds, releaseHold, verifyWebhook } from '../_lib/stripe.ts';
 import { SITE } from '../../src/config.ts';
@@ -16,7 +17,7 @@ type Session = {
 	payment_status: string;
 	payment_intent?: string | null;
 	amount_total?: number | null;
-	metadata?: { product_id?: string };
+	metadata?: { product_id?: string; offer_id?: string };
 	customer_details?: { name?: string | null; email?: string | null; phone?: string | null } | null;
 	collected_information?: { shipping_details?: { name?: string; address?: Address } | null } | null;
 	shipping_details?: { name?: string; address?: Address } | null;
@@ -86,6 +87,12 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 			return json({ error: 'Try again.' }, 500);
 		}
 		if (db && PRODUCT_ID.test(id)) await holdSold(db, id).catch(() => {});
+		// Paid through an accepted price offer: close the offer.
+		const offerId = Number(session.metadata?.offer_id);
+		if (offerId > 0) {
+			const offers = await offersDb(env).catch(() => null);
+			await offers?.prepare("UPDATE offers SET status = 'paid', updated_at = ? WHERE id = ?").bind(now(), offerId).run().catch(() => {});
+		}
 		return json({ ok: true });
 	}
 

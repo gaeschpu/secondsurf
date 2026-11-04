@@ -4,6 +4,7 @@ import { getImage, Image } from 'astro:assets';
 import Base from '../../../layouts/Base.astro';
 import Icon from '../../../components/Icon.astro';
 import WishButton from '../../../components/WishButton.astro';
+import OfferForm from '../../../components/OfferForm.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { chf, l, langPaths, url, useT, type Lang } from '../../../i18n';
 import { CATEGORIES, CHECKOUT, CONDITIONS, SITE } from '../../../config';
@@ -156,6 +157,7 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 					)
 				}
 				{!p.sold && <p class="wish-row"><WishButton lang={lang} id={product.id} withLabel /></p>}
+				{!p.sold && <OfferForm lang={lang} id={product.id} price={p.price} />}
 				<p class="back small"><a href={url(lang, '/shop/')}>← {t('shop.back')}</a></p>
 			</div>
 		</article>
