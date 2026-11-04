@@ -274,7 +274,8 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 			profile = await api<Profile>('me');
 		}
 		rememberLogin(profile.wishlist.map((item) => item.id));
-		if (save && back?.startsWith('/') && !back.startsWith('//')) return location.assign(back);
+		// Back to the page that sent the customer here (the heart, or a price offer).
+		if (back?.startsWith('/') && !back.startsWith('//')) return location.assign(back);
 		history.replaceState(null, '', location.pathname);
 		await showProfile(profile);
 	}

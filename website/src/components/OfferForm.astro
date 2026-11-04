@@ -1,6 +1,7 @@
 ---
-// "Preis vorschlagen" on a product page: the customer offers a price (at most 35 % below), sent to functions/api/offers.
-// Hidden on the live site until PUBLIC_TURNSTILE_SITE_KEY is set, like the other forms.
+// "Preis vorschlagen" on a product page: a logged-in customer offers a price (at most 35 % below),
+// sent to /api/account/offer (functions/_lib/offer-create.ts). Logged out, the button shows a link to the login,
+// which comes back here afterwards. Hidden on the live site until PUBLIC_TURNSTILE_SITE_KEY is set, like the other forms.
 import { chf, url, useT, type Lang } from '../i18n';
 
 interface Props {
@@ -22,17 +23,22 @@ const minText = chf(minimum);
 	show && (
 		<details class="offer">
 			<summary class="btn btn-ghost">{t('offer.button')}</summary>
+			<div class="offer-login" hidden>
+				<p>{t('offer.loginNeeded')}</p>
+				<a class="btn" href={url(lang, '/account/')} data-login>
+					{t('offer.loginButton')}
+				</a>
+			</div>
 			<form
 				class="offer-form"
+				hidden
 				novalidate
 				data-min={minimum}
 				data-price={price}
 				data-sent={t('offer.sent')}
 				data-error={t('contact.error')}
 				data-sending={t('contact.sending')}
-				data-captcha={t('form.captcha')}
 				data-required={t('form.required')}
-				data-email={t('form.email')}
 				data-too-low={t('offer.tooLow').replace('{min}', minText)}
 				data-not-lower={t('offer.notLower')}
 				data-sold={t('offer.sold')}
@@ -41,23 +47,10 @@ const minText = chf(minimum);
 				<p class="small muted">{t('offer.intro').replace('{min}', minText)}</p>
 				<input type="hidden" name="id" value={id} />
 				<input type="hidden" name="lang" value={lang} />
-				<label class="hp" aria-hidden="true">
-					Website <input name="botcheck" tabindex="-1" autocomplete="off" />
-				</label>
 				<label>
 					{t('offer.amount')}
 					<input name="amount" type="number" inputmode="decimal" min={minimum} max={price - 1} step="1" required placeholder={String(minimum)} />
 				</label>
-				<div class="row">
-					<label>
-						{t('contact.name')}
-						<input name="name" autocomplete="name" maxlength="120" required />
-					</label>
-					<label>
-						{t('contact.email')}
-						<input name="email" type="email" autocomplete="email" maxlength="200" required />
-					</label>
-				</div>
 				<label>
 					{t('offer.messageOptional')}
 					<textarea name="message" rows="2" maxlength="1000" />
@@ -65,15 +58,7 @@ const minText = chf(minimum);
 				<p class="small muted">
 					{t('form.privacyLabel')}: <a href={url(lang, '/privacy/')}>{t('legal.privacy')}</a>
 				</p>
-				{
-					siteKey && (
-						<>
-							<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
-							<div class="cf-turnstile" data-sitekey={siteKey} data-language={lang} data-theme="light" />
-						</>
-					)
-				}
-				<button class="btn" type="submit" disabled={!siteKey}>
+				<button class="btn" type="submit">
 					{t('offer.send')}
 				</button>
 				<p class="status small" role="status" aria-live="polite" />
@@ -83,12 +68,26 @@ const minText = chf(minimum);
 }
 
 <script>
-	declare const turnstile: { reset: () => void } | undefined;
+	import { api, ApiError, seemsLoggedIn } from '../scripts/account';
 
-	for (const form of document.querySelectorAll<HTMLFormElement>('.offer-form')) {
+	for (const details of document.querySelectorAll<HTMLDetailsElement>('details.offer')) {
+		const form = details.querySelector<HTMLFormElement>('.offer-form')!;
+		const login = details.querySelector<HTMLElement>('.offer-login')!;
 		const status = form.querySelector<HTMLElement>('.status')!;
 		const button = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
 		const say = (text: string) => (status.textContent = text);
+
+		// The login button comes back to this piece afterwards.
+		const loginLink = login.querySelector<HTMLAnchorElement>('[data-login]')!;
+		loginLink.href += `?back=${encodeURIComponent(location.pathname)}`;
+
+		const showLogin = (needed: boolean) => {
+			login.hidden = !needed;
+			form.hidden = needed;
+		};
+		details.addEventListener('toggle', () => {
+			if (details.open) showLogin(!seemsLoggedIn());
+		});
 
 		form.addEventListener('submit', async (event) => {
 			event.preventDefault();
@@ -96,37 +95,23 @@ const minText = chf(minimum);
 			const d = form.dataset;
 			const data = Object.fromEntries(new FormData(form)) as Record<string, string>;
 			const amount = Number(data.amount);
-			if (!data.amount || !data.name.trim() || !data.email.trim()) return say(d.required!);
-			if (!form.querySelector<HTMLInputElement>('input[name=email]')!.checkValidity()) return say(d.email!);
+			if (!data.amount) return say(d.required!);
 			if (amount < Number(d.min)) return say(d.tooLow!);
 			if (amount >= Number(d.price)) return say(d.notLower!);
-			if (!data['cf-turnstile-response']) return say(d.captcha!);
 
 			button.disabled = true;
 			say(d.sending!);
 			try {
-				const res = await fetch('/api/offers', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ ...data, amount }),
-				});
-				const json = (await res.json().catch(() => ({}))) as { error?: string; link?: string };
-				const messages: Record<string, string | undefined> = {
-					captcha: d.captcha,
-					tooLow: d.tooLow,
-					notLower: d.notLower,
-					sold: d.sold,
-					tooMany: d.tooMany,
-				};
-				if (!res.ok) return say(messages[json.error ?? ''] ?? d.error!);
+				await api('offer', 'POST', { ...data, amount });
 				say(d.sent!);
 				form.reset();
-			} catch {
-				say(d.error!);
+			} catch (error) {
+				// The login ran out or was ended on another device.
+				if ((error as ApiError).status === 401) return showLogin(true);
+				const messages: Record<string, string | undefined> = { tooLow: d.tooLow, notLower: d.notLower, sold: d.sold, tooMany: d.tooMany };
+				say(messages[(error as ApiError).code] ?? d.error!);
 			} finally {
 				button.disabled = false;
-				// A token only works once.
-				if (typeof turnstile !== 'undefined') turnstile.reset();
 			}
 		});
 	}
@@ -162,14 +147,17 @@ const minText = chf(minimum);
 		font: inherit;
 		font-weight: 400;
 	}
-	.row {
+	.offer-login {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
-		gap: 0.85rem;
+		justify-items: start;
+		gap: 0.75rem;
+		margin-top: 1rem;
+		padding: 1rem;
+		border: 1px solid var(--line, rgba(0, 0, 0, 0.12));
+		border-radius: var(--radius-sm);
 	}
-	.hp {
-		position: absolute;
-		left: -9999px;
+	.offer :global([hidden]) {
+		display: none !important;
 	}
 	.status:empty {
 		display: none;

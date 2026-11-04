@@ -13,6 +13,7 @@
 // POST   reset     { token, password }
 // PUT    addresses { addresses: [...] }
 // PUT    wishlist/<piece>, DELETE wishlist/<piece>
+// POST   offer     { id, amount, message?, lang }   price offer for a piece, see functions/_lib/offer-create.ts
 
 import { url } from '../../../src/i18n/index.ts';
 import { json, type D1Database, type Env, type Handler } from '../../_lib/auth.ts';
@@ -35,6 +36,7 @@ import {
 	type User,
 } from '../../_lib/accounts.ts';
 import { EMAIL, isHuman } from '../../_lib/mail.ts';
+import { createOffer } from '../../_lib/offer-create.ts';
 import { PRODUCT_ID } from '../../_lib/product.ts';
 
 type Body = Record<string, unknown>;
@@ -83,7 +85,7 @@ async function sendVerification(env: Env, db: D1Database, user: Pick<User, 'id' 
 	}
 }
 
-export const onRequest: Handler = async ({ request, env, params }) => {
+export const onRequest: Handler = async ({ request, env, params, waitUntil }) => {
 	if (!env.DB) return fail('unavailable', 503);
 	const { origin } = new URL(request.url);
 	const method = request.method;
@@ -225,6 +227,8 @@ export const onRequest: Handler = async ({ request, env, params }) => {
 			await sendVerification(env, db, user, origin);
 			return json({ ok: true });
 		}
+
+		if (route === 'offer' && method === 'POST') return createOffer(env, request, user, body, waitUntil);
 
 		if (route === 'addresses' && method === 'PUT') {
 			const addresses = parseAddresses(body.addresses);

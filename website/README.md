@@ -153,7 +153,8 @@ Then swap in the live keys and redeploy. A piece with its own `buyUrl:` (e.g. a 
 
 ## Price offers ("Preis vorschlagen")
 
-Every available piece has a **Preis vorschlagen** button. Customers offer a price, at most 35 % below the shop price
+Every available piece has a **Preis vorschlagen** button. Only logged-in customers can use it: logged out, it shows a
+note with a login button that comes back to the piece. Name and email come from the customer account. Customers offer a price, at most 35 % below the shop price
 (rounded up to whole francs; `MAX_DISCOUNT` in `functions/_lib/offers.ts`). You get an email, and the offer appears in the
 dashboard under **Offers** (`/admin/#offers`), where you **accept**, **decline** or send a **counter-offer**.
 The customer gets an email in their language with a link to `/offer/?t=…`, where they see the status, accept or decline
@@ -162,7 +163,7 @@ marked as sold when paid); without it, you send the payment details yourself. An
 Until it's paid, the piece is not reserved: whoever pays first gets it.
 
 Needs the same setup as the forms below (Resend, Turnstile) plus the D1 binding `DB`, where offers are stored.
-Code: `functions/api/offers/`, `functions/api/admin/offers/`, `src/components/OfferForm.astro`, `src/pages/[...lang]/offer.astro`.
+Code: `functions/_lib/offer-create.ts` (sent to `/api/account/offer`), `functions/api/offers/`, `functions/api/admin/offers/`, `src/components/OfferForm.astro`, `src/pages/[...lang]/offer.astro`.
 
 ## Forms (contact, stockist, sell once)
 
