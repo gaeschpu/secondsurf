@@ -365,9 +365,56 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 		margin-top: 1.75rem;
 		margin-bottom: 0.6rem;
 	}
-	.btn.big {
-		padding: 0.9em 1.6em;
+	/* The buttons under a piece share one look: full width, square, bold, like the contact form.
+	   Main action (Anfragen / Kaufen) dark, the others (wishlist, price offer) outlined. */
+	.btn.big,
+	.info :global(.wish.with-label),
+	.info :global(details.offer > summary) {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 0.6rem;
+		width: 100%;
+		max-width: 26rem;
+		min-height: 3.4rem;
+		padding: 0.9rem 1.5rem;
+		border: 1.5px solid var(--ink);
+		border-radius: 0;
+		font-family: var(--font-body);
 		font-size: var(--step-0);
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		line-height: 1.2;
+		text-transform: uppercase;
+		-webkit-font-smoothing: auto;
+	}
+	.btn.big {
+		background: var(--ink);
+		color: var(--bg);
+	}
+	.btn.big:hover {
+		border-color: var(--ink-soft);
+		background: var(--ink-soft);
+		color: var(--bg);
+	}
+	.btn.big :global(svg) {
+		transition: transform 0.15s;
+	}
+	.btn.big:hover :global(svg) {
+		transform: translateX(3px);
+	}
+	.info :global(.wish.with-label),
+	.info :global(details.offer > summary) {
+		background: transparent;
+		color: var(--ink);
+	}
+	.info :global(.wish.with-label:hover),
+	.info :global(details.offer > summary:hover) {
+		background: var(--bg-sunken);
+		color: var(--ink);
+	}
+	.info :global(details.offer) {
+		margin-top: 0.75rem;
 	}
 	.sold-note {
 		margin-top: 1.75rem;
@@ -377,7 +424,7 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 		color: var(--ink-soft);
 	}
 	.wish-row {
-		margin-top: 1rem;
+		margin-top: 1.5rem;
 	}
 	/* Shown when the checkout sends the customer back with #reserved or #checkout-error. */
 	.checkout-msg {

@@ -34,7 +34,8 @@ export default defineConfig({
 			provider: fontProviders.fontsource(),
 			name: 'Inter',
 			cssVariable: '--font-sans',
-			weights: ['400 900'],
+			// One file per weight: Safari draws bold too thin from the single variable-font file.
+			weights: ['400', '500', '600', '700', '900'],
 			styles: ['normal'],
 			subsets: ['latin'],
 			fallbacks: ['system-ui', 'sans-serif'],
