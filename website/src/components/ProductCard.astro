@@ -1,5 +1,6 @@
 ---
-// One product tile, Jamdrobe style: photo (second photo on hover), BRAND + name, size, price.
+// One product tile, Jamdrobe style: photos you can swipe through, BRAND + name, size, price.
+// Swipe on phones; arrows on hover and dots on computers. The whole photo still links to the piece.
 import { Image } from 'astro:assets';
 import Icon from './Icon.astro';
 import WishButton from './WishButton.astro';
@@ -14,23 +15,41 @@ interface Props {
 const { lang, product } = Astro.props;
 const t = useT(lang);
 const p = product.data;
-const [first, second] = p.photos;
+const photos = p.photos;
 const name = l(p.title, lang);
+const slider = photos.length > 1;
 ---
 
 <li class="product" data-size={p.size}>
 	<a href={url(lang, `/item/${product.id}/`)} class:list={['card-link', { sold: p.sold }]}>
 		<div class="media">
 			{
-				first ? (
-					<>
-						<Image src={first} alt={`${p.brand} ${name}`} widths={[360, 640]} sizes="(max-width: 40rem) 50vw, 18rem" class="photo" />
-						{second && <Image src={second} alt="" widths={[360, 640]} sizes="(max-width: 40rem) 50vw, 18rem" class="photo hover" />}
-					</>
+				photos.length > 0 ? (
+					<div class="track" data-track>
+						{photos.map((photo, i) => (
+							<Image
+								src={photo}
+								alt={i === 0 ? `${p.brand} ${name}` : ''}
+								widths={[360, 640]}
+								sizes="(max-width: 40rem) 50vw, 18rem"
+								loading={i === 0 ? undefined : 'lazy'}
+								class="photo"
+							/>
+						))}
+					</div>
 				) : (
 					<div class="photo placeholder" aria-hidden="true">
 						<Icon name="shirt" size={44} />
 					</div>
+				)
+			}
+			{
+				slider && (
+					<span class="dots" aria-hidden="true">
+						{photos.map((_, i) => (
+							<span class:list={['dot', { on: i === 0 }]} />
+						))}
+					</span>
 				)
 			}
 			{p.sold && <span class="badge">{t('shop.sold')}</span>}
@@ -42,12 +61,51 @@ const name = l(p.title, lang);
 			<span class="price">{chf(p.price)}</span>
 		</p>
 	</a>
+	{
+		slider && (
+			<>
+				<button type="button" class="nav prev" data-step="-1" aria-label={t('shop.prevPhoto')} hidden>
+					<Icon name="chevronLeft" size={18} />
+				</button>
+				<button type="button" class="nav next" data-step="1" aria-label={t('shop.nextPhoto')}>
+					<Icon name="chevronRight" size={18} />
+				</button>
+			</>
+		)
+	}
 	{!p.sold && <WishButton lang={lang} id={product.id} class="card-wish" />}
 </li>
+
+<script>
+	// Arrows scroll the photo strip one photo at a time; the dots and arrows follow the scroll position (swipe too).
+	for (const card of document.querySelectorAll<HTMLElement>('.product')) {
+		const track = card.querySelector<HTMLElement>('[data-track]');
+		const dots = [...card.querySelectorAll<HTMLElement>('.dot')];
+		const prev = card.querySelector<HTMLButtonElement>('.nav.prev');
+		const next = card.querySelector<HTMLButtonElement>('.nav.next');
+		if (!track || dots.length < 2) continue;
+		const index = () => Math.round(track.scrollLeft / track.clientWidth);
+		const update = () => {
+			const i = index();
+			dots.forEach((dot, n) => dot.classList.toggle('on', n === i));
+			if (prev) prev.hidden = i === 0;
+			if (next) next.hidden = i === dots.length - 1;
+		};
+		for (const button of [prev, next]) {
+			button?.addEventListener('click', () => {
+				const i = Math.min(dots.length - 1, Math.max(0, index() + Number(button.dataset.step)));
+				track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' });
+			});
+		}
+		track.addEventListener('scroll', update, { passive: true });
+	}
+</script>
 
 <style>
 	.product {
 		position: relative;
+		/* Without this, the photo strip makes the grid column as wide as all photos side by side. */
+		min-width: 0;
 	}
 	.product :global(.card-wish) {
 		position: absolute;
@@ -69,25 +127,24 @@ const name = l(p.title, lang);
 		border-radius: var(--radius-sm);
 		background: var(--bg-sunken);
 	}
+	.track {
+		display: flex;
+		height: 100%;
+		overflow-x: auto;
+		scroll-snap-type: x mandatory;
+		scrollbar-width: none;
+		overscroll-behavior-x: contain;
+	}
+	.track::-webkit-scrollbar {
+		display: none;
+	}
 	.photo {
-		position: absolute;
-		inset: 0;
+		flex: 0 0 100%;
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		transition:
-			opacity 0.25s,
-			transform 0.4s;
-	}
-	.photo.hover {
-		opacity: 0;
-	}
-	.card-link:hover .photo.hover,
-	.card-link:focus-visible .photo.hover {
-		opacity: 1;
-	}
-	.card-link:hover .photo {
-		transform: scale(1.03);
+		scroll-snap-align: start;
+		scroll-snap-stop: always;
 	}
 	.placeholder {
 		display: grid;
@@ -98,6 +155,65 @@ const name = l(p.title, lang);
 	.sold .photo {
 		filter: grayscale(1);
 		opacity: 0.55;
+	}
+	.dots {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0.55rem;
+		display: flex;
+		justify-content: center;
+		gap: 0.3rem;
+		pointer-events: none;
+	}
+	.dot {
+		width: 0.4rem;
+		height: 0.4rem;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.7);
+		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+		transition: background 0.2s;
+	}
+	.dot.on {
+		background: var(--ink);
+	}
+	/* The arrows sit on top of the photo (outside the link, so clicking them doesn't open the piece). */
+	.nav {
+		position: absolute;
+		top: 0;
+		margin-top: calc((100% * 5 / 4) / 2 - 1rem);
+		display: grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.9);
+		color: var(--ink);
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+		cursor: pointer;
+		opacity: 0;
+		transition: opacity 0.2s;
+	}
+	.nav[hidden] {
+		display: none;
+	}
+	.prev {
+		left: 0.45rem;
+	}
+	.next {
+		right: 0.45rem;
+	}
+	.product:hover .nav,
+	.nav:focus-visible {
+		opacity: 1;
+	}
+	/* Phones and tablets: swiping is enough, no arrows. */
+	@media (hover: none) {
+		.nav {
+			display: none;
+		}
 	}
 	.badge {
 		position: absolute;
