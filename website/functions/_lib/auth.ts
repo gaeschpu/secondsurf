@@ -21,6 +21,11 @@ export interface Env {
 	AI?: { run: (model: string, input: Record<string, unknown>) => Promise<unknown> };
 	/** D1 database binding for customer accounts. */
 	DB?: D1Database;
+	/** Stripe Checkout: the secret key (sk_live_… or sk_test_…) and the signing secret of the webhook (whsec_…). */
+	STRIPE_SECRET_KEY?: string;
+	STRIPE_WEBHOOK_SECRET?: string;
+	/** Only for local testing against a fake Stripe. */
+	STRIPE_API?: string;
 	/** The built site, provided by Cloudflare Pages. */
 	ASSETS?: { fetch: (input: URL | string) => Promise<Response> };
 }

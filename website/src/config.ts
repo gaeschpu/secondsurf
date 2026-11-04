@@ -66,3 +66,13 @@ export const CONDITIONS = {
 	veryGood: { de: 'Sehr gut', fr: 'Très bon état', it: 'Molto buono', en: 'Very good' },
 	good: { de: 'Gut, mit Gebrauchsspuren', fr: 'Bon, traces d’usure', it: 'Buono, con segni d’uso', en: 'Good, some wear' },
 } as const satisfies Record<string, Localized>;
+
+/**
+ * Online payment with Stripe Checkout (functions/api/checkout.ts). Switch it on with "stripeCheckout": true in
+ * src/settings/site.json once STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are set in Cloudflare (see README).
+ * Pieces in these categories ship as a parcel up to 10 kg, everything else up to 2 kg.
+ */
+export const CHECKOUT = {
+	enabled: settings.stripeCheckout === true,
+	heavyCategories: ['wetsuits'] as readonly string[],
+};

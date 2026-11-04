@@ -1,0 +1,29 @@
+---
+// Stripe Checkout sends the customer here after paying (success_url in functions/api/checkout.ts).
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import { langPaths, url, useT, type Lang } from '../../i18n';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+---
+
+<Base lang={lang} title={t('thanks.title')} description={t('thanks.text')} noindex>
+	<div class="container page-head thanks">
+		<h1>{t('thanks.title')}</h1>
+		<p>{t('thanks.text')}</p>
+		<p class="actions">
+			<a class="btn" href={url(lang, '/shop/')}>{t('thanks.back')} <Icon name="arrow" /></a>
+		</p>
+	</div>
+</Base>
+
+<style>
+	.thanks {
+		min-height: 50vh;
+	}
+	.actions {
+		margin-top: 1.5rem;
+	}
+</style>

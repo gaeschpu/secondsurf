@@ -1,7 +1,7 @@
 ---
 import LegalPage from '../../components/LegalPage.astro';
 import { chf, langPaths, url, useT, type Lang } from '../../i18n';
-import { OWNER, SHIPPING, SITE } from '../../config';
+import { CHECKOUT, OWNER, SHIPPING, SITE } from '../../config';
 
 export const getStaticPaths = langPaths;
 const { lang } = Astro.props as { lang: Lang };
@@ -28,11 +28,11 @@ const contactHref = url(lang, '/contact/');
 			<h2>1. Geltungsbereich</h2>
 			<p>Diese AGB gelten für alle Käufe bei {SITE.name}, {OWNER.legalForm}, Inhaber {OWNER.name} (im Folgenden «wir»).</p>
 			<h2>2. Anfrage und Vertragsschluss</h2>
-			<p>Die Pieces auf der Website sind kein verbindliches Angebot. Du fragst ein Piece über den Button «Anfragen» an, und wir schicken dir die Zahlungsangaben. Der Kaufvertrag kommt zustande, wenn deine Zahlung bei uns eingeht. Vorher ist das Piece nicht reserviert. Bezahlt jemand anderes zuerst, informieren wir dich und erstatten eine bereits geleistete Zahlung zurück.</p>
+			{CHECKOUT.enabled ? <p>Mit dem Button «Kaufen» kommst du zur Kasse unseres Zahlungsdienstleisters Stripe. Dort wählst du den Versand und gibst deine Adresse an. Der Kaufvertrag kommt zustande, wenn du die Zahlung abschliesst. Solange du an der Kasse bist, höchstens 30 Minuten, ist das Piece für dich reserviert. Kommt es trotzdem zu einem Doppelverkauf, informieren wir dich und erstatten deine Zahlung vollständig zurück.</p> : <p>Die Pieces auf der Website sind kein verbindliches Angebot. Du fragst ein Piece über den Button «Anfragen» an, und wir schicken dir die Zahlungsangaben. Der Kaufvertrag kommt zustande, wenn deine Zahlung bei uns eingeht. Vorher ist das Piece nicht reserviert. Bezahlt jemand anderes zuerst, informieren wir dich und erstatten eine bereits geleistete Zahlung zurück.</p>}
 			<h2>3. Preise</h2>
 			<p>Alle Preise sind Endpreise in Schweizer Franken (CHF). {SITE.name} ist nicht MWST-pflichtig. Versandkosten kommen gemäss Ziffer 5 dazu.</p>
 			<h2>4. Zahlung</h2>
-			<p>Du bezahlst sofort und im Voraus. Die Zahlungsangaben erhältst du per E-Mail. Wir versenden nach Zahlungseingang.</p>
+			{CHECKOUT.enabled ? <p>Du bezahlst sofort an der Kasse von Stripe, mit den dort angebotenen Zahlungsarten (z.&nbsp;B. Karte oder TWINT). Die Quittung erhältst du per E-Mail. Wir versenden nach Zahlungseingang.</p> : <p>Du bezahlst sofort und im Voraus. Die Zahlungsangaben erhältst du per E-Mail. Wir versenden nach Zahlungseingang.</p>}
 			<h2>5. Lieferung und Versandkosten</h2>
 			<p>Wir versenden in der Schweiz mit der Schweizerischen Post, in der Regel innert 2 Arbeitstagen nach Zahlungseingang.</p>
 			<ul>
@@ -53,11 +53,11 @@ const contactHref = url(lang, '/contact/');
 			<h2>1. Champ d’application</h2>
 			<p>Les présentes CGV s’appliquent à tous les achats auprès de {SITE.name}, {OWNER.legalForm}, propriétaire {OWNER.name} (ci-après « nous »).</p>
 			<h2>2. Demande et conclusion du contrat</h2>
-			<p>Les pièces présentées sur le site ne constituent pas une offre ferme. Tu demandes une pièce avec le bouton « Demander » et nous t’envoyons les informations de paiement. Le contrat de vente est conclu à la réception de ton paiement. Avant cela, la pièce n’est pas réservée. Si quelqu’un d’autre paie en premier, nous t’informons et remboursons tout paiement déjà effectué.</p>
+			{CHECKOUT.enabled ? <p>Le bouton « Acheter » t’emmène à la caisse de notre prestataire de paiement Stripe. Tu y choisis l’envoi et indiques ton adresse. Le contrat de vente est conclu lorsque tu finalises le paiement. Tant que tu es à la caisse, 30 minutes au plus, la pièce t’est réservée. Si une pièce devait malgré tout être vendue deux fois, nous t’en informons et te remboursons intégralement.</p> : <p>Les pièces présentées sur le site ne constituent pas une offre ferme. Tu demandes une pièce avec le bouton « Demander » et nous t’envoyons les informations de paiement. Le contrat de vente est conclu à la réception de ton paiement. Avant cela, la pièce n’est pas réservée. Si quelqu’un d’autre paie en premier, nous t’informons et remboursons tout paiement déjà effectué.</p>}
 			<h2>3. Prix</h2>
 			<p>Tous les prix sont des prix finaux en francs suisses (CHF). {SITE.name} n’est pas assujetti à la TVA. Les frais d’envoi s’ajoutent selon le point 5.</p>
 			<h2>4. Paiement</h2>
-			<p>Le paiement se fait immédiatement et à l’avance. Tu reçois les informations de paiement par e-mail. Nous expédions après réception du paiement.</p>
+			{CHECKOUT.enabled ? <p>Tu paies immédiatement à la caisse de Stripe, avec les moyens de paiement proposés (p.&nbsp;ex. carte ou TWINT). Tu reçois le reçu par e-mail. Nous expédions dès réception du paiement.</p> : <p>Le paiement se fait immédiatement et à l’avance. Tu reçois les informations de paiement par e-mail. Nous expédions après réception du paiement.</p>}
 			<h2>5. Livraison et frais d’envoi</h2>
 			<p>En Suisse, nous expédions par La Poste Suisse, en général sous 2 jours ouvrables après réception du paiement.</p>
 			<ul>
@@ -78,11 +78,11 @@ const contactHref = url(lang, '/contact/');
 			<h2>1. Campo di applicazione</h2>
 			<p>Queste condizioni generali valgono per tutti gli acquisti presso {SITE.name}, {OWNER.legalForm}, titolare {OWNER.name} (di seguito «noi»).</p>
 			<h2>2. Richiesta e conclusione del contratto</h2>
-			<p>I pezzi presentati sul sito non sono un’offerta vincolante. Chiedi informazioni su un pezzo con il pulsante «Chiedi info» e noi ti mandiamo i dati di pagamento. Il contratto di vendita è concluso quando riceviamo il tuo pagamento. Fino ad allora il pezzo non è riservato. Se qualcun altro paga per primo, ti informiamo e rimborsiamo l’eventuale pagamento già effettuato.</p>
+			{CHECKOUT.enabled ? <p>Con il pulsante «Acquista» arrivi alla cassa del nostro fornitore di pagamenti Stripe. Lì scegli la spedizione e inserisci il tuo indirizzo. Il contratto di vendita è concluso quando completi il pagamento. Finché sei alla cassa, al massimo 30 minuti, il pezzo è riservato per te. Se un pezzo dovesse comunque essere venduto due volte, ti informiamo e ti rimborsiamo per intero.</p> : <p>I pezzi presentati sul sito non sono un’offerta vincolante. Chiedi informazioni su un pezzo con il pulsante «Chiedi info» e noi ti mandiamo i dati di pagamento. Il contratto di vendita è concluso quando riceviamo il tuo pagamento. Fino ad allora il pezzo non è riservato. Se qualcun altro paga per primo, ti informiamo e rimborsiamo l’eventuale pagamento già effettuato.</p>}
 			<h2>3. Prezzi</h2>
 			<p>Tutti i prezzi sono prezzi finali in franchi svizzeri (CHF). {SITE.name} non è assoggettato all’IVA. Le spese di spedizione si aggiungono secondo il punto 5.</p>
 			<h2>4. Pagamento</h2>
-			<p>Paghi subito e in anticipo. Ricevi i dati di pagamento via e-mail. Spediamo dopo aver ricevuto il pagamento.</p>
+			{CHECKOUT.enabled ? <p>Paghi subito alla cassa di Stripe, con i metodi di pagamento offerti (p.&nbsp;es. carta o TWINT). Ricevi la ricevuta via e-mail. Spediamo dopo aver ricevuto il pagamento.</p> : <p>Paghi subito e in anticipo. Ricevi i dati di pagamento via e-mail. Spediamo dopo aver ricevuto il pagamento.</p>}
 			<h2>5. Consegna e spese di spedizione</h2>
 			<p>In Svizzera spediamo con la Posta Svizzera, di regola entro 2 giorni lavorativi dal ricevimento del pagamento.</p>
 			<ul>
@@ -103,11 +103,11 @@ const contactHref = url(lang, '/contact/');
 			<h2>1. Scope</h2>
 			<p>These terms apply to all purchases from {SITE.name}, {OWNER.legalForm}, owner {OWNER.name} (“we”).</p>
 			<h2>2. Enquiry and contract</h2>
-			<p>The pieces on the website are not a binding offer. You enquire about a piece with the “Ask about it” button, and we send you the payment details. The contract of sale is made when your payment reaches us. Until then, the piece isn’t reserved. If someone else pays first, we’ll tell you and refund any payment you’ve already made.</p>
+			{CHECKOUT.enabled ? <p>The “Buy” button takes you to the checkout of our payment provider Stripe, where you choose shipping and enter your address. The contract of sale is made when you complete the payment. While you are at the checkout, for at most 30 minutes, the piece is reserved for you. If a piece should still be sold twice, we’ll tell you and refund you in full.</p> : <p>The pieces on the website are not a binding offer. You enquire about a piece with the “Ask about it” button, and we send you the payment details. The contract of sale is made when your payment reaches us. Until then, the piece isn’t reserved. If someone else pays first, we’ll tell you and refund any payment you’ve already made.</p>}
 			<h2>3. Prices</h2>
 			<p>All prices are final prices in Swiss francs (CHF). {SITE.name} is not registered for VAT. Shipping costs are added as set out in section 5.</p>
 			<h2>4. Payment</h2>
-			<p>You pay immediately and in advance. You get the payment details by email. We ship once payment has arrived.</p>
+			{CHECKOUT.enabled ? <p>You pay right away at the Stripe checkout, with the payment methods offered there (e.g. card or TWINT). You get the receipt by email. We ship once payment has arrived.</p> : <p>You pay immediately and in advance. You get the payment details by email. We ship once payment has arrived.</p>}
 			<h2>5. Delivery and shipping costs</h2>
 			<p>Within Switzerland we ship with Swiss Post, usually within 2 business days of receiving payment.</p>
 			<ul>

@@ -10,6 +10,7 @@
 	"uid": "",
 	"legalReviewed": false,
 	"currentDrop": 1,
+	"stripeCheckout": false,
 	"freeShippingFrom": 50,
 	"shippingUpTo2kg": 9,
 	"shippingUpTo10kg": 12,

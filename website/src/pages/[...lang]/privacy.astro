@@ -1,7 +1,7 @@
 ---
 import LegalPage from '../../components/LegalPage.astro';
 import { langPaths, useT, type Lang } from '../../i18n';
-import { OWNER, SITE } from '../../config';
+import { CHECKOUT, OWNER, SITE } from '../../config';
 
 export const getStaticPaths = langPaths;
 const { lang } = Astro.props as { lang: Lang };
@@ -36,6 +36,7 @@ const mail = `mailto:${SITE.email}`;
 				<li><strong>Cloudflare</strong> (Hosting, Sicherheit und Datenbank): verarbeitet die Daten des Website-Besuchs und speichert die Kundenkonten.</li>
 				<li><strong>Cloudflare Turnstile</strong> (Spam-Schutz in den Formularen): prüft mit technischen Daten deines Browsers und der IP-Adresse, ob ein Mensch das Formular sendet.</li>
 				<li><strong>Resend</strong> (E-Mail-Versand): stellt Formularnachrichten und Bestätigungen zu.</li>
+				{CHECKOUT.enabled && <li><strong>Stripe</strong> (Zahlungen): wickelt die Zahlung an der Kasse ab und erhält dafür Name, E-Mail, Lieferadresse, Telefonnummer und Zahlungsangaben. Kartendaten sehen wir nie.</li>}
 				<li><strong>Google Gmail</strong> (unser E-Mail-Postfach): speichert die E-Mails, die uns erreichen.</li>
 			</ul>
 			<p>Diese Anbieter können Daten auch ausserhalb der Schweiz bearbeiten, insbesondere in den USA. Dabei stützen wir uns auf die von den Anbietern vorgesehenen Garantien, etwa die Standardvertragsklauseln.</p>
@@ -67,6 +68,7 @@ const mail = `mailto:${SITE.email}`;
 				<li><strong>Cloudflare</strong> (hébergement, sécurité et base de données) : traite les données de visite du site et enregistre les comptes clients.</li>
 				<li><strong>Cloudflare Turnstile</strong> (protection anti-spam des formulaires) : vérifie, avec des données techniques de ton navigateur et l’adresse IP, qu’un humain envoie le formulaire.</li>
 				<li><strong>Resend</strong> (envoi d’e-mails) : transmet les messages des formulaires et les confirmations.</li>
+				{CHECKOUT.enabled && <li><strong>Stripe</strong> (paiements) : traite le paiement à la caisse et reçoit pour cela nom, e-mail, adresse de livraison, numéro de téléphone et données de paiement. Nous ne voyons jamais les données de carte.</li>}
 				<li><strong>Google Gmail</strong> (notre boîte e-mail) : conserve les e-mails qui nous parviennent.</li>
 			</ul>
 			<p>Ces prestataires peuvent aussi traiter des données hors de Suisse, notamment aux États-Unis. Nous nous appuyons alors sur les garanties qu’ils prévoient, comme les clauses contractuelles types.</p>
@@ -98,6 +100,7 @@ const mail = `mailto:${SITE.email}`;
 				<li><strong>Cloudflare</strong> (hosting, sicurezza e banca dati): tratta i dati della visita del sito e salva gli account dei clienti.</li>
 				<li><strong>Cloudflare Turnstile</strong> (protezione antispam dei moduli): verifica, con dati tecnici del tuo browser e l’indirizzo IP, che il modulo sia inviato da una persona.</li>
 				<li><strong>Resend</strong> (invio di e-mail): recapita i messaggi dei moduli e le conferme.</li>
+				{CHECKOUT.enabled && <li><strong>Stripe</strong> (pagamenti): gestisce il pagamento alla cassa e riceve a tale scopo nome, e-mail, indirizzo di consegna, numero di telefono e dati di pagamento. Non vediamo mai i dati della carta.</li>}
 				<li><strong>Google Gmail</strong> (la nostra casella e-mail): conserva le e-mail che riceviamo.</li>
 			</ul>
 			<p>Questi fornitori possono trattare dati anche fuori dalla Svizzera, in particolare negli Stati Uniti. In tal caso ci basiamo sulle garanzie da loro previste, come le clausole contrattuali standard.</p>
@@ -129,6 +132,7 @@ const mail = `mailto:${SITE.email}`;
 				<li><strong>Cloudflare</strong> (hosting, security and database): processes website visit data and stores customer accounts.</li>
 				<li><strong>Cloudflare Turnstile</strong> (spam protection on forms): uses technical data from your browser and your IP address to check that a person is sending the form.</li>
 				<li><strong>Resend</strong> (email delivery): delivers form messages and confirmations.</li>
+				{CHECKOUT.enabled && <li><strong>Stripe</strong> (payments): handles the payment at checkout and receives your name, email, delivery address, phone number and payment details for it. We never see card details.</li>}
 				<li><strong>Google Gmail</strong> (our mailbox): stores the emails that reach us.</li>
 			</ul>
 			<p>These providers may also process data outside Switzerland, particularly in the USA. For this we rely on the safeguards they provide, such as standard contractual clauses.</p>

@@ -12,7 +12,7 @@ const t = useT(lang);
 const products = await getNewDrop();
 ---
 
-<Base lang={lang} title={t('shop.newTitle')} description={`${t('site.tagline')}: ${t('shop.newIntro')} ${t('shop.intro')}`}>
+<Base lang={lang} title={t('shop.newTitle')} description={`${t('site.tagline')}: ${t('shop.intro')}`}>
 	<JsonLd
 		slot="head"
 		data={{
@@ -28,7 +28,6 @@ const products = await getNewDrop();
 	<div class="container-wide">
 		<header class="page-head">
 			<h1>{t('shop.newTitle')}</h1>
-			<p>{t('shop.newIntro')}</p>
 		</header>
 		<ProductGrid lang={lang} products={products} filter />
 	</div>

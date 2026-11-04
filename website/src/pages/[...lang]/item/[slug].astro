@@ -6,7 +6,7 @@ import Icon from '../../../components/Icon.astro';
 import WishButton from '../../../components/WishButton.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { chf, l, langPaths, url, useT, type Lang } from '../../../i18n';
-import { CATEGORIES, CONDITIONS, SHIPPING, SITE } from '../../../config';
+import { CATEGORIES, CHECKOUT, CONDITIONS, SITE } from '../../../config';
 import type { Product } from '../../../lib/products';
 
 export async function getStaticPaths() {
@@ -22,10 +22,8 @@ const name = l(p.title, lang);
 const category = CATEGORIES.find((c) => c.id === p.category)!;
 const inquireHref = `${url(lang, '/contact/')}?item=${encodeURIComponent(`${p.brand} ${name} (${p.size}, ${chf(p.price)}) – ${product.id}`)}`;
 const ogImage = p.photos[0] && (await getImage({ src: p.photos[0], width: 1200, format: 'jpeg' })).src;
-const shippingNote =
-	p.price >= SHIPPING.freeFrom
-		? t('shop.shippingFree')
-		: t('shop.shippingCost').replace('{small}', chf(SHIPPING.upTo2kg)).replace('{big}', chf(SHIPPING.upTo10kg)).replace('{free}', chf(SHIPPING.freeFrom));
+// Stripe Checkout (functions/api/checkout.ts) when it's switched on in src/settings/site.json, unless the piece has its own buyUrl.
+const checkout = CHECKOUT.enabled && !p.buyUrl;
 ---
 
 <Base
@@ -83,9 +81,6 @@ const shippingNote =
 				<p class="eyebrow">{p.brand}</p>
 				<h1>{name}{p.staffPick && ' ★'}</h1>
 				<p class="price">{chf(p.price)}</p>
-				<p class="small muted">
-					{t('shop.priceNote')} {shippingNote} <a href={url(lang, '/contact/')}>{t('shop.shippingAbroad')}</a>
-				</p>
 				<dl>
 					<dt>{t('shop.size')}</dt>
 					<dd>{p.size}{p.sizeNote && ` · ${p.sizeNote}`}</dd>
@@ -102,6 +97,19 @@ const shippingNote =
 				{
 					p.sold ? (
 						<p class="sold-note">{t('shop.sold')}</p>
+					) : checkout ? (
+						<>
+							<p id="reserved" class="checkout-msg small" role="status">{t('checkout.reserved')}</p>
+							<p id="checkout-error" class="checkout-msg small" role="status">{t('checkout.error')}</p>
+							<form class="actions" method="post" action="/api/checkout">
+								<input type="hidden" name="id" value={product.id} />
+								<input type="hidden" name="lang" value={lang} />
+								<button class="btn big" type="submit">
+									{t('shop.buy')} <Icon name="arrow" />
+								</button>
+							</form>
+							<p class="small muted">{t('checkout.note')}</p>
+						</>
 					) : p.buyUrl ? (
 						<p class="actions">
 							<a class="btn big" href={p.buyUrl} rel="noopener">
@@ -208,6 +216,18 @@ const shippingNote =
 	}
 	.wish-row {
 		margin-top: 1rem;
+	}
+	/* Shown when the checkout sends the customer back with #reserved or #checkout-error. */
+	.checkout-msg {
+		display: none;
+		margin-top: 1.5rem;
+		padding: 0.75rem 1rem;
+		border-left: 3px solid var(--accent, currentColor);
+		background: var(--surface-alt, rgba(0, 0, 0, 0.04));
+	}
+	.checkout-msg:target {
+		display: block;
+		scroll-margin-top: 6rem;
 	}
 	.back {
 		margin-top: 2rem;

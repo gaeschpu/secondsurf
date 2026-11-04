@@ -124,10 +124,32 @@ To test locally: `npm run build`, then `npx wrangler pages dev dist --d1 DB=acco
 
 ## Selling: how people pay
 
-Right now each product has an **Anfragen** button: it opens the contact form with the piece already filled in,
-and you send the payment details (e.g. TWINT) yourself. That works without any shop software.
-To let people pay directly, create a payment link for the piece (for example a Stripe Payment Link) and add it as
-`buyUrl: "https://…"`; the button then says **Kaufen**. A full cart and checkout (Shopify, Snipcart …) can come later.
+**Without Stripe** (`"stripeCheckout": false` in `src/settings/site.json`): each piece has an **Anfragen** button that opens
+the contact form with the piece filled in, and you send the payment details (e.g. TWINT) yourself.
+
+**With Stripe Checkout** (`"stripeCheckout": true`): the button says **Kaufen** and takes the customer to Stripe's payment page.
+Shipping is added there (CHF 9 up to 2 kg, CHF 12 for wetsuits, free from CHF 50; set in `site.json` and `CHECKOUT` in `src/config.ts`),
+along with the address and phone number (Switzerland and Liechtenstein only). While someone is at the checkout, the piece is held for
+them for 30 minutes so it can't be sold twice. When they've paid, the piece is marked as sold automatically (a commit, so the site
+rebuilds) and you get an email with the shipping address. The customer lands on `/thanks/`. Code: `functions/api/checkout.ts`,
+`functions/api/stripe-webhook.ts`, `functions/_lib/stripe.ts`. The AGB and the privacy policy switch to the Stripe wording automatically.
+
+Setup, once:
+
+1. Create an account at [stripe.com](https://dashboard.stripe.com/register) and activate it (business details, bank account for payouts).
+2. **Settings → Payment methods**: switch on what you want, e.g. cards, TWINT, Apple Pay and Google Pay.
+3. **Settings → Emails**: switch on receipts for successful payments, so customers get a receipt.
+4. **Developers → Webhooks → Add endpoint**: URL `https://secondsurf.ch/api/stripe-webhook`, events
+   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`,
+   `checkout.session.expired`. Copy the **signing secret** (`whsec_…`).
+5. In **Cloudflare → Workers & Pages → secondsurf → Settings → Variables and Secrets**, add as secrets for Production:
+   `STRIPE_SECRET_KEY` (Developers → API keys → Secret key, `sk_live_…`) and `STRIPE_WEBHOOK_SECRET` (`whsec_…`).
+   The D1 binding `DB`, `GITHUB_TOKEN` and `RESEND_API_KEY` must be set too (see above); they are used for the hold, the sold mark and the email.
+6. Set `"stripeCheckout": true` in `src/settings/site.json`, commit and push.
+
+Test first with Stripe's test mode: use the test keys (`sk_test_…` and the test webhook's `whsec_…`) and pay with card `4242 4242 4242 4242`.
+A test purchase really marks the piece as sold on the site: set it back to available in the dashboard afterwards.
+Then swap in the live keys and redeploy. A piece with its own `buyUrl:` (e.g. a Stripe Payment Link) uses that link instead.
 
 ## Forms (contact, stockist, sell once)
 
