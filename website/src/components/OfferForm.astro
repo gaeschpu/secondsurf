@@ -2,6 +2,7 @@
 // "Preis vorschlagen" on a product page: a logged-in customer offers a price (at most 35 % below),
 // sent to /api/account/offer (functions/_lib/offer-create.ts). Logged out, the button shows a link to the login,
 // which comes back here afterwards. Hidden on the live site until PUBLIC_TURNSTILE_SITE_KEY is set, like the other forms.
+import Icon from './Icon.astro';
 import { chf, url, useT, type Lang } from '../i18n';
 
 interface Props {
@@ -23,15 +24,8 @@ const minText = chf(minimum);
 	show && (
 		<details class="offer">
 			<summary class="btn btn-ghost">{t('offer.button')}</summary>
-			<div class="offer-login" hidden>
-				<p>{t('offer.loginNeeded')}</p>
-				<a class="btn" href={url(lang, '/account/')} data-login>
-					{t('offer.loginButton')}
-				</a>
-			</div>
 			<form
 				class="offer-form"
-				hidden
 				novalidate
 				data-min={minimum}
 				data-price={price}
@@ -66,13 +60,26 @@ const minText = chf(minimum);
 		</details>
 	)
 }
+{
+	show && (
+		<dialog class="offer-login" aria-labelledby="offer-login-text">
+			<button type="button" class="close" aria-label={t('offer.close')} data-close>
+				<Icon name="close" size={20} />
+			</button>
+			<p id="offer-login-text">{t('offer.loginNeeded')}</p>
+			<a class="btn" href={url(lang, '/account/')} data-login>
+				{t('offer.loginButton')}
+			</a>
+		</dialog>
+	)
+}
 
 <script>
 	import { api, ApiError, seemsLoggedIn } from '../scripts/account';
 
 	for (const details of document.querySelectorAll<HTMLDetailsElement>('details.offer')) {
 		const form = details.querySelector<HTMLFormElement>('.offer-form')!;
-		const login = details.querySelector<HTMLElement>('.offer-login')!;
+		const login = document.querySelector<HTMLDialogElement>('dialog.offer-login')!;
 		const status = form.querySelector<HTMLElement>('.status')!;
 		const button = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
 		const say = (text: string) => (status.textContent = text);
@@ -81,12 +88,20 @@ const minText = chf(minimum);
 		const loginLink = login.querySelector<HTMLAnchorElement>('[data-login]')!;
 		loginLink.href += `?back=${encodeURIComponent(location.pathname)}`;
 
-		const showLogin = (needed: boolean) => {
-			login.hidden = !needed;
-			form.hidden = needed;
+		// Logged out, the button opens a popup in the middle of the screen instead of the form.
+		const showLogin = () => {
+			details.open = false;
+			login.showModal();
 		};
-		details.addEventListener('toggle', () => {
-			if (details.open) showLogin(!seemsLoggedIn());
+		details.querySelector('summary')!.addEventListener('click', (event) => {
+			if (details.open || seemsLoggedIn()) return;
+			event.preventDefault();
+			showLogin();
+		});
+		login.querySelector('[data-close]')!.addEventListener('click', () => login.close());
+		// A tap on the dark background closes it too.
+		login.addEventListener('click', (event) => {
+			if (event.target === login) login.close();
 		});
 
 		form.addEventListener('submit', async (event) => {
@@ -107,7 +122,7 @@ const minText = chf(minimum);
 				form.reset();
 			} catch (error) {
 				// The login ran out or was ended on another device.
-				if ((error as ApiError).status === 401) return showLogin(true);
+				if ((error as ApiError).status === 401) return showLogin();
 				const messages: Record<string, string | undefined> = { tooLow: d.tooLow, notLower: d.notLower, sold: d.sold, tooMany: d.tooMany };
 				say(messages[(error as ApiError).code] ?? d.error!);
 			} finally {
@@ -147,17 +162,46 @@ const minText = chf(minimum);
 		font: inherit;
 		font-weight: 400;
 	}
+	/* In the middle of the screen (the global reset removes the browser's own centring). */
 	.offer-login {
-		display: grid;
-		justify-items: start;
-		gap: 0.75rem;
-		margin-top: 1rem;
-		padding: 1rem;
-		border: 1px solid var(--line, rgba(0, 0, 0, 0.12));
-		border-radius: var(--radius-sm);
+		position: fixed;
+		inset: 0;
+		margin: auto;
+		height: fit-content;
+		width: min(calc(100vw - 2rem), 24rem);
+		padding: 2rem 1.5rem 1.5rem;
+		border: 0;
+		border-radius: var(--radius);
+		background: var(--bg-raised);
+		color: var(--ink);
+		box-shadow: var(--shadow);
+		text-align: center;
 	}
-	.offer :global([hidden]) {
-		display: none !important;
+	.offer-login[open] {
+		display: grid;
+		justify-items: center;
+		gap: 1.25rem;
+	}
+	.offer-login::backdrop {
+		background: rgb(0 0 0 / 0.5);
+	}
+	.offer-login p {
+		font-size: var(--step-1);
+		font-weight: 600;
+		line-height: 1.35;
+	}
+	.offer-login .close {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		display: grid;
+		place-items: center;
+		width: 2.5rem;
+		height: 2.5rem;
+		border: 0;
+		background: none;
+		color: var(--ink-soft);
+		cursor: pointer;
 	}
 	.status:empty {
 		display: none;
