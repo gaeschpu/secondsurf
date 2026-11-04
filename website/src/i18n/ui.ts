@@ -9,7 +9,7 @@ const de = {
 	'nav.home': 'Start',
 	'nav.new': '☆ New Drop ☆',
 	'nav.shop': 'Shop',
-	'nav.shopAll': 'Alles verfügbar',
+	'nav.shopAll': 'Alles Verfügbare',
 	'nav.sell': 'Verkaufen',
 	'nav.stockist': 'Stockist werden (regelmässig)',
 	'nav.sellOnce': 'Einmalig verkaufen',
@@ -29,7 +29,7 @@ const de = {
 	'home.newsletter': 'Neue Drops zuerst erfahren',
 	'home.newsletterText': 'Folge uns auf Instagram, dort kündigen wir jeden Drop an.',
 
-	'shop.title': 'Alles verfügbar',
+	'shop.title': 'Alles Verfügbare',
 	'shop.intro': 'Alle Pieces, die gerade zu haben sind. Jedes gibt es nur einmal.',
 	'shop.newTitle': '☆ New Drop ☆',
 	'shop.empty': 'Gerade ist hier nichts verfügbar. Der nächste Drop kommt bald.',
