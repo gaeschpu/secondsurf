@@ -1,35 +1,66 @@
 ---
-// Grid of product cards with an optional size filter (works without a page reload).
+// Grid of product cards with optional filters by brand, size and price (works without a page reload).
+// Only values that occur in the list are offered. The choice is kept in the address (?brand=…&size=…&price=…).
 import ProductCard from './ProductCard.astro';
-import { useT, type Lang } from '../i18n';
+import { chf, useT, type Lang } from '../i18n';
 import { SIZES } from '../config';
 import type { Product } from '../lib/products';
 
 interface Props {
 	lang: Lang;
 	products: Product[];
-	/** Show the size filter above the grid. */
+	/** Show the filters above the grid. */
 	filter?: boolean;
 }
 
 const { lang, products, filter = false } = Astro.props;
 const t = useT(lang);
-const sizesInUse = SIZES.filter((s) => products.some((p) => p.data.size === s));
+
+/** Price ranges in CHF: [from, up to and including]. */
+const PRICE_RANGES = [
+	{ id: 'u30', min: 0, max: 29.99 },
+	{ id: '30-50', min: 30, max: 50 },
+	{ id: '50-100', min: 50.01, max: 100 },
+	{ id: 'o100', min: 100.01, max: Infinity },
+] as const;
+const priceLabel = (range: (typeof PRICE_RANGES)[number]) =>
+	range.id === 'u30'
+		? t('shop.priceUnder').replace('{price}', chf(30))
+		: range.id === 'o100'
+			? t('shop.priceOver').replace('{price}', chf(100))
+			: `CHF ${Math.round(range.min)}–${range.max}`;
+
+const brands = [...new Set(products.map((p) => p.data.brand))].sort((a, b) => a.localeCompare(b, 'de'));
+const sizes = SIZES.filter((s) => products.some((p) => p.data.size === s));
+const prices = PRICE_RANGES.filter((r) => products.some((p) => p.data.price >= r.min && p.data.price <= r.max));
+
+const groups = [
+	{ key: 'brand', label: t('shop.brand'), options: brands.map((b) => ({ value: b, label: b })) },
+	{ key: 'size', label: t('shop.size'), options: sizes.map((s) => ({ value: s, label: s })) },
+	{ key: 'price', label: t('shop.price'), options: prices.map((r) => ({ value: r.id, label: priceLabel(r) })) },
+].filter((group) => group.options.length > 1);
 ---
 
-<div class="product-grid-wrap">
+<div class="product-grid-wrap" data-ranges={JSON.stringify(PRICE_RANGES.map((r) => [r.id, r.min, r.max === Infinity ? null : r.max]))}>
 	{
-		filter && sizesInUse.length > 1 && (
-			<div class="size-filter" role="group" aria-label={t('shop.size')}>
-				<span class="label">{t('shop.size')}</span>
-				<button type="button" data-size="" aria-pressed="true">
-					{t('shop.allSizes')}
-				</button>
-				{sizesInUse.map((s) => (
-					<button type="button" data-size={s} aria-pressed="false">
-						{s}
-					</button>
+		filter && groups.length > 0 && (
+			<div class="filters">
+				{groups.map((group) => (
+					<div class="filter" role="group" aria-label={group.label} data-filter={group.key}>
+						<span class="label">{group.label}</span>
+						<button type="button" data-value="" aria-pressed="true">
+							{t('shop.filterAll')}
+						</button>
+						{group.options.map((o) => (
+							<button type="button" data-value={o.value} aria-pressed="false">
+								{o.label}
+							</button>
+						))}
+					</div>
 				))}
+				<button type="button" class="reset" hidden>
+					{t('shop.filterReset')}
+				</button>
 			</div>
 		)
 	}
@@ -48,27 +79,70 @@ const sizesInUse = SIZES.filter((s) => products.some((p) => p.data.size === s));
 </div>
 
 <script>
+	type Key = 'brand' | 'size' | 'price';
+	const KEYS: Key[] = ['brand', 'size', 'price'];
+
 	document.querySelectorAll<HTMLElement>('.product-grid-wrap').forEach((wrap) => {
-		const buttons = wrap.querySelectorAll<HTMLButtonElement>('.size-filter button');
-		const items = wrap.querySelectorAll<HTMLElement>('.product');
+		const groups = [...wrap.querySelectorAll<HTMLElement>('.filter')];
+		if (!groups.length) return;
+		const items = [...wrap.querySelectorAll<HTMLElement>('.product')];
 		const noMatch = wrap.querySelector<HTMLElement>('.no-match')!;
-		const apply = (size: string) => {
+		const reset = wrap.querySelector<HTMLButtonElement>('.reset')!;
+		const ranges = new Map<string, [number, number | null]>(
+			(JSON.parse(wrap.dataset.ranges!) as [string, number, number | null][]).map(([id, min, max]) => [id, [min, max]]),
+		);
+		const state: Record<Key, string> = { brand: '', size: '', price: '' };
+
+		const matches = (item: HTMLElement) => {
+			if (state.brand && item.dataset.brand !== state.brand) return false;
+			if (state.size && item.dataset.size !== state.size) return false;
+			if (state.price) {
+				const [min, max] = ranges.get(state.price) ?? [0, null];
+				const price = Number(item.dataset.price);
+				if (price < min || (max !== null && price > max)) return false;
+			}
+			return true;
+		};
+
+		const apply = () => {
 			let shown = 0;
-			items.forEach((item) => {
-				const match = !size || item.dataset.size === size;
+			for (const item of items) {
+				const match = matches(item);
 				item.hidden = !match;
 				if (match) shown++;
-			});
+			}
 			noMatch.hidden = shown > 0;
-			buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.size === size)));
+			for (const group of groups) {
+				const key = group.dataset.filter as Key;
+				group.querySelectorAll<HTMLButtonElement>('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.value === state[key])));
+			}
+			reset.hidden = KEYS.every((key) => !state[key]);
 			const u = new URL(location.href);
-			if (size) u.searchParams.set('size', size);
-			else u.searchParams.delete('size');
+			for (const key of KEYS) {
+				if (state[key]) u.searchParams.set(key, state[key]);
+				else u.searchParams.delete(key);
+			}
 			history.replaceState(null, '', u);
 		};
-		buttons.forEach((b) => b.addEventListener('click', () => apply(b.dataset.size ?? '')));
-		const initial = new URL(location.href).searchParams.get('size');
-		if (initial && [...buttons].some((b) => b.dataset.size === initial)) apply(initial);
+
+		for (const group of groups) {
+			const key = group.dataset.filter as Key;
+			const values = [...group.querySelectorAll<HTMLButtonElement>('button')].map((b) => b.dataset.value ?? '');
+			group.querySelectorAll<HTMLButtonElement>('button').forEach((b) =>
+				b.addEventListener('click', () => {
+					state[key] = b.dataset.value ?? '';
+					apply();
+				}),
+			);
+			// A shared link keeps its filters, as long as the value still exists.
+			const initial = new URL(location.href).searchParams.get(key);
+			if (initial && values.includes(initial)) state[key] = initial;
+		}
+		reset.addEventListener('click', () => {
+			for (const key of KEYS) state[key] = '';
+			apply();
+		});
+		if (KEYS.some((key) => state[key])) apply();
 	});
 </script>
 
@@ -80,37 +154,57 @@ const sizesInUse = SIZES.filter((s) => products.some((p) => p.data.size === s));
 		padding: 0;
 		list-style: none;
 	}
-	.size-filter {
+	.filters {
+		display: grid;
+		gap: 0.75rem;
+		margin-bottom: 1.75rem;
+	}
+	.filter {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 0.4rem;
-		margin-bottom: 1.5rem;
 	}
-	.size-filter .label {
+	.filter .label {
+		min-width: 4.5rem;
 		margin-right: 0.4rem;
 		font-size: var(--step--1);
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 	}
-	.size-filter button {
+	.filter button {
 		min-width: 2.75rem;
 		padding: 0.35em 0.85em;
 		border: 1.5px solid var(--line);
 		border-radius: 999px;
 		background: var(--bg-raised);
+		color: var(--ink);
 		font-size: var(--step--1);
 		font-weight: 600;
 		cursor: pointer;
 	}
-	.size-filter button:hover {
+	.filter button:hover {
 		border-color: var(--accent);
 	}
-	.size-filter button[aria-pressed='true'] {
+	.filter button[aria-pressed='true'] {
 		background: var(--accent);
 		border-color: var(--accent);
 		color: var(--on-accent);
+	}
+	.reset {
+		justify-self: start;
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--accent);
+		font: inherit;
+		font-size: var(--step--1);
+		text-decoration: underline;
+		cursor: pointer;
+	}
+	.reset[hidden] {
+		display: none;
 	}
 	.empty,
 	.no-match {

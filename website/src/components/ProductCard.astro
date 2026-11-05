@@ -20,7 +20,7 @@ const name = l(p.title, lang);
 const slider = photos.length > 1;
 ---
 
-<li class="product" data-size={p.size}>
+<li class="product" data-size={p.size} data-brand={p.brand} data-price={p.price}>
 	<a href={url(lang, `/item/${product.id}/`)} class:list={['card-link', { sold: p.sold }]}>
 		<div class="media">
 			{
