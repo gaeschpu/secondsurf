@@ -5,7 +5,6 @@ category: boardshorts
 size: L
 sizeNote: "W34"
 condition: good
-# TODO price: set the real price, then remove "draft: true"
 price: 35
 description:
   de: "Weisse Billabong-Boardshorts mit grossem schwarz-grauem Graffiti-Schriftzug auf beiden Beinen. Gesässtasche mit Logo, Schnürung vorne. Auffällig und zeitlos, vom Wasser direkt an die Strandbar."
@@ -17,5 +16,4 @@ photos:
   - ./2.jpg
   - ./3.jpg
 drop: 1
-draft: true
 ---

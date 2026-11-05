@@ -4,8 +4,7 @@ title: { de: "T-Shirt navy mit Bruststreifen", fr: "T-shirt navy à bande poitri
 category: tees
 size: M
 condition: veryGood
-# TODO price: set the real price, then remove "draft: true"
-price: 35
+price: 40
 description:
   de: "Navy T-Shirt mit hellblauem Streifen über der Brust, weissen Paspeln und Billabong-Schriftzug. Lockerer Schnitt, weiche Baumwolle. Passt zum Strand wie in die Stadt."
   fr: "T-shirt navy avec bande bleu clair sur la poitrine, passepoils blancs et logo Billabong. Coupe ample, coton doux. Aussi bien à la plage qu’en ville."
@@ -16,5 +15,4 @@ photos:
   - ./2.jpg
   - ./3.jpg
 drop: 1
-draft: true
 ---

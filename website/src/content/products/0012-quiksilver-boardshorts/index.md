@@ -5,7 +5,6 @@ category: boardshorts
 size: S
 sizeNote: "W30"
 condition: good
-# TODO price: set the real price, then remove "draft: true"
 price: 35
 description:
   de: "Weisse Quiksilver-Boardshorts im 2000er-Look: blau-schwarzes Karo-Logo, Flügel- und Tattoo-Prints in Blau, Pink und Grau. Cargotasche mit Ösen, türkises Futter. Schnürung vorne."
@@ -18,5 +17,4 @@ photos:
   - ./3.jpg
   - ./4.jpg
 drop: 1
-draft: true
 ---

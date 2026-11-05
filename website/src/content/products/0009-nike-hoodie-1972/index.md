@@ -4,8 +4,7 @@ title: { de: "Hoodie schwarz «1972»", fr: "Sweat à capuche noir « 1972 »", 
 category: hoodies
 size: M
 condition: good
-# TODO price: set the real price, then remove "draft: true"
-price: 45
+price: 50
 description:
   de: "Schwarzer Nike-Hoodie im Washed-Look mit grossem College-Schriftzug und gesticktem «1972» in Gold. Kängurutasche, Kapuze mit Kordel. Bequem und warm, perfekt nach der Session."
   fr: "Sweat Nike noir délavé avec grand logo college et « 1972 » brodé en or. Poche kangourou, capuche à cordon. Confortable et chaud, parfait après la session."
@@ -16,5 +15,4 @@ photos:
   - ./2.jpg
   - ./3.jpg
 drop: 1
-draft: true
 ---
