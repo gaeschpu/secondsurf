@@ -11,9 +11,8 @@
 	"legalReviewed": false,
 	"currentDrop": 1,
 	"stripeCheckout": false,
-	"freeShippingFrom": 50,
-	"shippingUpTo2kg": 9,
-	"shippingUpTo10kg": 12,
+	"freeShippingFrom": 100,
+	"shippingPrice": 9,
 	"announcement": {
 		"de": "☆ Schweizweiter Versand innert 48H ☆",
 		"fr": "☆ Envoi sous 48H dans toute la Suisse ☆",

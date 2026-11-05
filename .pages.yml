@@ -17,8 +17,7 @@ content:
       - { name: legalReviewed, label: Rechtstexte geprüft (blendet den Vorlage-Hinweis aus), type: boolean }
       - { name: currentDrop, label: Aktueller Drop, type: number, required: true }
       - { name: freeShippingFrom, label: Gratis Versand ab (CHF), type: number, required: true }
-      - { name: shippingUpTo2kg, label: Versand bis 2 kg (CHF), type: number, required: true }
-      - { name: shippingUpTo10kg, label: Versand bis 10 kg (CHF), type: number, required: true }
+      - { name: shippingPrice, label: Versand pro Bestellung (CHF), type: number, required: true }
       - name: announcement
         label: Balken ganz oben
         type: object

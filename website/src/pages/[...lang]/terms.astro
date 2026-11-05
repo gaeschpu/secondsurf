@@ -1,16 +1,387 @@
 ---
+// AGB, from the owner's document (raw-docs/legal forms/AGB_secondsurf.pdf, Stand 05.11.2026), in all four languages.
+// German is the contract language (2.5); the other versions say so. Section 6 follows the returns page:
+// only wrong, damaged or not-as-described pieces. Shipping figures come from src/settings/site.json.
 import LegalPage from '../../components/LegalPage.astro';
 import { chf, langPaths, url, useT, type Lang } from '../../i18n';
-import { CHECKOUT, OWNER, SHIPPING, SITE } from '../../config';
+import { OWNER, SHIPPING, SITE } from '../../config';
 
 export const getStaticPaths = langPaths;
 const { lang } = Astro.props as { lang: Lang };
 const t = useT(lang);
-const free = chf(SHIPPING.freeFrom);
-const small = chf(SHIPPING.upTo2kg);
-const big = chf(SHIPPING.upTo10kg);
-const returnsHref = url(lang, '/returns/');
-const contactHref = url(lang, '/contact/');
+
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const link = (href: string, label: string) => `<a href="${esc(href)}">${esc(label)}</a>`;
+/** Fills {email}, {privacy}, {returns}, {price}, {free}, {owner} in a paragraph. */
+const fill = (text: string) =>
+	esc(text)
+		.replace(/\{email\}/g, link(`mailto:${SITE.email}`, SITE.email))
+		.replace(/\{privacy\}/g, link(url(lang, '/privacy/'), `secondsurf.ch${url(lang, '/privacy/')}`))
+		.replace(/\{returns\}/g, link(url(lang, '/returns/'), t('returns.title')))
+		.replace(/\{price\}/g, chf(SHIPPING.price))
+		.replace(/\{free\}/g, chf(SHIPPING.freeFrom))
+		.replace(/\{owner\}/g, esc(OWNER.name));
+
+type Section = { title: string; paragraphs: (string | string[])[] };
+
+const content: Record<Lang, { subtitle: string; note?: string; sections: Section[]; updated: string }> = {
+	de: {
+		subtitle: 'secondsurf.ch – Second-Hand-Surfkleidung',
+		updated: 'Stand: 05.11.2026',
+		sections: [
+			{
+				title: '1. Geltungsbereich und Anbieter',
+				paragraphs: [
+					'1.1 Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle Bestellungen über den Onlineshop www.secondsurf.ch.',
+					'1.2 Anbieter und Vertragspartner ist: {owner}, secondsurf.ch, Biel/Bienne, Kanton Bern, Schweiz, E-Mail: {email} (nachfolgend «secondsurf» oder «wir»).',
+					'1.3 Das Angebot richtet sich an Privatkundinnen und Privatkunden (nachfolgend «Kunde»). Für Wiederverkäufer und Grosshandelskunden gelten separate Bedingungen, die wir auf Anfrage zustellen.',
+					'1.4 Massgebend ist die zum Zeitpunkt der Bestellung gültige Fassung dieser AGB. Abweichende Bedingungen des Kunden gelten nur, wenn wir ihnen schriftlich zustimmen.',
+				],
+			},
+			{
+				title: '2. Angebot und Vertragsschluss',
+				paragraphs: [
+					'2.1 Die Darstellung der Artikel im Onlineshop ist kein verbindliches Angebot, sondern eine Einladung zur Bestellung.',
+					'2.2 Mit dem Absenden der Bestellung über den Button «Jetzt kaufen» gibt der Kunde ein verbindliches Angebot ab. Vorher kann er seine Angaben jederzeit prüfen und korrigieren.',
+					'2.3 Nach erfolgreicher Zahlung erhält der Kunde eine Bestellbestätigung per E-Mail. Mit dieser Bestätigung kommt der Kaufvertrag zustande.',
+					'2.4 Fast alle Artikel sind Einzelstücke. Wird ein Artikel durch zeitgleiche Bestellungen mehrfach gekauft, gilt die zuerst bezahlte Bestellung. Weitere Kunden werden informiert und erhalten den bezahlten Betrag vollständig zurück.',
+					'2.5 Die Vertragssprache ist Deutsch.',
+				],
+			},
+			{
+				title: '3. Preise und Zahlung',
+				paragraphs: [
+					'3.1 Alle Preise sind Endpreise in Schweizer Franken (CHF). secondsurf ist nicht mehrwertsteuerpflichtig, deshalb wird keine Mehrwertsteuer ausgewiesen. Versandkosten werden vor Abschluss der Bestellung separat angezeigt.',
+					'3.2 Die Zahlung erfolgt über den Zahlungsdienstleister Stripe. Je nach Angebot im Checkout stehen Kredit- und Debitkarten, TWINT, Apple Pay oder Google Pay zur Verfügung.',
+					'3.3 Die Zahlung ist bei Bestellung fällig. Zahlungsdaten werden direkt von Stripe verarbeitet; secondsurf speichert keine Karteninformationen.',
+				],
+			},
+			{
+				title: '4. Lieferung und Versand',
+				paragraphs: [
+					'4.1 Wir liefern innerhalb der Schweiz und nach Liechtenstein mit der Schweizerischen Post. Die Versandkosten betragen {price} pro Bestellung; ab einem Bestellwert von {free} ist der Versand kostenlos.',
+					'4.2 Bestellungen werden in der Regel innert 2 Werktagen nach Zahlungseingang versendet. Angegebene Lieferzeiten sind unverbindlich.',
+					'4.3 Lieferungen in die EU sind nur auf Anfrage möglich. Der Kunde kontaktiert uns vor der Bestellung per E-Mail an {email}. Wir nennen ihm die Versandkosten und Bedingungen im Voraus. Zoll, Einfuhrabgaben und ausländische Steuern trägt der Kunde. Zwingende Verbraucherschutzrechte des Wohnsitzlandes des Kunden bleiben vorbehalten.',
+					'4.4 Die Gefahr geht mit der Übergabe der Ware an den Kunden über. Ist ein Paket bei Ankunft sichtbar beschädigt, bitten wir den Kunden, uns umgehend mit Fotos zu informieren.',
+				],
+			},
+			{
+				title: '5. Second-Hand-Ware und Zustand',
+				paragraphs: [
+					'5.1 secondsurf verkauft gebrauchte Kleidung. Jeder Artikel wird geprüft, gereinigt und mit seinem Zustand beschrieben (z. B. «sehr gut», «gut», «mit Gebrauchsspuren»). Sichtbare Mängel werden in der Beschreibung und auf den Fotos gezeigt.',
+					'5.2 Normale Gebrauchsspuren und in der Beschreibung genannte Mängel gelten nicht als Mangel im Sinne der Gewährleistung.',
+					'5.3 Farben können je nach Bildschirm leicht von der Abbildung abweichen. Grössenangaben stammen vom Originaletikett; wo möglich geben wir zusätzlich Masse an.',
+				],
+			},
+			{
+				title: '6. Rückgabe',
+				paragraphs: [
+					'6.1 Nach Schweizer Recht besteht beim Onlinekauf kein gesetzliches Widerrufsrecht. Weil fast alle Artikel gebrauchte Einzelstücke sind, nehmen wir einwandfreie Ware nicht zurück und tauschen sie nicht um.',
+					'6.2 Eine Rückgabe ist möglich, wenn der Kunde einen falschen Artikel erhalten hat, der Artikel beim Versand beschädigt wurde oder nicht der Beschreibung entspricht:',
+					[
+						'Der Kunde meldet dies innert 14 Tagen nach Erhalt über das Formular unter {returns} oder per E-Mail an {email}, wenn möglich mit Fotos.',
+						'Der Kunde sendet den Artikel im erhaltenen Zustand zurück.',
+					],
+					'6.3 Wir übernehmen die Kosten der Rücksendung und erstatten den Kaufpreis samt Versandkosten innert 14 Tagen über das ursprüngliche Zahlungsmittel. Auf Wunsch erhält der Kunde stattdessen einen Gutschein im gleichen Wert. Weitergehende Rechte aus Gewährleistung (Ziffer 7) bleiben vorbehalten.',
+					'6.4 Für Lieferungen in die EU gelten zusätzlich die zwingenden Widerrufsrechte des Wohnsitzlandes, insbesondere das 14-tägige Widerrufsrecht für Verbraucher.',
+				],
+			},
+			{
+				title: '7. Gewährleistung',
+				paragraphs: [
+					'7.1 Es gelten die gesetzlichen Bestimmungen (Art. 197 ff. OR). Weil es sich um gebrauchte Ware handelt, beträgt die Gewährleistungsfrist ein Jahr ab Lieferung (Art. 210 Abs. 4 OR).',
+					'7.2 Der Kunde prüft die Ware nach Erhalt und meldet erkennbare Mängel umgehend, spätestens innert 7 Tagen, per E-Mail mit Fotos. Versteckte Mängel meldet er sofort nach Entdeckung.',
+					'7.3 Bei einem berechtigten Mangel erstatten wir nach Wahl des Kunden den Kaufpreis gegen Rückgabe der Ware oder gewähren eine angemessene Preisminderung. Da es sich um Einzelstücke handelt, ist ein Ersatz durch einen gleichen Artikel in der Regel nicht möglich. Die Kosten der Rücksendung eines mangelhaften Artikels übernehmen wir.',
+				],
+			},
+			{
+				title: '8. Haftung und Datenschutz',
+				paragraphs: [
+					'8.1 secondsurf haftet unbeschränkt für Schäden, die vorsätzlich oder grobfahrlässig verursacht wurden. Die Haftung für leichte Fahrlässigkeit ist im gesetzlich zulässigen Umfang ausgeschlossen.',
+					'8.2 Für Verzögerungen oder Verluste durch das Transportunternehmen, Störungen des Zahlungsdienstleisters oder höhere Gewalt haften wir nicht, soweit gesetzlich zulässig.',
+					'8.3 Personendaten bearbeiten wir gemäss dem Schweizer Datenschutzgesetz. Einzelheiten stehen in unserer Datenschutzerklärung unter {privacy}.',
+				],
+			},
+			{
+				title: '9. Schlussbestimmungen',
+				paragraphs: [
+					'9.1 Es gilt ausschliesslich Schweizer Recht unter Ausschluss des UN-Kaufrechts (CISG). Zwingende Verbraucherschutzbestimmungen des Wohnsitzlandes des Kunden bleiben vorbehalten.',
+					'9.2 Gerichtsstand ist Biel/Bienne, Kanton Bern. Für Konsumentinnen und Konsumenten gilt zusätzlich der gesetzliche Gerichtsstand an ihrem Wohnsitz (Art. 32 ZPO).',
+					'9.3 Sollte eine Bestimmung dieser AGB unwirksam sein, bleiben die übrigen Bestimmungen gültig.',
+					'9.4 secondsurf kann diese AGB jederzeit anpassen. Für eine Bestellung gilt die Fassung, die zum Zeitpunkt der Bestellung auf der Website veröffentlicht war.',
+				],
+			},
+		],
+	},
+	fr: {
+		subtitle: 'secondsurf.ch – Vêtements de surf de seconde main',
+		note: 'Traduction fournie à titre d’information. Seule la version allemande fait foi (ch. 2.5).',
+		updated: 'État au 05.11.2026',
+		sections: [
+			{
+				title: '1. Champ d’application et fournisseur',
+				paragraphs: [
+					'1.1 Les présentes conditions générales de vente (CGV) s’appliquent à toutes les commandes passées sur la boutique en ligne www.secondsurf.ch.',
+					'1.2 Le fournisseur et partenaire contractuel est : {owner}, secondsurf.ch, Biel/Bienne, canton de Berne, Suisse, e-mail : {email} (ci-après « secondsurf » ou « nous »).',
+					'1.3 L’offre s’adresse aux clientes et clients privés (ci-après le « client »). Des conditions séparées, que nous envoyons sur demande, s’appliquent aux revendeurs et aux clients grossistes.',
+					'1.4 La version des présentes CGV en vigueur au moment de la commande fait foi. Des conditions divergentes du client ne s’appliquent que si nous les acceptons par écrit.',
+				],
+			},
+			{
+				title: '2. Offre et conclusion du contrat',
+				paragraphs: [
+					'2.1 La présentation des articles dans la boutique en ligne ne constitue pas une offre ferme, mais une invitation à commander.',
+					'2.2 En envoyant la commande au moyen du bouton « Acheter maintenant », le client fait une offre ferme. Auparavant, il peut à tout moment vérifier et corriger ses données.',
+					'2.3 Après le paiement, le client reçoit une confirmation de commande par e-mail. Le contrat de vente est conclu avec cette confirmation.',
+					'2.4 Presque tous les articles sont des pièces uniques. Si un article est acheté plusieurs fois par des commandes simultanées, la commande payée en premier prévaut. Les autres clients en sont informés et sont intégralement remboursés.',
+					'2.5 La langue du contrat est l’allemand.',
+				],
+			},
+			{
+				title: '3. Prix et paiement',
+				paragraphs: [
+					'3.1 Tous les prix sont des prix finaux en francs suisses (CHF). secondsurf n’est pas assujetti à la TVA ; aucune TVA n’est donc indiquée. Les frais d’envoi sont affichés séparément avant la fin de la commande.',
+					'3.2 Le paiement s’effectue via le prestataire de paiement Stripe. Selon l’offre au moment du paiement, les cartes de crédit et de débit, TWINT, Apple Pay ou Google Pay sont disponibles.',
+					'3.3 Le paiement est dû à la commande. Les données de paiement sont traitées directement par Stripe ; secondsurf n’enregistre aucune donnée de carte.',
+				],
+			},
+			{
+				title: '4. Livraison et envoi',
+				paragraphs: [
+					'4.1 Nous livrons en Suisse et au Liechtenstein avec La Poste Suisse. Les frais d’envoi s’élèvent à {price} par commande ; à partir d’une commande de {free}, l’envoi est gratuit.',
+					'4.2 Les commandes sont en général expédiées dans les 2 jours ouvrables suivant la réception du paiement. Les délais de livraison indiqués sont sans engagement.',
+					'4.3 Les livraisons dans l’UE ne sont possibles que sur demande. Le client nous contacte avant la commande par e-mail à {email}. Nous lui indiquons à l’avance les frais d’envoi et les conditions. Les droits de douane, taxes d’importation et impôts étrangers sont à la charge du client. Les droits impératifs de protection des consommateurs du pays de domicile du client sont réservés.',
+					'4.4 Le risque passe au client à la remise de la marchandise. Si un colis est visiblement endommagé à son arrivée, nous prions le client de nous en informer immédiatement avec des photos.',
+				],
+			},
+			{
+				title: '5. Articles de seconde main et état',
+				paragraphs: [
+					'5.1 secondsurf vend des vêtements d’occasion. Chaque article est contrôlé, nettoyé et décrit avec son état (p. ex. « très bon », « bon », « traces d’usure »). Les défauts visibles sont indiqués dans la description et sur les photos.',
+					'5.2 Les traces d’usure normales et les défauts mentionnés dans la description ne constituent pas un défaut au sens de la garantie.',
+					'5.3 Les couleurs peuvent légèrement différer de l’image selon l’écran. Les tailles proviennent de l’étiquette d’origine ; si possible, nous indiquons en plus des mesures.',
+				],
+			},
+			{
+				title: '6. Retour',
+				paragraphs: [
+					'6.1 Le droit suisse ne prévoit pas de droit de rétractation légal pour les achats en ligne. Presque tous les articles étant des pièces uniques d’occasion, nous ne reprenons ni n’échangeons une marchandise sans défaut.',
+					'6.2 Un retour est possible si le client a reçu le mauvais article, si l’article a été endommagé pendant l’envoi ou s’il ne correspond pas à la description :',
+					[
+						'Le client nous le signale dans les 14 jours suivant la réception via le formulaire sous {returns} ou par e-mail à {email}, si possible avec des photos.',
+						'Le client renvoie l’article dans l’état où il l’a reçu.',
+					],
+					'6.3 Nous prenons en charge les frais de retour et remboursons le prix d’achat ainsi que les frais d’envoi dans les 14 jours, sur le moyen de paiement d’origine. Si le client le souhaite, il reçoit à la place un bon de la même valeur. Les droits plus étendus découlant de la garantie (ch. 7) sont réservés.',
+					'6.4 Pour les livraisons dans l’UE, les droits de rétractation impératifs du pays de domicile s’appliquent en outre, notamment le droit de rétractation de 14 jours des consommateurs.',
+				],
+			},
+			{
+				title: '7. Garantie',
+				paragraphs: [
+					'7.1 Les dispositions légales s’appliquent (art. 197 ss CO). S’agissant de marchandises d’occasion, le délai de garantie est d’un an à compter de la livraison (art. 210 al. 4 CO).',
+					'7.2 Le client contrôle la marchandise à réception et signale immédiatement les défauts reconnaissables, au plus tard dans les 7 jours, par e-mail avec des photos. Il signale les défauts cachés dès leur découverte.',
+					'7.3 En cas de défaut justifié, nous remboursons, au choix du client, le prix d’achat contre restitution de la marchandise ou accordons une réduction de prix appropriée. S’agissant de pièces uniques, un remplacement par un article identique n’est en général pas possible. Nous prenons en charge les frais de retour d’un article défectueux.',
+				],
+			},
+			{
+				title: '8. Responsabilité et protection des données',
+				paragraphs: [
+					'8.1 secondsurf répond de manière illimitée des dommages causés intentionnellement ou par négligence grave. La responsabilité pour négligence légère est exclue dans la mesure permise par la loi.',
+					'8.2 Nous ne répondons pas des retards ou pertes causés par l’entreprise de transport, des perturbations du prestataire de paiement ou de la force majeure, dans la mesure permise par la loi.',
+					'8.3 Nous traitons les données personnelles conformément à la loi suisse sur la protection des données. Les détails figurent dans notre déclaration de protection des données sous {privacy}.',
+				],
+			},
+			{
+				title: '9. Dispositions finales',
+				paragraphs: [
+					'9.1 Le droit suisse est exclusivement applicable, à l’exclusion de la Convention de Vienne (CVIM). Les dispositions impératives de protection des consommateurs du pays de domicile du client sont réservées.',
+					'9.2 Le for est à Biel/Bienne, canton de Berne. Pour les consommatrices et consommateurs, le for légal de leur domicile s’applique en outre (art. 32 CPC).',
+					'9.3 Si une disposition des présentes CGV est invalide, les autres dispositions restent valables.',
+					'9.4 secondsurf peut modifier ces CGV à tout moment. La version publiée sur le site au moment de la commande s’applique à celle-ci.',
+				],
+			},
+		],
+	},
+	it: {
+		subtitle: 'secondsurf.ch – Abbigliamento da surf di seconda mano',
+		note: 'Traduzione a scopo informativo. Fa fede unicamente la versione tedesca (n. 2.5).',
+		updated: 'Stato: 05.11.2026',
+		sections: [
+			{
+				title: '1. Campo d’applicazione e fornitore',
+				paragraphs: [
+					'1.1 Le presenti condizioni generali (CG) si applicano a tutti gli ordini effettuati tramite il negozio online www.secondsurf.ch.',
+					'1.2 Fornitore e partner contrattuale è: {owner}, secondsurf.ch, Biel/Bienne, Canton Berna, Svizzera, e-mail: {email} (di seguito «secondsurf» o «noi»).',
+					'1.3 L’offerta si rivolge a clienti privati (di seguito «cliente»). Per rivenditori e grossisti valgono condizioni separate, che inviamo su richiesta.',
+					'1.4 Fa stato la versione delle presenti CG valida al momento dell’ordine. Condizioni divergenti del cliente valgono solo se le accettiamo per iscritto.',
+				],
+			},
+			{
+				title: '2. Offerta e conclusione del contratto',
+				paragraphs: [
+					'2.1 La presentazione degli articoli nel negozio online non è un’offerta vincolante, ma un invito a ordinare.',
+					'2.2 Inviando l’ordine con il pulsante «Acquista ora», il cliente fa un’offerta vincolante. Prima può verificare e correggere i suoi dati in qualsiasi momento.',
+					'2.3 Dopo il pagamento, il cliente riceve una conferma d’ordine per e-mail. Con questa conferma il contratto di compravendita è concluso.',
+					'2.4 Quasi tutti gli articoli sono pezzi unici. Se un articolo viene acquistato più volte con ordini simultanei, vale l’ordine pagato per primo. Gli altri clienti vengono informati e ricevono il rimborso completo dell’importo pagato.',
+					'2.5 La lingua del contratto è il tedesco.',
+				],
+			},
+			{
+				title: '3. Prezzi e pagamento',
+				paragraphs: [
+					'3.1 Tutti i prezzi sono prezzi finali in franchi svizzeri (CHF). secondsurf non è assoggettato all’IVA, perciò non viene indicata alcuna IVA. Le spese di spedizione sono indicate separatamente prima di concludere l’ordine.',
+					'3.2 Il pagamento avviene tramite il fornitore di servizi di pagamento Stripe. A seconda dell’offerta al checkout sono disponibili carte di credito e di debito, TWINT, Apple Pay o Google Pay.',
+					'3.3 Il pagamento è dovuto al momento dell’ordine. I dati di pagamento sono trattati direttamente da Stripe; secondsurf non salva dati di carte.',
+				],
+			},
+			{
+				title: '4. Consegna e spedizione',
+				paragraphs: [
+					'4.1 Consegniamo in Svizzera e nel Liechtenstein con la Posta Svizzera. Le spese di spedizione ammontano a {price} per ordine; a partire da un ordine di {free} la spedizione è gratuita.',
+					'4.2 Di regola gli ordini vengono spediti entro 2 giorni lavorativi dal ricevimento del pagamento. I tempi di consegna indicati non sono vincolanti.',
+					'4.3 Le consegne nell’UE sono possibili solo su richiesta. Il cliente ci contatta prima dell’ordine per e-mail a {email}. Gli comunichiamo in anticipo le spese di spedizione e le condizioni. Dazi, tributi d’importazione e imposte estere sono a carico del cliente. Restano riservati i diritti imperativi di protezione dei consumatori del paese di domicilio del cliente.',
+					'4.4 Il rischio passa al cliente con la consegna della merce. Se un pacco arriva visibilmente danneggiato, preghiamo il cliente di informarci subito con delle foto.',
+				],
+			},
+			{
+				title: '5. Merce di seconda mano e stato',
+				paragraphs: [
+					'5.1 secondsurf vende abbigliamento usato. Ogni articolo viene controllato, pulito e descritto con il suo stato (p. es. «molto buono», «buono», «con segni d’uso»). I difetti visibili sono indicati nella descrizione e nelle foto.',
+					'5.2 Normali segni d’uso e difetti indicati nella descrizione non costituiscono un difetto ai sensi della garanzia.',
+					'5.3 I colori possono differire leggermente dall’immagine a seconda dello schermo. Le taglie provengono dall’etichetta originale; se possibile indichiamo anche le misure.',
+				],
+			},
+			{
+				title: '6. Resi',
+				paragraphs: [
+					'6.1 Secondo il diritto svizzero non esiste un diritto di revoca legale per gli acquisti online. Poiché quasi tutti gli articoli sono pezzi unici usati, non riprendiamo né cambiamo merce senza difetti.',
+					'6.2 Un reso è possibile se il cliente ha ricevuto l’articolo sbagliato, se l’articolo è stato danneggiato durante la spedizione o se non corrisponde alla descrizione:',
+					[
+						'Il cliente ce lo segnala entro 14 giorni dal ricevimento tramite il modulo alla pagina {returns} o per e-mail a {email}, se possibile con foto.',
+						'Il cliente rispedisce l’articolo nello stato in cui l’ha ricevuto.',
+					],
+					'6.3 Paghiamo noi le spese di rispedizione e rimborsiamo il prezzo d’acquisto e le spese di spedizione entro 14 giorni sul mezzo di pagamento originale. Se lo desidera, il cliente riceve invece un buono dello stesso valore. Restano riservati i diritti più ampi derivanti dalla garanzia (n. 7).',
+					'6.4 Per le consegne nell’UE valgono inoltre i diritti di revoca imperativi del paese di domicilio, in particolare il diritto di revoca di 14 giorni dei consumatori.',
+				],
+			},
+			{
+				title: '7. Garanzia',
+				paragraphs: [
+					'7.1 Si applicano le disposizioni legali (art. 197 segg. CO). Trattandosi di merce usata, il termine di garanzia è di un anno dalla consegna (art. 210 cpv. 4 CO).',
+					'7.2 Il cliente controlla la merce al ricevimento e segnala subito i difetti riconoscibili, al più tardi entro 7 giorni, per e-mail con foto. I difetti nascosti li segnala subito dopo la scoperta.',
+					'7.3 In caso di difetto fondato rimborsiamo, a scelta del cliente, il prezzo d’acquisto contro restituzione della merce oppure concediamo un’adeguata riduzione del prezzo. Trattandosi di pezzi unici, di regola non è possibile una sostituzione con un articolo uguale. Paghiamo noi le spese di rispedizione di un articolo difettoso.',
+				],
+			},
+			{
+				title: '8. Responsabilità e protezione dei dati',
+				paragraphs: [
+					'8.1 secondsurf risponde senza limiti dei danni causati intenzionalmente o per negligenza grave. La responsabilità per negligenza lieve è esclusa nella misura consentita dalla legge.',
+					'8.2 Non rispondiamo di ritardi o perdite causati dall’impresa di trasporto, di disfunzioni del fornitore di servizi di pagamento o di forza maggiore, nella misura consentita dalla legge.',
+					'8.3 Trattiamo i dati personali secondo la legge svizzera sulla protezione dei dati. I dettagli si trovano nella nostra dichiarazione sulla protezione dei dati alla pagina {privacy}.',
+				],
+			},
+			{
+				title: '9. Disposizioni finali',
+				paragraphs: [
+					'9.1 Si applica esclusivamente il diritto svizzero, con esclusione della Convenzione di Vienna (CISG). Restano riservate le disposizioni imperative di protezione dei consumatori del paese di domicilio del cliente.',
+					'9.2 Il foro competente è Biel/Bienne, Canton Berna. Per i consumatori vale inoltre il foro legale del loro domicilio (art. 32 CPC).',
+					'9.3 Se una disposizione delle presenti CG fosse invalida, le altre restano valide.',
+					'9.4 secondsurf può modificare queste CG in qualsiasi momento. Per un ordine vale la versione pubblicata sul sito al momento dell’ordine.',
+				],
+			},
+		],
+	},
+	en: {
+		subtitle: 'secondsurf.ch – Second-hand surf clothing',
+		note: 'This translation is for information only. The German version is the binding one (section 2.5).',
+		updated: 'Last updated: 5 November 2026',
+		sections: [
+			{
+				title: '1. Scope and provider',
+				paragraphs: [
+					'1.1 These general terms and conditions (terms) apply to all orders placed through the online shop www.secondsurf.ch.',
+					'1.2 The provider and contracting party is: {owner}, secondsurf.ch, Biel/Bienne, Canton of Bern, Switzerland, email: {email} (hereinafter “secondsurf” or “we”).',
+					'1.3 The offer is aimed at private customers (hereinafter “customer”). Separate conditions, which we send on request, apply to resellers and wholesale customers.',
+					'1.4 The version of these terms valid at the time of the order applies. Different conditions of the customer only apply if we agree to them in writing.',
+				],
+			},
+			{
+				title: '2. Offer and conclusion of the contract',
+				paragraphs: [
+					'2.1 The presentation of items in the online shop is not a binding offer but an invitation to order.',
+					'2.2 By submitting the order with the “Buy now” button, the customer makes a binding offer. Before that, they can check and correct their details at any time.',
+					'2.3 After successful payment, the customer receives an order confirmation by email. The purchase contract is concluded with this confirmation.',
+					'2.4 Almost all items are one of a kind. If an item is bought more than once through simultaneous orders, the order paid first applies. Other customers are informed and receive a full refund of the amount paid.',
+					'2.5 The language of the contract is German.',
+				],
+			},
+			{
+				title: '3. Prices and payment',
+				paragraphs: [
+					'3.1 All prices are final prices in Swiss francs (CHF). secondsurf is not registered for VAT, so no VAT is shown. Shipping costs are shown separately before the order is completed.',
+					'3.2 Payment is made through the payment provider Stripe. Depending on what the checkout offers, credit and debit cards, TWINT, Apple Pay or Google Pay are available.',
+					'3.3 Payment is due when ordering. Payment details are processed directly by Stripe; secondsurf does not store any card information.',
+				],
+			},
+			{
+				title: '4. Delivery and shipping',
+				paragraphs: [
+					'4.1 We deliver within Switzerland and to Liechtenstein with Swiss Post. Shipping costs {price} per order; from an order value of {free}, shipping is free.',
+					'4.2 Orders are usually shipped within 2 working days of receiving payment. Stated delivery times are not binding.',
+					'4.3 Deliveries to the EU are only possible on request. The customer contacts us before ordering by email at {email}. We tell them the shipping costs and conditions in advance. Customs, import duties and foreign taxes are paid by the customer. Mandatory consumer protection rights of the customer’s country of residence remain reserved.',
+					'4.4 The risk passes to the customer when the goods are handed over. If a parcel arrives visibly damaged, we ask the customer to inform us immediately with photos.',
+				],
+			},
+			{
+				title: '5. Second-hand goods and condition',
+				paragraphs: [
+					'5.1 secondsurf sells used clothing. Every item is checked, cleaned and described with its condition (e.g. “very good”, “good”, “some wear”). Visible defects are shown in the description and the photos.',
+					'5.2 Normal signs of wear and defects mentioned in the description are not a defect within the meaning of the warranty.',
+					'5.3 Colours may differ slightly from the picture depending on the screen. Sizes are taken from the original label; where possible we also give measurements.',
+				],
+			},
+			{
+				title: '6. Returns',
+				paragraphs: [
+					'6.1 Under Swiss law there is no statutory right of withdrawal for online purchases. As almost all items are used one-of-a-kind pieces, we do not take back or exchange goods without defects.',
+					'6.2 A return is possible if the customer received the wrong item, the item was damaged in shipping or it does not match the description:',
+					[
+						'The customer tells us within 14 days of receipt using the form at {returns} or by email at {email}, with photos if possible.',
+						'The customer sends the item back in the condition they received it in.',
+					],
+					'6.3 We pay for the return shipping and refund the purchase price and shipping costs within 14 days to the original payment method. If the customer prefers, they receive a gift card of the same value instead. Further rights under the warranty (section 7) remain reserved.',
+					'6.4 For deliveries to the EU, the mandatory withdrawal rights of the country of residence also apply, in particular the 14-day right of withdrawal for consumers.',
+				],
+			},
+			{
+				title: '7. Warranty',
+				paragraphs: [
+					'7.1 The statutory provisions apply (Art. 197 ff. Swiss Code of Obligations). As the goods are used, the warranty period is one year from delivery (Art. 210 para. 4 CO).',
+					'7.2 The customer checks the goods on receipt and reports recognisable defects immediately, at the latest within 7 days, by email with photos. Hidden defects are reported as soon as they are discovered.',
+					'7.3 In the case of a justified defect, we refund the purchase price against return of the goods or grant an appropriate price reduction, as the customer chooses. As the items are one of a kind, replacement with an identical item is usually not possible. We pay the cost of returning a defective item.',
+				],
+			},
+			{
+				title: '8. Liability and data protection',
+				paragraphs: [
+					'8.1 secondsurf is liable without limitation for damage caused intentionally or through gross negligence. Liability for slight negligence is excluded to the extent permitted by law.',
+					'8.2 We are not liable for delays or losses caused by the transport company, disruptions of the payment provider or force majeure, to the extent permitted by law.',
+					'8.3 We process personal data in accordance with the Swiss Data Protection Act. Details are in our privacy policy at {privacy}.',
+				],
+			},
+			{
+				title: '9. Final provisions',
+				paragraphs: [
+					'9.1 Swiss law applies exclusively, excluding the UN Convention on Contracts for the International Sale of Goods (CISG). Mandatory consumer protection provisions of the customer’s country of residence remain reserved.',
+					'9.2 The place of jurisdiction is Biel/Bienne, Canton of Bern. For consumers, the statutory place of jurisdiction at their place of residence also applies (Art. 32 Swiss Civil Procedure Code).',
+					'9.3 Should a provision of these terms be invalid, the remaining provisions remain valid.',
+					'9.4 secondsurf may change these terms at any time. An order is governed by the version published on the website at the time of the order.',
+				],
+			},
+		],
+	},
+};
+const c = content[lang];
 ---
 
 <LegalPage
@@ -23,104 +394,42 @@ const contactHref = url(lang, '/contact/');
 		en: 'Terms of secondsurf: ordering, prices, payment, shipping, returns and warranty.',
 	}[lang]}
 >
-	{lang === 'de' && (
-		<>
-			<h2>1. Geltungsbereich</h2>
-			<p>Diese AGB gelten für alle Käufe bei {SITE.name}, {OWNER.legalForm}, Inhaber {OWNER.name} (im Folgenden «wir»).</p>
-			<h2>2. Anfrage und Vertragsschluss</h2>
-			{CHECKOUT.enabled ? <p>Mit dem Button «Kaufen» kommst du zur Kasse unseres Zahlungsdienstleisters Stripe. Dort wählst du den Versand und gibst deine Adresse an. Der Kaufvertrag kommt zustande, wenn du die Zahlung abschliesst. Solange du an der Kasse bist, höchstens 30 Minuten, ist das Piece für dich reserviert. Kommt es trotzdem zu einem Doppelverkauf, informieren wir dich und erstatten deine Zahlung vollständig zurück.</p> : <p>Die Pieces auf der Website sind kein verbindliches Angebot. Du fragst ein Piece über den Button «Anfragen» an, und wir schicken dir die Zahlungsangaben. Der Kaufvertrag kommt zustande, wenn deine Zahlung bei uns eingeht. Vorher ist das Piece nicht reserviert. Bezahlt jemand anderes zuerst, informieren wir dich und erstatten eine bereits geleistete Zahlung zurück.</p>}
-			<h2>3. Preise</h2>
-			<p>Alle Preise sind Endpreise in Schweizer Franken (CHF). {SITE.name} ist nicht MWST-pflichtig. Versandkosten kommen gemäss Ziffer 5 dazu.</p>
-			<h2>4. Zahlung</h2>
-			{CHECKOUT.enabled ? <p>Du bezahlst sofort an der Kasse von Stripe, mit den dort angebotenen Zahlungsarten (z.&nbsp;B. Karte oder TWINT). Die Quittung erhältst du per E-Mail. Wir versenden nach Zahlungseingang.</p> : <p>Du bezahlst sofort und im Voraus. Die Zahlungsangaben erhältst du per E-Mail. Wir versenden nach Zahlungseingang.</p>}
-			<h2>5. Lieferung und Versandkosten</h2>
-			<p>Wir versenden in der Schweiz mit der Schweizerischen Post, in der Regel innert 2 Arbeitstagen nach Zahlungseingang.</p>
-			<ul>
-				<li>Ab einem Bestellwert von {free}: gratis</li>
-				<li>Unter {free}: {small} bis 2 kg, {big} bis 10 kg (Post, PostPac Economy)</li>
-			</ul>
-			<p>Für Versand ins Ausland <a href={contactHref}>kontaktiere uns</a>, wir nennen dir die Kosten im Voraus.</p>
-			<h2>6. Rückgabe bei Fehlern</h2>
-			<p>Hast du das falsche Piece erhalten, wurde es beim Versand beschädigt oder entspricht es nicht der Beschreibung, melde dich bitte rasch, spätestens innert 14 Tagen nach Erhalt, über das <a href={returnsHref}>Rückgabeformular</a>. Einen Mangel, der sich erst später zeigt, meldest du sofort nach der Entdeckung. Schick das Piece im Zustand zurück, in dem du es erhalten hast. Wir übernehmen den Rückversand und erstatten dir den Kaufpreis samt Versandkosten zurück. Wenn du möchtest, erhältst du stattdessen einen Gutschein im gleichen Wert. Weil jedes Piece ein Einzelstück ist, gibt es keinen Umtausch. Für fehlerfreie Pieces, die dir nicht gefallen oder nicht passen, besteht kein Rückgaberecht.</p>
-			<h2>7. Gewährleistung</h2>
-			<p>Unsere Pieces sind, wenn nicht anders angegeben, gebraucht. Beschriebene oder auf den Fotos sichtbare Gebrauchsspuren sind kein Mangel. Im Übrigen gelten die gesetzlichen Gewährleistungsrechte (Art. 197 ff. OR).</p>
-			<h2>8. Anwendbares Recht</h2>
-			<p>Es gilt Schweizer Recht. Zwingende Gerichtsstände für Konsumentinnen und Konsumenten bleiben vorbehalten.</p>
-		</>
-	)}
-	{lang === 'fr' && (
-		<>
-			<h2>1. Champ d’application</h2>
-			<p>Les présentes CGV s’appliquent à tous les achats auprès de {SITE.name}, {OWNER.legalForm}, propriétaire {OWNER.name} (ci-après « nous »).</p>
-			<h2>2. Demande et conclusion du contrat</h2>
-			{CHECKOUT.enabled ? <p>Le bouton « Acheter » t’emmène à la caisse de notre prestataire de paiement Stripe. Tu y choisis l’envoi et indiques ton adresse. Le contrat de vente est conclu lorsque tu finalises le paiement. Tant que tu es à la caisse, 30 minutes au plus, la pièce t’est réservée. Si une pièce devait malgré tout être vendue deux fois, nous t’en informons et te remboursons intégralement.</p> : <p>Les pièces présentées sur le site ne constituent pas une offre ferme. Tu demandes une pièce avec le bouton « Demander » et nous t’envoyons les informations de paiement. Le contrat de vente est conclu à la réception de ton paiement. Avant cela, la pièce n’est pas réservée. Si quelqu’un d’autre paie en premier, nous t’informons et remboursons tout paiement déjà effectué.</p>}
-			<h2>3. Prix</h2>
-			<p>Tous les prix sont des prix finaux en francs suisses (CHF). {SITE.name} n’est pas assujetti à la TVA. Les frais d’envoi s’ajoutent selon le point 5.</p>
-			<h2>4. Paiement</h2>
-			{CHECKOUT.enabled ? <p>Tu paies immédiatement à la caisse de Stripe, avec les moyens de paiement proposés (p.&nbsp;ex. carte ou TWINT). Tu reçois le reçu par e-mail. Nous expédions dès réception du paiement.</p> : <p>Le paiement se fait immédiatement et à l’avance. Tu reçois les informations de paiement par e-mail. Nous expédions après réception du paiement.</p>}
-			<h2>5. Livraison et frais d’envoi</h2>
-			<p>En Suisse, nous expédions par La Poste Suisse, en général sous 2 jours ouvrables après réception du paiement.</p>
-			<ul>
-				<li>À partir de {free} de commande : gratuit</li>
-				<li>En dessous de {free} : {small} jusqu’à 2 kg, {big} jusqu’à 10 kg (Poste, PostPac Economy)</li>
-			</ul>
-			<p>Pour un envoi à l’étranger, <a href={contactHref}>contacte-nous</a> : nous t’indiquons les frais à l’avance.</p>
-			<h2>6. Retour en cas de problème</h2>
-			<p>Si tu as reçu la mauvaise pièce, si elle a été endommagée pendant l’envoi ou si elle ne correspond pas à la description, annonce-le rapidement, au plus tard dans les 14 jours après réception, via le <a href={returnsHref}>formulaire de retour</a>. Un défaut qui n’apparaît que plus tard doit nous être signalé dès sa découverte. Renvoie la pièce dans l’état où tu l’as reçue. Nous prenons le renvoi en charge et te remboursons le prix d’achat ainsi que les frais d’envoi. Si tu préfères, tu reçois à la place un bon de la même valeur. Chaque pièce étant unique, il n’y a pas d’échange. Les pièces sans défaut qui ne te plaisent pas ou ne te vont pas ne peuvent pas être retournées.</p>
-			<h2>7. Garantie</h2>
-			<p>Sauf indication contraire, nos pièces sont d’occasion. Les traces d’usure décrites ou visibles sur les photos ne constituent pas un défaut. Pour le reste, les droits légaux de garantie s’appliquent (art. 197 ss CO).</p>
-			<h2>8. Droit applicable</h2>
-			<p>Le droit suisse s’applique. Les fors impératifs pour les consommatrices et consommateurs sont réservés.</p>
-		</>
-	)}
-	{lang === 'it' && (
-		<>
-			<h2>1. Campo di applicazione</h2>
-			<p>Queste condizioni generali valgono per tutti gli acquisti presso {SITE.name}, {OWNER.legalForm}, titolare {OWNER.name} (di seguito «noi»).</p>
-			<h2>2. Richiesta e conclusione del contratto</h2>
-			{CHECKOUT.enabled ? <p>Con il pulsante «Acquista» arrivi alla cassa del nostro fornitore di pagamenti Stripe. Lì scegli la spedizione e inserisci il tuo indirizzo. Il contratto di vendita è concluso quando completi il pagamento. Finché sei alla cassa, al massimo 30 minuti, il pezzo è riservato per te. Se un pezzo dovesse comunque essere venduto due volte, ti informiamo e ti rimborsiamo per intero.</p> : <p>I pezzi presentati sul sito non sono un’offerta vincolante. Chiedi informazioni su un pezzo con il pulsante «Chiedi info» e noi ti mandiamo i dati di pagamento. Il contratto di vendita è concluso quando riceviamo il tuo pagamento. Fino ad allora il pezzo non è riservato. Se qualcun altro paga per primo, ti informiamo e rimborsiamo l’eventuale pagamento già effettuato.</p>}
-			<h2>3. Prezzi</h2>
-			<p>Tutti i prezzi sono prezzi finali in franchi svizzeri (CHF). {SITE.name} non è assoggettato all’IVA. Le spese di spedizione si aggiungono secondo il punto 5.</p>
-			<h2>4. Pagamento</h2>
-			{CHECKOUT.enabled ? <p>Paghi subito alla cassa di Stripe, con i metodi di pagamento offerti (p.&nbsp;es. carta o TWINT). Ricevi la ricevuta via e-mail. Spediamo dopo aver ricevuto il pagamento.</p> : <p>Paghi subito e in anticipo. Ricevi i dati di pagamento via e-mail. Spediamo dopo aver ricevuto il pagamento.</p>}
-			<h2>5. Consegna e spese di spedizione</h2>
-			<p>In Svizzera spediamo con la Posta Svizzera, di regola entro 2 giorni lavorativi dal ricevimento del pagamento.</p>
-			<ul>
-				<li>Ordini da {free}: gratuita</li>
-				<li>Ordini sotto {free}: {small} fino a 2 kg, {big} fino a 10 kg (Posta, PostPac Economy)</li>
-			</ul>
-			<p>Per spedizioni all’estero <a href={contactHref}>contattaci</a>: ti indichiamo i costi in anticipo.</p>
-			<h2>6. Resi in caso di problemi</h2>
-			<p>Se hai ricevuto il pezzo sbagliato, se è stato danneggiato durante la spedizione o se non corrisponde alla descrizione, segnalacelo subito, al più tardi entro 14 giorni dal ricevimento, con il <a href={returnsHref}>modulo per i resi</a>. Un difetto che si manifesta solo più tardi va segnalato subito dopo averlo scoperto. Rispedisci il pezzo nello stato in cui l’hai ricevuto. Paghiamo noi la spedizione di ritorno e ti rimborsiamo il prezzo d’acquisto e le spese di spedizione. Se preferisci, ricevi invece un buono dello stesso valore. Ogni pezzo è unico, quindi non sono possibili cambi. I pezzi senza difetti che non ti piacciono o non ti stanno non possono essere resi.</p>
-			<h2>7. Garanzia</h2>
-			<p>Salvo indicazione contraria, i nostri pezzi sono usati. I segni d’uso descritti o visibili nelle foto non costituiscono un difetto. Per il resto valgono i diritti legali di garanzia (art. 197 segg. CO).</p>
-			<h2>8. Diritto applicabile</h2>
-			<p>Si applica il diritto svizzero. Sono fatti salvi i fori imperativi per i consumatori.</p>
-		</>
-	)}
-	{lang === 'en' && (
-		<>
-			<h2>1. Scope</h2>
-			<p>These terms apply to all purchases from {SITE.name}, {OWNER.legalForm}, owner {OWNER.name} (“we”).</p>
-			<h2>2. Enquiry and contract</h2>
-			{CHECKOUT.enabled ? <p>The “Buy” button takes you to the checkout of our payment provider Stripe, where you choose shipping and enter your address. The contract of sale is made when you complete the payment. While you are at the checkout, for at most 30 minutes, the piece is reserved for you. If a piece should still be sold twice, we’ll tell you and refund you in full.</p> : <p>The pieces on the website are not a binding offer. You enquire about a piece with the “Ask about it” button, and we send you the payment details. The contract of sale is made when your payment reaches us. Until then, the piece isn’t reserved. If someone else pays first, we’ll tell you and refund any payment you’ve already made.</p>}
-			<h2>3. Prices</h2>
-			<p>All prices are final prices in Swiss francs (CHF). {SITE.name} is not registered for VAT. Shipping costs are added as set out in section 5.</p>
-			<h2>4. Payment</h2>
-			{CHECKOUT.enabled ? <p>You pay right away at the Stripe checkout, with the payment methods offered there (e.g. card or TWINT). You get the receipt by email. We ship once payment has arrived.</p> : <p>You pay immediately and in advance. You get the payment details by email. We ship once payment has arrived.</p>}
-			<h2>5. Delivery and shipping costs</h2>
-			<p>Within Switzerland we ship with Swiss Post, usually within 2 business days of receiving payment.</p>
-			<ul>
-				<li>Orders from {free}: free</li>
-				<li>Orders under {free}: {small} up to 2 kg, {big} up to 10 kg (Swiss Post, PostPac Economy)</li>
-			</ul>
-			<p>For shipping abroad, <a href={contactHref}>contact us</a> and we’ll tell you the cost in advance.</p>
-			<h2>6. Returns when something is wrong</h2>
-			<p>If you received the wrong piece, it was damaged in shipping, or it doesn’t match the description, tell us quickly, at the latest within 14 days of receiving it, using the <a href={returnsHref}>returns form</a>. A defect that only shows up later must be reported as soon as you discover it. Send the piece back in the condition you received it. We pay for return shipping and refund the purchase price and shipping costs. If you prefer, you can get a gift card of the same value instead. Every piece is one of a kind, so there are no exchanges. Pieces without a fault that you don’t like or that don’t fit can’t be returned.</p>
-			<h2>7. Warranty</h2>
-			<p>Unless stated otherwise, our pieces are used. Wear that is described or visible in the photos is not a defect. Otherwise, the statutory warranty rights apply (Art. 197 ff. of the Swiss Code of Obligations).</p>
-			<h2>8. Applicable law</h2>
-			<p>Swiss law applies. Mandatory places of jurisdiction for consumers remain reserved.</p>
-		</>
-	)}
+	<p class="subtitle">{c.subtitle}</p>
+	{c.note && <p class="note">{c.note}</p>}
+	{
+		c.sections.map((section) => (
+			<>
+				<h2>{section.title}</h2>
+				{section.paragraphs.map((p) =>
+					Array.isArray(p) ? (
+						<ul>
+							{p.map((item) => (
+								<li set:html={fill(item)} />
+							))}
+						</ul>
+					) : (
+						<p set:html={fill(p)} />
+					),
+				)}
+			</>
+		))
+	}
+	<p class="updated">{c.updated}</p>
 </LegalPage>
+
+<style>
+	.subtitle,
+	.updated {
+		color: var(--ink-soft);
+	}
+	.note {
+		padding: 0.75rem 1rem;
+		border-left: 3px solid var(--accent);
+		background: var(--accent-tint);
+		font-size: var(--step--1);
+	}
+	.updated {
+		margin-top: 2rem;
+		font-size: var(--step--1);
+	}
+</style>

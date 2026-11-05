@@ -23,11 +23,10 @@ export const OWNER = {
 	legalReviewed: settings.legalReviewed,
 };
 
-/** Swiss Post PostPac Economy prices in CHF, free from `freeFrom`. */
+/** Shipping in Switzerland and Liechtenstein: one price per order (CHF), free from `freeFrom`. Same as the AGB. */
 export const SHIPPING = {
 	freeFrom: settings.freeShippingFrom,
-	upTo2kg: settings.shippingUpTo2kg,
-	upTo10kg: settings.shippingUpTo10kg,
+	price: settings.shippingPrice,
 };
 
 /** Bar at the very top of every page. Leave the German text empty to hide it. */
@@ -70,11 +69,9 @@ export const CONDITIONS = {
 /**
  * Online payment with Stripe Checkout (functions/api/checkout.ts). Switch it on with "stripeCheckout": true in
  * src/settings/site.json once STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are set in Cloudflare (see README).
- * Pieces in these categories ship as a parcel up to 10 kg, everything else up to 2 kg.
  */
 export const CHECKOUT = {
 	enabled: settings.stripeCheckout === true,
-	heavyCategories: ['wetsuits'] as readonly string[],
 };
 
 /**

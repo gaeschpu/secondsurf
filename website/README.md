@@ -139,7 +139,7 @@ For orders by inquiry, the owner applies the discount by hand.
 the contact form with the piece filled in, and you send the payment details (e.g. TWINT) yourself.
 
 **With Stripe Checkout** (`"stripeCheckout": true`): the button says **Kaufen** and takes the customer to Stripe's payment page.
-Shipping is added there (CHF 9 up to 2 kg, CHF 12 for wetsuits, free from CHF 50; set in `site.json` and `CHECKOUT` in `src/config.ts`),
+Shipping is added there (CHF 9 per order, free from CHF 100; `shippingPrice` and `freeShippingFrom` in `site.json`, the same values the AGB show),
 along with the address and phone number (Switzerland and Liechtenstein only). While someone is at the checkout, the piece is held for
 them for 30 minutes so it can't be sold twice. When they've paid, the piece is marked as sold automatically (a commit, so the site
 rebuilds) and you get an email with the shipping address. The customer lands on `/thanks/`. Code: `functions/api/checkout.ts`,
@@ -193,7 +193,7 @@ Texts, contact details, banners, shipping prices and news can be edited at [app.
 
 The owner guide in German is in `OWNER-ANLEITUNG.md`. What's still missing before going live is in `CLIENT-CHECKLIST.md`.
 
-To show shipping costs, the site uses Swiss Post's PostPac Economy prices at the counter, stored in `src/settings/site.json`. Check them each January, when Swiss Post usually adjusts prices.
+Shipping is one price per order (`shippingPrice`, CHF 9) and free from `freeShippingFrom` (CHF 100), both in `src/settings/site.json`. The AGB page and the Stripe checkout read them from there.
 
 ## Deploy (Cloudflare Pages)
 

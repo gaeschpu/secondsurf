@@ -71,13 +71,10 @@ export async function startCheckout(opts: {
 		if (hold.previousSession) await stripe(env, `/checkout/sessions/${hold.previousSession}/expire`, {}).catch(() => {});
 	}
 
-	const heavy = CHECKOUT.heavyCategories.includes(piece.category);
 	const shipping =
 		price >= SHIPPING.freeFrom
 			? { amount: 0, name: text(lang, 'checkout.shippingFree') }
-			: heavy
-				? { amount: SHIPPING.upTo10kg, name: text(lang, 'checkout.shippingBig') }
-				: { amount: SHIPPING.upTo2kg, name: text(lang, 'checkout.shippingSmall') };
+			: { amount: SHIPPING.price, name: text(lang, 'checkout.shippingPost') };
 	const metadata = { product_id: id, ...opts.metadata };
 
 	try {

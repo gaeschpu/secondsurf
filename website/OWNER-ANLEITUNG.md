@@ -80,7 +80,7 @@ In Pages CMS unter **News** auf **Add an entry** tippen, Datum, Titel und Text a
 
 ## Versandpreise ändern
 
-In Pages CMS unter **Einstellungen**: **Gratis Versand ab**, **Versand bis 2 kg** und **Versand bis 10 kg**. Die Post passt ihre Preise meist im Januar an. Kontrolliere sie darum einmal im Jahr auf [post.ch](https://www.post.ch/de/pakete-versenden/pakete-schweiz/postpac-economy).
+In Pages CMS unter **Einstellungen**: **Versand pro Bestellung** (zurzeit CHF 9.–) und **Gratis Versand ab** (zurzeit CHF 100.–). Die AGB übernehmen die Werte automatisch. Deckt der Preis das Porto nicht mehr, erhöhe ihn hier.
 
 ## Wenn etwas nicht klappt
 
