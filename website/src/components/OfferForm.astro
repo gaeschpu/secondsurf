@@ -62,11 +62,11 @@ const minText = chf(minimum);
 }
 {
 	show && (
-		<dialog class="offer-login" aria-labelledby="offer-login-text" tabindex="-1">
-			<button type="button" class="close" aria-label={t('offer.close')} data-close>
+		<dialog class="modal offer-login" aria-labelledby="offer-login-text" tabindex="-1">
+			<button type="button" class="modal-close" aria-label={t('offer.close')} data-close>
 				<Icon name="close" size={20} />
 			</button>
-			<p id="offer-login-text">{t('offer.loginNeeded')}</p>
+			<p id="offer-login-text" class="modal-text">{t('offer.loginNeeded')}</p>
 			<a class="btn" href={url(lang, '/account/')} data-login>
 				{t('offer.loginButton')}
 			</a>
@@ -163,70 +163,6 @@ const minText = chf(minimum);
 	.offer-form textarea {
 		font: inherit;
 		font-weight: 400;
-	}
-	/* In the middle of the screen (the global reset removes the browser's own centring). */
-	.offer-login {
-		position: fixed;
-		inset: 0;
-		margin: auto;
-		height: fit-content;
-		width: min(calc(100vw - 2rem), 26rem);
-		padding: 2.75rem 2rem 2rem;
-		border: 0;
-		border-radius: 0;
-		background: var(--bg-raised);
-		color: var(--ink);
-		box-shadow: var(--shadow);
-		text-align: center;
-	}
-	.offer-login[open] {
-		display: grid;
-		justify-items: center;
-		gap: 1.25rem;
-	}
-	.offer-login:focus {
-		outline: none;
-	}
-	.offer-login::backdrop {
-		background: rgb(0 0 0 / 0.5);
-	}
-	.offer-login p {
-		font-size: var(--step-1);
-		font-weight: 600;
-		line-height: 1.35;
-	}
-	/* Same square, bold look as the buttons on the product page. */
-	.offer-login .btn {
-		justify-content: center;
-		width: 100%;
-		min-height: 3.2rem;
-		padding: 0.85rem 1.5rem;
-		border-color: var(--ink);
-		border-radius: 0;
-		background: var(--ink);
-		color: var(--bg);
-		font-size: var(--step-0);
-		font-weight: 700;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-	}
-	.offer-login .btn:hover {
-		border-color: var(--ink-soft);
-		background: var(--ink-soft);
-		color: var(--bg);
-	}
-	.offer-login .close {
-		position: absolute;
-		top: 0.5rem;
-		right: 0.5rem;
-		display: grid;
-		place-items: center;
-		width: 2.5rem;
-		height: 2.5rem;
-		border: 0;
-		background: none;
-		color: var(--ink-soft);
-		cursor: pointer;
 	}
 	.status:empty {
 		display: none;

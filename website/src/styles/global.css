@@ -373,3 +373,85 @@ small,
 		transition-duration: 0.01ms !important;
 	}
 }
+
+/* ----------------------------------------------------------------
+   Popups (<dialog class="modal">): the price-offer login note and the welcome offer.
+   Centred with top/left + transform: Safari ignores "height: fit-content" on a dialog and stretched it
+   to the full window height. The content is a column, so nothing inside can stretch.
+---------------------------------------------------------------- */
+dialog.modal {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	right: auto;
+	bottom: auto;
+	transform: translate(-50%, -50%);
+	box-sizing: border-box;
+	width: min(calc(100vw - 2rem), 26rem);
+	height: auto;
+	max-height: calc(100vh - 2rem);
+	margin: 0;
+	padding: 2.75rem 2rem 2rem;
+	overflow: auto;
+	border: 0;
+	border-radius: 0;
+	background: var(--bg-raised);
+	color: var(--ink);
+	box-shadow: var(--shadow);
+	text-align: center;
+}
+dialog.modal[open] {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	justify-content: flex-start;
+	gap: 1.25rem;
+}
+dialog.modal:focus {
+	outline: none;
+}
+dialog.modal::backdrop {
+	background: rgb(0 0 0 / 0.5);
+}
+.modal-close {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	display: grid;
+	place-items: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--ink-soft);
+	cursor: pointer;
+}
+.modal-close:hover {
+	color: var(--ink);
+}
+/* Square, bold buttons, like the ones under a piece. */
+dialog.modal .btn {
+	flex: none;
+	justify-content: center;
+	min-height: 3.2rem;
+	padding: 0.85rem 1.5rem;
+	border-color: var(--ink);
+	border-radius: 0;
+	background: var(--ink);
+	color: var(--bg);
+	font-size: var(--step-0);
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+dialog.modal .btn:hover {
+	border-color: var(--ink-soft);
+	background: var(--ink-soft);
+	color: var(--bg);
+}
+dialog.modal .modal-text {
+	font-size: var(--step-1);
+	font-weight: 600;
+	line-height: 1.35;
+}

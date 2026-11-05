@@ -1,7 +1,7 @@
 // Customer accounts: email + password, wishlist, shipping addresses and price-drop alerts.
 // Everything lives in the Cloudflare D1 database bound as DB. The tables create themselves on first use.
 
-import { SITE } from '../../src/config.ts';
+import { SITE, WELCOME } from '../../src/config.ts';
 import { url, type Lang } from '../../src/i18n/index.ts';
 import type { D1Database, Env } from './auth.ts';
 import { sendMail } from './mail.ts';
@@ -39,6 +39,8 @@ const SCHEMA = [
 	/** Login and email attempts, to slow down guessing and spam. */
 	`CREATE TABLE IF NOT EXISTS attempts (key TEXT NOT NULL, at INTEGER NOT NULL)`,
 	`CREATE INDEX IF NOT EXISTS attempts_key ON attempts (key, at)`,
+	/** Welcome discount (WELCOME in src/config.ts): one row per account once it has been used in a paid order. */
+	`CREATE TABLE IF NOT EXISTS welcome_used (user_id INTEGER PRIMARY KEY, session_id TEXT NOT NULL, used_at INTEGER NOT NULL)`,
 ];
 
 let schemaReady: Promise<unknown> | null = null;
@@ -102,10 +104,13 @@ export async function startSession(db: D1Database, userId: number) {
 		.prepare('INSERT INTO sessions (hash, user_id, expires_at) VALUES (?, ?, ?)')
 		.bind(await sha256(token), userId, now() + SESSION_DAYS * 86400)
 		.run();
-	return `${COOKIE}=${token}; Path=/api/account; Max-Age=${SESSION_DAYS * 86400}; HttpOnly; Secure; SameSite=Strict`;
+	// Path /api: the checkout (/api/checkout) needs the login too, for the welcome discount.
+	return `${COOKIE}=${token}; Path=/api; Max-Age=${SESSION_DAYS * 86400}; HttpOnly; Secure; SameSite=Strict`;
 }
 
-export const endSessionCookie = `${COOKIE}=; Path=/api/account; Max-Age=0; HttpOnly; Secure; SameSite=Strict`;
+export const endSessionCookie = `${COOKIE}=; Path=/api; Max-Age=0; HttpOnly; Secure; SameSite=Strict`;
+/** Logins used to be limited to /api/account. Sent along whenever the login changes, so such an old cookie goes away. */
+export const oldSessionCookieClear = `${COOKIE}=; Path=/api/account; Max-Age=0; HttpOnly; Secure; SameSite=Strict`;
 
 const sessionToken = (request: Request) =>
 	(request.headers.get('Cookie') ?? '').match(new RegExp(`(?:^|;\\s*)${COOKIE}=([A-Za-z0-9_-]{43})(?:;|$)`))?.[1];
@@ -191,10 +196,10 @@ export function parseAddresses(value: unknown): Address[] | null {
 
 const MAILS = {
 	verify: {
-		de: ['Bestätige deine E-Mail-Adresse für secondsurf', 'Hallo\n\nWillkommen bei secondsurf! Bitte bestätige deine E-Mail-Adresse mit diesem Link (7 Tage gültig):\n\n{link}\n\nErst danach bekommst du Preisalarme für deine Wunschliste.\n\nDu hast kein Konto erstellt? Dann ignoriere diese E-Mail einfach.\n\nsecondsurf'],
-		fr: ['Confirme ton adresse e-mail pour secondsurf', 'Bonjour\n\nBienvenue chez secondsurf ! Confirme ton adresse e-mail avec ce lien (valable 7 jours) :\n\n{link}\n\nEnsuite seulement, tu recevras les alertes de prix de ta liste d’envies.\n\nTu n’as pas créé de compte ? Ignore simplement cet e-mail.\n\nsecondsurf'],
-		it: ['Conferma il tuo indirizzo e-mail per secondsurf', 'Ciao\n\nBenvenuto/a su secondsurf! Conferma il tuo indirizzo e-mail con questo link (valido 7 giorni):\n\n{link}\n\nSolo dopo riceverai gli avvisi di prezzo per la tua lista dei desideri.\n\nNon hai creato un account? Ignora semplicemente questa e-mail.\n\nsecondsurf'],
-		en: ['Confirm your email address for secondsurf', 'Hello\n\nWelcome to secondsurf! Please confirm your email address with this link (valid for 7 days):\n\n{link}\n\nOnly then will you get price alerts for your wishlist.\n\nDidn’t create an account? Just ignore this email.\n\nsecondsurf'],
+		de: ['Bestätige deine E-Mail-Adresse für secondsurf', 'Hallo\n\nWillkommen bei secondsurf! Bitte bestätige deine E-Mail-Adresse mit diesem Link (7 Tage gültig):\n\n{link}\n\nErst danach bekommst du Preisalarme für deine Wunschliste.\n\nAls Dankeschön: Mit dem Code {code} bekommst du {percent} % auf deine erste Bestellung. Gib ihn an der Kasse ein oder erwähne ihn in deiner Anfrage.\n\nDu hast kein Konto erstellt? Dann ignoriere diese E-Mail einfach.\n\nsecondsurf'],
+		fr: ['Confirme ton adresse e-mail pour secondsurf', 'Bonjour\n\nBienvenue chez secondsurf ! Confirme ton adresse e-mail avec ce lien (valable 7 jours) :\n\n{link}\n\nEnsuite seulement, tu recevras les alertes de prix de ta liste d’envies.\n\nPour te remercier : avec le code {code}, tu as {percent} % sur ta première commande. Saisis-le à la caisse ou mentionne-le dans ta demande.\n\nTu n’as pas créé de compte ? Ignore simplement cet e-mail.\n\nsecondsurf'],
+		it: ['Conferma il tuo indirizzo e-mail per secondsurf', 'Ciao\n\nBenvenuto/a su secondsurf! Conferma il tuo indirizzo e-mail con questo link (valido 7 giorni):\n\n{link}\n\nSolo dopo riceverai gli avvisi di prezzo per la tua lista dei desideri.\n\nPer ringraziarti: con il codice {code} hai il {percent} % sul tuo primo ordine. Inseriscilo alla cassa o indicalo nella tua richiesta.\n\nNon hai creato un account? Ignora semplicemente questa e-mail.\n\nsecondsurf'],
+		en: ['Confirm your email address for secondsurf', 'Hello\n\nWelcome to secondsurf! Please confirm your email address with this link (valid for 7 days):\n\n{link}\n\nOnly then will you get price alerts for your wishlist.\n\nAs a thank-you: the code {code} gets you {percent} % off your first order. Enter it at checkout or mention it in your inquiry.\n\nDidn’t create an account? Just ignore this email.\n\nsecondsurf'],
 	},
 	reset: {
 		de: ['Neues Passwort für secondsurf', 'Hallo\n\nMit diesem Link setzt du ein neues Passwort (1 Stunde gültig):\n\n{link}\n\nDu hast das nicht verlangt? Dann ignoriere diese E-Mail, dein Passwort bleibt gleich.\n\nsecondsurf'],
@@ -220,7 +225,7 @@ export async function sendAccountMail(env: Env, kind: 'verify' | 'reset', to: st
 	const [subject, text] = MAILS[kind][lang];
 	// The verification link goes to the API, which confirms and then opens the profile.
 	const link = kind === 'verify' ? `${origin}/api/account/verify?token=${token}&lang=${lang}` : `${origin}${url(lang, '/account/')}?reset=${token}`;
-	await sendMail(env, { to, subject, text: fill(text, { link }) });
+	await sendMail(env, { to, subject, text: fill(text, { link, code: WELCOME.code, percent: String(WELCOME.percent) }) });
 }
 
 /** The title in one language, from the index.md of a piece (dashboard JSON or hand-written YAML). */
@@ -276,3 +281,19 @@ export async function notifyPriceDrop(env: Env, productId: string, markdown: str
 	}
 	return sent;
 }
+
+// ---------------------------------------------------------------- welcome discount
+
+/** The code as typed by the customer, made comparable: "welcome 10" -> "WELCOME10". */
+export const normalizeCode = (value: unknown) => (typeof value === 'string' ? value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 40) : '');
+
+export async function welcomeUsed(db: D1Database, userId: number) {
+	return Boolean(await db.prepare('SELECT 1 FROM welcome_used WHERE user_id = ?').bind(userId).first());
+}
+
+/** Called when a discounted order is paid. A second paid order with the code doesn't change anything. */
+export const markWelcomeUsed = (db: D1Database, userId: number, sessionId: string) =>
+	db.prepare('INSERT OR IGNORE INTO welcome_used (user_id, session_id, used_at) VALUES (?, ?, ?)').bind(userId, sessionId, now()).run();
+
+/** Price after the welcome discount, rounded to 5 Rappen like Swiss cash prices. */
+export const welcomePrice = (price: number) => Math.round(price * (1 - WELCOME.percent / 100) * 20) / 20;

@@ -88,6 +88,12 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 				<button type="button" class="link" id="verify-resend">{a.verifyResend}</button>
 			</p>
 
+			<section class="welcome-code" hidden aria-labelledby="welcome-code-title">
+				<p id="welcome-code-title" class="eyebrow">{a.welcomeCodeTitle}</p>
+				<p class="code"></p>
+				<p class="small welcome-code-text"></p>
+			</section>
+
 			<section class="block" aria-labelledby="wish-title">
 				<h2 id="wish-title">{a.wishlist}</h2>
 				<ul class="wish-grid"></ul>
@@ -175,6 +181,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 		canEmail: boolean;
 		wishlist: { id: string; savedPrice: number }[];
 		addresses: Address[];
+		welcome: { code: string; percent: number } | null;
 	};
 	declare const turnstile: { render: (el: HTMLElement, options: object) => string; getResponse: (id: string) => string; reset: (id: string) => void } | undefined;
 
@@ -409,6 +416,11 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 		$('.verify-text').textContent = a.verifyNote.replace('{email}', me.email);
 		$('.alerts').hidden = !me.canEmail;
 		$('.alerts-verify').hidden = !unverified;
+		$('.welcome-code').hidden = !me.welcome;
+		if (me.welcome) {
+			$('.welcome-code .code').textContent = me.welcome.code;
+			$('.welcome-code-text').textContent = a.welcomeCodeText.replace('{percent}', String(me.welcome.percent));
+		}
 		$<HTMLInputElement>('#price-alerts').checked = me.priceAlerts;
 		renderAddresses();
 		await renderWishlist();
@@ -473,7 +485,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 				showGuest();
 			});
 	} else {
-		showGuest();
+		showGuest(params.get('tab') === 'register' ? 'register' : 'login');
 	}
 </script>
 
@@ -642,6 +654,23 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 	}
 	.verify .link {
 		margin-left: 0.4rem;
+	}
+	.welcome-code {
+		margin-top: 1.5rem;
+		padding: 1.25rem;
+		border: 1.5px dashed var(--accent);
+		background: var(--accent-tint);
+	}
+	.welcome-code .code {
+		margin-top: 0.4rem;
+		font-family: var(--font-display);
+		font-size: var(--step-3);
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		user-select: all;
+	}
+	.welcome-code-text {
+		margin-top: 0.4rem;
 	}
 	.block {
 		margin-top: 2.5rem;

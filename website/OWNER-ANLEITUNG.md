@@ -29,6 +29,15 @@ Kundinnen und Kunden können unter **Profil** (Personen-Symbol oben) ein Konto m
 
 Kundendaten siehst du nicht im Dashboard. Will jemand sein Konto löschen, kann er das selbst im Profil tun.
 
+## Willkommens-Rabatt (WELCOME10)
+
+Wer zum ersten Mal auf die Website kommt, sieht nach ein paar Sekunden ein Fenster: 10 % auf die erste Bestellung mit einem Konto. Nach dem Erstellen des Kontos steht der Code **WELCOME10** im Profil und in der Bestätigungs-E-Mail.
+
+- **Bezahlen über die Kasse (Stripe):** Der Code wird an der Kasse eingegeben, die 10 % werden automatisch abgezogen. Er funktioniert nur angemeldet und nur einmal pro Konto.
+- **Bestellung per Anfrage:** Erwähnt jemand den Code in der Anfrage, ziehst du die 10 % selbst ab. Die Website kann dort nicht prüfen, ob der Code schon gebraucht wurde: Gib ihn pro E-Mail-Adresse nur einmal.
+
+Code und Prozent stehen in `src/config.ts` (`WELCOME`).
+
 ## Ein Piece als verkauft markieren
 
 So verkaufst du im Moment: Kundinnen und Kunden tippen auf **Anfragen**, du bekommst eine E-Mail und schickst ihnen die Zahlungsangaben. Sie bezahlen sofort. Reserviert wird nichts: Wer zuerst bezahlt, bekommt das Piece.

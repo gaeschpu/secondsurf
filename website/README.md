@@ -122,6 +122,17 @@ Setup, once: in **Cloudflare → Workers & Pages → D1 SQL Database → Create*
 
 To test locally: `npm run build`, then `npx wrangler pages dev dist --d1 DB=accounts-test`.
 
+## Welcome discount (WELCOME10)
+
+`src/components/WelcomePopup.astro` (in every page via `Base.astro`) shows a popup a few seconds into the first visit:
+10 % off the first order with an account. It shows once per browser, never to logged-in customers or on `/account/`.
+After signing up, the code (`WELCOME` in `src/config.ts`) shows in the profile and in the confirmation email.
+
+With Stripe Checkout on, the product page has a code field. `functions/api/checkout.ts` only accepts the code for a
+logged-in customer who hasn't used it yet, and charges 10 % less (rounded to 5 Rappen). The webhook records it as used
+(`welcome_used` table) once the payment arrives. The login cookie therefore covers `/api`, not just `/api/account`.
+For orders by inquiry, the owner applies the discount by hand.
+
 ## Selling: how people pay
 
 **Without Stripe** (`"stripeCheckout": false` in `src/settings/site.json`): each piece has an **Anfragen** button that opens

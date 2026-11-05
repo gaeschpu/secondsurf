@@ -15,6 +15,7 @@
 // PUT    wishlist/<piece>, DELETE wishlist/<piece>
 // POST   offer     { id, amount, message?, lang }   price offer for a piece, see functions/_lib/offer-create.ts
 
+import { WELCOME } from '../../../src/config.ts';
 import { url } from '../../../src/i18n/index.ts';
 import { json, type D1Database, type Env, type Handler } from '../../_lib/auth.ts';
 import {
@@ -26,6 +27,8 @@ import {
 	database,
 	endSession,
 	endSessionCookie,
+	oldSessionCookieClear,
+	welcomeUsed,
 	hashPassword,
 	isValidPassword,
 	parseAddresses,
@@ -45,9 +48,10 @@ const emailOf = (value: unknown) => text(value, 200).toLowerCase();
 const fail = (error: string, status = 400) => json({ error }, status);
 
 async function profile(db: D1Database, env: Env, user: User) {
-	const [wishlist, addresses] = await Promise.all([
+	const [wishlist, addresses, usedWelcome] = await Promise.all([
 		db.prepare('SELECT product_id, saved_price FROM wishlist WHERE user_id = ? ORDER BY created_at DESC').bind(user.id).all<{ product_id: string; saved_price: number }>(),
 		db.prepare('SELECT list FROM addresses WHERE user_id = ?').bind(user.id).first<{ list: string }>(),
+		welcomeUsed(db, user.id),
 	]);
 	return {
 		email: user.email,
@@ -58,6 +62,8 @@ async function profile(db: D1Database, env: Env, user: User) {
 		canEmail: canEmail(env),
 		wishlist: wishlist.results.map((row) => ({ id: row.product_id, savedPrice: row.saved_price })),
 		addresses: addresses ? JSON.parse(addresses.list) : [],
+		// The welcome code, until it has been used in a paid order.
+		welcome: usedWelcome ? null : WELCOME,
 	};
 }
 
@@ -85,7 +91,14 @@ async function sendVerification(env: Env, db: D1Database, user: Pick<User, 'id' 
 	}
 }
 
-export const onRequest: Handler = async ({ request, env, params, waitUntil }) => {
+export const onRequest: Handler = async (context) => {
+	const res = await handle(context);
+	// Logins used to be limited to /api/account: whenever the login changes, drop such an old cookie too.
+	if (res.headers.get('Set-Cookie')?.startsWith('secondsurf_session=')) res.headers.append('Set-Cookie', oldSessionCookieClear);
+	return res;
+};
+
+const handle: Handler = async ({ request, env, params, waitUntil }) => {
 	if (!env.DB) return fail('unavailable', 503);
 	const { origin } = new URL(request.url);
 	const method = request.method;

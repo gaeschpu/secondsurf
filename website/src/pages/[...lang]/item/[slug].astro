@@ -130,9 +130,18 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 						<>
 							<p id="reserved" class="checkout-msg small" role="status">{t('checkout.reserved')}</p>
 							<p id="checkout-error" class="checkout-msg small" role="status">{t('checkout.error')}</p>
+							<p id="code-invalid" class="checkout-msg small" role="status">{t('checkout.codeInvalid')}</p>
+							<p id="code-login" class="checkout-msg small" role="status">
+								{t('checkout.codeLogin')} <a href={`${url(lang, '/account/')}?back=${encodeURIComponent(url(lang, `/item/${product.id}/`))}`}>{t('offer.loginButton')}</a>
+							</p>
+							<p id="code-used" class="checkout-msg small" role="status">{t('checkout.codeUsed')}</p>
 							<form class="actions" method="post" action="/api/checkout">
 								<input type="hidden" name="id" value={product.id} />
 								<input type="hidden" name="lang" value={lang} />
+								<label class="code-field">
+									<span>{t('checkout.code')}</span>
+									<input name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40" placeholder="WELCOME10" />
+								</label>
 								<button class="btn big" type="submit">
 									{t('shop.buy')} <Icon name="arrow" />
 								</button>
@@ -422,6 +431,25 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		color: var(--ink-soft);
+	}
+	.code-field {
+		display: grid;
+		gap: 0.35rem;
+		max-width: 26rem;
+		margin-bottom: 0.9rem;
+		font-size: var(--step--1);
+		font-weight: 700;
+	}
+	.code-field input {
+		min-height: 3rem;
+		padding: 0.6rem 0.85rem;
+		border: 1px solid var(--line);
+		border-radius: 0;
+		background: var(--bg-raised);
+		font: inherit;
+		font-weight: 400;
+		font-size: max(1rem, var(--step-0));
+		text-transform: uppercase;
 	}
 	.wish-row {
 		margin-top: 1.5rem;

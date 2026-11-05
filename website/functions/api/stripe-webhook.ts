@@ -3,6 +3,7 @@
 // Expired or failed: the hold is released so someone else can buy the piece.
 // In Stripe: Developers → Webhooks → add https://secondsurf.ch/api/stripe-webhook with the events listed in the README.
 
+import { database, markWelcomeUsed } from '../_lib/accounts.ts';
 import { json, type Handler } from '../_lib/auth.ts';
 import { commit, PRODUCTS_DIR, readText } from '../_lib/github.ts';
 import { sendMail } from '../_lib/mail.ts';
@@ -17,7 +18,7 @@ type Session = {
 	payment_status: string;
 	payment_intent?: string | null;
 	amount_total?: number | null;
-	metadata?: { product_id?: string; offer_id?: string };
+	metadata?: { product_id?: string; offer_id?: string; welcome_user?: string; discount?: string };
 	customer_details?: { name?: string | null; email?: string | null; phone?: string | null } | null;
 	collected_information?: { shipping_details?: { name?: string; address?: Address } | null } | null;
 	shipping_details?: { name?: string; address?: Address } | null;
@@ -46,7 +47,7 @@ async function sell(env: Parameters<Handler>[0]['env'], session: Session) {
 			alreadySold
 				? `Achtung: ${id} war schon als verkauft markiert. Bitte die Zahlung in Stripe rückerstatten und der Kundin / dem Kunden schreiben.\n`
 				: `${id} wurde online bezahlt und ist jetzt als verkauft markiert. Bitte innert 48 Stunden verschicken.\n`,
-			`Betrag (inkl. Versand): ${chf(session.amount_total)}`,
+			`Betrag (inkl. Versand): ${chf(session.amount_total)}${session.metadata?.discount ? ` (mit Rabattcode ${session.metadata.discount})` : ''}`,
 			'',
 			'Versand an:',
 			ship?.name ?? customer?.name ?? '',
@@ -92,6 +93,11 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 		if (offerId > 0) {
 			const offers = await offersDb(env).catch(() => null);
 			await offers?.prepare("UPDATE offers SET status = 'paid', updated_at = ? WHERE id = ?").bind(now(), offerId).run().catch(() => {});
+		}
+		// Paid with the welcome code: it can't be used again on this account.
+		const welcomeUser = Number(session.metadata?.welcome_user);
+		if (welcomeUser > 0 && env.DB) {
+			await markWelcomeUsed(await database(env), welcomeUser, session.id).catch((error) => console.error('Marking the welcome code failed', error));
 		}
 		return json({ ok: true });
 	}

@@ -1,0 +1,86 @@
+---
+// Welcome offer: on the first visit, a popup invites people to create an account for a discount on their first order.
+// Shown once per browser, a few seconds after the page opens; never to logged-in customers or on the profile page.
+// The code itself (WELCOME in src/config.ts) is only shown after signing up, in the profile and the confirmation email.
+import Icon from './Icon.astro';
+import { url, type Lang } from '../i18n';
+import { accountTexts } from '../i18n/account';
+import { WELCOME } from '../config';
+
+interface Props {
+	lang: Lang;
+}
+
+const { lang } = Astro.props;
+const a = accountTexts[lang];
+const percent = (text: string) => text.replace('{percent}', String(WELCOME.percent));
+---
+
+<dialog class="modal welcome" aria-labelledby="welcome-title" tabindex="-1" data-account={url(lang, '/account/')}>
+	<button type="button" class="modal-close" aria-label={a.close} data-close>
+		<Icon name="close" size={20} />
+	</button>
+	<p class="welcome-percent" aria-hidden="true">−{WELCOME.percent} %</p>
+	<p id="welcome-title" class="modal-text">{percent(a.welcomeTitle)}</p>
+	<p class="welcome-text">{percent(a.welcomeText)}</p>
+	<a class="btn" href={`${url(lang, '/account/')}?tab=register`} data-cta>{a.welcomeCta}</a>
+	<button type="button" class="welcome-later" data-close>{a.welcomeLater}</button>
+</dialog>
+
+<script>
+	import { seemsLoggedIn } from '../scripts/account';
+
+	const SEEN = 'welcome-popup';
+	const DELAY = 4000;
+	const dialog = document.querySelector<HTMLDialogElement>('dialog.welcome');
+
+	const seen = () => {
+		try {
+			return localStorage.getItem(SEEN) !== null;
+		} catch {
+			// Without storage we couldn't remember closing it, so don't show it at all.
+			return true;
+		}
+	};
+	const onProfile = () => location.pathname.replace(/^\/(fr|it|en)(?=\/)/, '').startsWith('/account/');
+
+	if (dialog && !seemsLoggedIn() && !seen() && !onProfile()) {
+		setTimeout(() => {
+			// Don't interrupt another popup (e.g. the price-offer login note).
+			if (document.querySelector('dialog[open]')) return;
+			try {
+				localStorage.setItem(SEEN, String(Date.now()));
+			} catch {}
+			dialog.showModal();
+			dialog.focus();
+		}, DELAY);
+		dialog.querySelectorAll('[data-close]').forEach((button) => button.addEventListener('click', () => dialog.close()));
+		dialog.addEventListener('click', (event) => {
+			if (event.target === dialog) dialog.close();
+		});
+	}
+</script>
+
+<style>
+	.welcome-percent {
+		font-family: var(--font-display);
+		font-size: clamp(3rem, 2.4rem + 3vw, 4.5rem);
+		font-weight: 700;
+		line-height: 1;
+		color: var(--accent);
+	}
+	.welcome-text {
+		color: var(--ink-soft);
+	}
+	.welcome-later {
+		align-self: center;
+		padding: 0.25rem 0.5rem;
+		border: 0;
+		background: none;
+		color: var(--ink-soft);
+		font: inherit;
+		font-size: var(--step--1);
+		text-decoration: underline;
+		cursor: pointer;
+	}
+</style>

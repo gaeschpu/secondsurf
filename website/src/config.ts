@@ -76,3 +76,9 @@ export const CHECKOUT = {
 	enabled: settings.stripeCheckout === true,
 	heavyCategories: ['wetsuits'] as readonly string[],
 };
+
+/**
+ * Welcome discount: after creating an account, customers get this code once, for their first order.
+ * Only logged-in customers can use it, once per account (functions/api/checkout.ts checks this).
+ */
+export const WELCOME = { code: 'WELCOME10', percent: 10 } as const;
