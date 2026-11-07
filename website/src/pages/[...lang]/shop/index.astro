@@ -1,7 +1,6 @@
 ---
 import Base from '../../../layouts/Base.astro';
 import ProductGrid from '../../../components/ProductGrid.astro';
-import CategoryNav from '../../../components/CategoryNav.astro';
 import { availableFirst, getProducts } from '../../../lib/products';
 import { langPaths, useT, type Lang } from '../../../i18n';
 
@@ -17,7 +16,6 @@ const products = availableFirst(await getProducts());
 			<h1>{t('shop.title')}</h1>
 			<p>{t('shop.intro')}</p>
 		</header>
-		<CategoryNav lang={lang} />
-		<ProductGrid lang={lang} products={products} filter />
+		<ProductGrid lang={lang} products={products} filter categories="" />
 	</div>
 </Base>

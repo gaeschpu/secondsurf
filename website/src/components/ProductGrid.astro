@@ -1,34 +1,39 @@
 ---
-// Grid of product cards with optional filters by brand, size and price (works without a page reload).
-// Only values that occur in the list are offered. The choice is kept in the address (?brand=…&size=…&price=…).
+// Grid of product cards with an optional "Filter" button at the top right, above the last card of the first row.
+// It opens a panel with everything to narrow down: categories (links to the category pages, if `categories` is set),
+// brand, size and price. Brand, size and price filter without a page reload; only values that occur are offered.
+// The choice is kept in the address (?brand=…&size=…&price=…), so a filtered link can be shared.
 import ProductCard from './ProductCard.astro';
-import { chf, useT, type Lang } from '../i18n';
-import { SIZES } from '../config';
+import Icon from './Icon.astro';
+import { chf, l, url, useT, type Lang } from '../i18n';
+import { CATEGORIES, SIZES } from '../config';
 import type { Product } from '../lib/products';
 
 interface Props {
 	lang: Lang;
 	products: Product[];
-	/** Show the filters above the grid. */
+	/** Show the filter button above the grid. */
 	filter?: boolean;
+	/** Also list the shop categories in the filter panel; the current one is marked. `''` = all pieces. */
+	categories?: string;
 }
 
-const { lang, products, filter = false } = Astro.props;
+const { lang, products, filter = false, categories } = Astro.props;
 const t = useT(lang);
 
 /** Price ranges in CHF: [from, up to and including]. */
 const PRICE_RANGES = [
-	{ id: 'u30', min: 0, max: 29.99 },
-	{ id: '30-50', min: 30, max: 50 },
-	{ id: '50-100', min: 50.01, max: 100 },
+	{ id: 'u35', min: 0, max: 35 },
+	{ id: '36-50', min: 35.01, max: 50 },
+	{ id: '51-100', min: 50.01, max: 100 },
 	{ id: 'o100', min: 100.01, max: Infinity },
 ] as const;
 const priceLabel = (range: (typeof PRICE_RANGES)[number]) =>
-	range.id === 'u30'
-		? t('shop.priceUnder').replace('{price}', chf(30))
+	range.id === 'u35'
+		? t('shop.priceUpTo').replace('{price}', chf(35))
 		: range.id === 'o100'
 			? t('shop.priceOver').replace('{price}', chf(100))
-			: `CHF ${Math.round(range.min)}–${range.max}`;
+			: `CHF ${Math.ceil(range.min)}–${range.max}`;
 
 const brands = [...new Set(products.map((p) => p.data.brand))].sort((a, b) => a.localeCompare(b, 'de'));
 const sizes = SIZES.filter((s) => products.some((p) => p.data.size === s));
@@ -39,28 +44,67 @@ const groups = [
 	{ key: 'size', label: t('shop.size'), options: sizes.map((s) => ({ value: s, label: s })) },
 	{ key: 'price', label: t('shop.price'), options: prices.map((r) => ({ value: r.id, label: priceLabel(r) })) },
 ].filter((group) => group.options.length > 1);
+
+const showCategories = categories !== undefined;
+const showButton = filter && (groups.length > 0 || showCategories);
+const panelId = `filter-panel-${Math.random().toString(36).slice(2, 8)}`;
 ---
 
 <div class="product-grid-wrap" data-ranges={JSON.stringify(PRICE_RANGES.map((r) => [r.id, r.min, r.max === Infinity ? null : r.max]))}>
 	{
-		filter && groups.length > 0 && (
-			<div class="filters">
-				{groups.map((group) => (
-					<div class="filter" role="group" aria-label={group.label} data-filter={group.key}>
-						<span class="label">{group.label}</span>
-						<button type="button" data-value="" aria-pressed="true">
-							{t('shop.filterAll')}
-						</button>
-						{group.options.map((o) => (
-							<button type="button" data-value={o.value} aria-pressed="false">
-								{o.label}
-							</button>
-						))}
-					</div>
-				))}
-				<button type="button" class="reset" hidden>
-					{t('shop.filterReset')}
+		showButton && (
+			<div class="toolbar">
+				<button type="button" class="filter-toggle" aria-expanded="false" aria-controls={panelId}>
+					<Icon name="sliders" size={18} />
+					{t('shop.filter')}
+					<span class="count" hidden />
 				</button>
+				<div class="filter-panel" id={panelId} role="dialog" aria-label={t('shop.filter')} hidden>
+					<div class="panel-head">
+						<p class="panel-title">{t('shop.filter')}</p>
+						<button type="button" class="panel-close" aria-label={t('offer.close')}>
+							<Icon name="close" size={20} />
+						</button>
+					</div>
+					{showCategories && (
+						<nav class="filter" aria-label={t('shop.categories')}>
+							<span class="label">{t('shop.categories')}</span>
+							<div class="options">
+								<a href={url(lang, '/shop/')} aria-current={categories === '' ? 'page' : undefined}>
+									{t('nav.shopAll')}
+								</a>
+								{CATEGORIES.map((c) => (
+									<a href={url(lang, `/shop/${c.id}/`)} aria-current={categories === c.id ? 'page' : undefined}>
+										{l(c.label, lang)}
+									</a>
+								))}
+							</div>
+						</nav>
+					)}
+					{groups.map((group) => (
+						<div class="filter" role="group" aria-label={group.label} data-filter={group.key}>
+							<span class="label">{group.label}</span>
+							<div class="options">
+								<button type="button" data-value="" aria-pressed="true">
+									{t('shop.filterAll')}
+								</button>
+								{group.options.map((o) => (
+									<button type="button" data-value={o.value} aria-pressed="false">
+										{o.label}
+									</button>
+								))}
+							</div>
+						</div>
+					))}
+					<div class="panel-foot">
+						<button type="button" class="reset" hidden>
+							{t('shop.filterReset')}
+						</button>
+						<button type="button" class="show" data-label={t('shop.showResults')}>
+							{t('shop.showResults').replace('{n}', String(products.length))}
+						</button>
+					</div>
+				</div>
 			</div>
 		)
 	}
@@ -83,15 +127,41 @@ const groups = [
 	const KEYS: Key[] = ['brand', 'size', 'price'];
 
 	document.querySelectorAll<HTMLElement>('.product-grid-wrap').forEach((wrap) => {
-		const groups = [...wrap.querySelectorAll<HTMLElement>('.filter')];
-		if (!groups.length) return;
+		const toggle = wrap.querySelector<HTMLButtonElement>('.filter-toggle');
+		const panel = wrap.querySelector<HTMLElement>('.filter-panel');
+		if (!toggle || !panel) return;
+		const groups = [...wrap.querySelectorAll<HTMLElement>('.filter[data-filter]')];
 		const items = [...wrap.querySelectorAll<HTMLElement>('.product')];
 		const noMatch = wrap.querySelector<HTMLElement>('.no-match')!;
 		const reset = wrap.querySelector<HTMLButtonElement>('.reset')!;
+		const show = wrap.querySelector<HTMLButtonElement>('.show')!;
+		const count = toggle.querySelector<HTMLElement>('.count')!;
 		const ranges = new Map<string, [number, number | null]>(
 			(JSON.parse(wrap.dataset.ranges!) as [string, number, number | null][]).map(([id, min, max]) => [id, [min, max]]),
 		);
 		const state: Record<Key, string> = { brand: '', size: '', price: '' };
+
+		// Open and close the panel.
+		const setOpen = (open: boolean) => {
+			panel.hidden = !open;
+			toggle.setAttribute('aria-expanded', String(open));
+			if (open) panel.querySelector<HTMLElement>('button, a')?.focus();
+		};
+		toggle.addEventListener('click', () => setOpen(panel.hidden !== false));
+		panel.querySelector('.panel-close')!.addEventListener('click', () => {
+			setOpen(false);
+			toggle.focus();
+		});
+		show.addEventListener('click', () => setOpen(false));
+		document.addEventListener('click', (event) => {
+			if (!panel.hidden && !panel.contains(event.target as Node) && !toggle.contains(event.target as Node)) setOpen(false);
+		});
+		document.addEventListener('keydown', (event) => {
+			if (event.key === 'Escape' && !panel.hidden) {
+				setOpen(false);
+				toggle.focus();
+			}
+		});
 
 		const matches = (item: HTMLElement) => {
 			if (state.brand && item.dataset.brand !== state.brand) return false;
@@ -116,7 +186,11 @@ const groups = [
 				const key = group.dataset.filter as Key;
 				group.querySelectorAll<HTMLButtonElement>('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.value === state[key])));
 			}
-			reset.hidden = KEYS.every((key) => !state[key]);
+			const active = KEYS.filter((key) => state[key]).length;
+			count.hidden = active === 0;
+			count.textContent = String(active);
+			reset.hidden = active === 0;
+			show.textContent = show.dataset.label!.replace('{n}', String(shown));
 			const u = new URL(location.href);
 			for (const key of KEYS) {
 				if (state[key]) u.searchParams.set(key, state[key]);
@@ -127,8 +201,8 @@ const groups = [
 
 		for (const group of groups) {
 			const key = group.dataset.filter as Key;
-			const values = [...group.querySelectorAll<HTMLButtonElement>('button')].map((b) => b.dataset.value ?? '');
-			group.querySelectorAll<HTMLButtonElement>('button').forEach((b) =>
+			const buttons = [...group.querySelectorAll<HTMLButtonElement>('button')];
+			buttons.forEach((b) =>
 				b.addEventListener('click', () => {
 					state[key] = b.dataset.value ?? '';
 					apply();
@@ -136,7 +210,7 @@ const groups = [
 			);
 			// A shared link keeps its filters, as long as the value still exists.
 			const initial = new URL(location.href).searchParams.get(key);
-			if (initial && values.includes(initial)) state[key] = initial;
+			if (initial && buttons.some((b) => b.dataset.value === initial)) state[key] = initial;
 		}
 		reset.addEventListener('click', () => {
 			for (const key of KEYS) state[key] = '';
@@ -154,46 +228,137 @@ const groups = [
 		padding: 0;
 		list-style: none;
 	}
-	.filters {
+	/* The button sits at the right edge, above the last card of the first row. */
+	.toolbar {
+		position: relative;
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: 1rem;
+	}
+	.filter-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-height: 2.75rem;
+		padding: 0.55rem 1.1rem;
+		border: 1.5px solid var(--ink);
+		border-radius: 0;
+		background: var(--bg-raised);
+		color: var(--ink);
+		font: inherit;
+		font-size: var(--step--1);
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		cursor: pointer;
+	}
+	.filter-toggle:hover,
+	.filter-toggle[aria-expanded='true'] {
+		background: var(--ink);
+		color: var(--bg);
+	}
+	.count {
+		display: inline-grid;
+		place-items: center;
+		min-width: 1.4rem;
+		height: 1.4rem;
+		padding: 0 0.3rem;
+		border-radius: 999px;
+		background: var(--accent);
+		color: var(--on-accent);
+		font-size: 0.75rem;
+		letter-spacing: 0;
+	}
+	.count[hidden] {
+		display: none;
+	}
+	.filter-panel {
+		position: absolute;
+		top: calc(100% + 0.5rem);
+		right: 0;
+		z-index: 40;
 		display: grid;
-		gap: 0.75rem;
-		margin-bottom: 1.75rem;
+		gap: 1.25rem;
+		width: min(26rem, calc(100vw - 2 * var(--gutter)));
+		max-height: min(75vh, 40rem);
+		overflow: auto;
+		padding: 1.25rem;
+		border: 1.5px solid var(--ink);
+		background: var(--bg-raised);
+		box-shadow: var(--shadow);
+	}
+	.filter-panel[hidden] {
+		display: none;
+	}
+	.panel-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+	.panel-title {
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	.panel-close {
+		display: grid;
+		place-items: center;
+		width: 2.25rem;
+		height: 2.25rem;
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--ink-soft);
+		cursor: pointer;
 	}
 	.filter {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.4rem;
+		display: grid;
+		gap: 0.5rem;
 	}
 	.filter .label {
-		min-width: 4.5rem;
-		margin-right: 0.4rem;
 		font-size: var(--step--1);
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 	}
-	.filter button {
+	.options {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+	.options button,
+	.options a {
 		min-width: 2.75rem;
 		padding: 0.35em 0.85em;
 		border: 1.5px solid var(--line);
 		border-radius: 999px;
-		background: var(--bg-raised);
+		background: var(--bg);
 		color: var(--ink);
 		font-size: var(--step--1);
 		font-weight: 600;
+		text-align: center;
+		text-decoration: none;
 		cursor: pointer;
 	}
-	.filter button:hover {
+	.options button:hover,
+	.options a:hover {
 		border-color: var(--accent);
 	}
-	.filter button[aria-pressed='true'] {
+	.options button[aria-pressed='true'],
+	.options a[aria-current='page'] {
 		background: var(--accent);
 		border-color: var(--accent);
 		color: var(--on-accent);
 	}
+	.panel-foot {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+		padding-top: 0.25rem;
+		border-top: 1px solid var(--line);
+	}
 	.reset {
-		justify-self: start;
 		padding: 0;
 		border: 0;
 		background: none;
@@ -204,7 +369,23 @@ const groups = [
 		cursor: pointer;
 	}
 	.reset[hidden] {
-		display: none;
+		display: block;
+		visibility: hidden;
+	}
+	.show {
+		margin-left: auto;
+		min-height: 2.75rem;
+		padding: 0.6rem 1.2rem;
+		border: 1.5px solid var(--ink);
+		border-radius: 0;
+		background: var(--ink);
+		color: var(--bg);
+		font: inherit;
+		font-size: var(--step--1);
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		cursor: pointer;
 	}
 	.empty,
 	.no-match {
