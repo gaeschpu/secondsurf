@@ -19,4 +19,5 @@ photos:
   - ./5.jpg
   - ./6.jpg
 drop: 1
+sold: true
 ---
