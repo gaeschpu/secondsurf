@@ -10,7 +10,7 @@
 	"uid": "",
 	"legalReviewed": false,
 	"currentDrop": 1,
-	"stripeCheckout": false,
+	"stripeCheckout": true,
 	"freeShippingFrom": 100,
 	"shippingPrice": 9,
 	"announcement": {
