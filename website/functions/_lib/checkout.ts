@@ -75,7 +75,8 @@ export async function startCheckout(opts: {
 		price >= SHIPPING.freeFrom
 			? { amount: 0, name: text(lang, 'checkout.shippingFree') }
 			: { amount: SHIPPING.price, name: text(lang, 'checkout.shippingPost') };
-	const metadata = { product_id: id, ...opts.metadata };
+	// lang and product_name are for the customer's order confirmation (functions/api/stripe-webhook.ts).
+	const metadata = { product_id: id, lang, product_name: `${piece.brand} ${titleIn(piece, lang)}`.slice(0, 450), ...opts.metadata };
 
 	try {
 		const session = await stripe<{ id: string; url: string }>(env, '/checkout/sessions', {

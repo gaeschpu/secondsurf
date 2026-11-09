@@ -1,5 +1,6 @@
 // POST /api/stripe-webhook: Stripe tells us when a checkout is paid or has expired.
-// Paid: the piece is marked as sold (a commit, so the site rebuilds) and the owner gets an email with the shipping address.
+// Paid: the piece is marked as sold (a commit, so the site rebuilds), the owner gets an email with the shipping address,
+// and the customer an order confirmation in their language (AGB 2.3).
 // Expired or failed: the hold is released so someone else can buy the piece.
 // In Stripe: Developers → Webhooks → add https://secondsurf.ch/api/stripe-webhook with the events listed in the README.
 
@@ -11,6 +12,7 @@ import { now, offersDb } from '../_lib/offers.ts';
 import { PRODUCT_ID, setSold } from '../_lib/product.ts';
 import { firstTime, forgetDone, holdSold, holds, releaseHold, verifyWebhook } from '../_lib/stripe.ts';
 import { SITE } from '../../src/config.ts';
+import { url, type Lang } from '../../src/i18n/index.ts';
 
 type Address = { line1?: string; line2?: string; postal_code?: string; city?: string; country?: string } | null;
 type Session = {
@@ -18,7 +20,7 @@ type Session = {
 	payment_status: string;
 	payment_intent?: string | null;
 	amount_total?: number | null;
-	metadata?: { product_id?: string; offer_id?: string; welcome_user?: string; discount?: string };
+	metadata?: { product_id?: string; offer_id?: string; welcome_user?: string; discount?: string; lang?: string; product_name?: string };
 	customer_details?: { name?: string | null; email?: string | null; phone?: string | null } | null;
 	collected_information?: { shipping_details?: { name?: string; address?: Address } | null } | null;
 	shipping_details?: { name?: string; address?: Address } | null;
@@ -29,7 +31,7 @@ const chf = (cents?: number | null) => `CHF ${((cents ?? 0) / 100).toFixed(2)}`;
 
 async function sell(env: Parameters<Handler>[0]['env'], session: Session) {
 	const id = session.metadata?.product_id ?? '';
-	if (!PRODUCT_ID.test(id)) return;
+	if (!PRODUCT_ID.test(id)) return { alreadySold: false };
 	const path = `${PRODUCTS_DIR}/${id}/index.md`;
 	const markdown = await readText(env, path);
 	const alreadySold = /^sold:\s*true\b/m.test(markdown);
@@ -62,6 +64,122 @@ async function sell(env: Parameters<Handler>[0]['env'], session: Session) {
 			`Zahlung in Stripe: ${dashboard}`,
 		].join('\n'),
 	});
+	return { alreadySold };
+}
+
+const CONFIRMATION: Record<Lang, { subject: string; lines: (v: Record<string, string>) => string[]; countries: Record<string, string> }> = {
+	de: {
+		subject: 'Danke für deine Bestellung bei secondsurf',
+		lines: (v) => [
+			`Hallo ${v.name}`,
+			'',
+			'Danke für deine Bestellung! Deine Zahlung ist bei uns angekommen, das Piece gehört jetzt dir.',
+			'',
+			`${v.piece}`,
+			`Bezahlt: ${v.amount} (inkl. Versand)`,
+			'',
+			'Wir schicken es in der Regel innert 2 Werktagen mit der Schweizerischen Post an:',
+			v.address,
+			'',
+			`Fragen? Antworte einfach auf diese E-Mail oder schreib an ${v.email}.`,
+			`Stimmt etwas nicht mit dem Piece, findest du alles zur Rückgabe hier: ${v.returns}`,
+			'',
+			'Viel Freude damit!',
+			'secondsurf',
+		],
+		countries: { CH: 'Schweiz', LI: 'Liechtenstein' },
+	},
+	fr: {
+		subject: 'Merci pour ta commande chez secondsurf',
+		lines: (v) => [
+			`Bonjour ${v.name}`,
+			'',
+			'Merci pour ta commande ! Ton paiement nous est bien parvenu, la pièce est maintenant à toi.',
+			'',
+			`${v.piece}`,
+			`Payé : ${v.amount} (envoi compris)`,
+			'',
+			'Nous l’envoyons en général dans les 2 jours ouvrables par La Poste Suisse à :',
+			v.address,
+			'',
+			`Des questions ? Réponds simplement à cet e-mail ou écris à ${v.email}.`,
+			`Si quelque chose ne va pas avec la pièce, tout sur les retours se trouve ici : ${v.returns}`,
+			'',
+			'Profite bien !',
+			'secondsurf',
+		],
+		countries: { CH: 'Suisse', LI: 'Liechtenstein' },
+	},
+	it: {
+		subject: 'Grazie per il tuo ordine da secondsurf',
+		lines: (v) => [
+			`Ciao ${v.name}`,
+			'',
+			'Grazie per il tuo ordine! Abbiamo ricevuto il pagamento, il pezzo ora è tuo.',
+			'',
+			`${v.piece}`,
+			`Pagato: ${v.amount} (spedizione inclusa)`,
+			'',
+			'Di regola lo spediamo entro 2 giorni lavorativi con la Posta Svizzera a:',
+			v.address,
+			'',
+			`Domande? Rispondi semplicemente a questa e-mail o scrivi a ${v.email}.`,
+			`Se qualcosa non va con il pezzo, trovi tutto sui resi qui: ${v.returns}`,
+			'',
+			'Goditelo!',
+			'secondsurf',
+		],
+		countries: { CH: 'Svizzera', LI: 'Liechtenstein' },
+	},
+	en: {
+		subject: 'Thanks for your order at secondsurf',
+		lines: (v) => [
+			`Hello ${v.name}`,
+			'',
+			'Thanks for your order! Your payment has arrived, so the piece is yours now.',
+			'',
+			`${v.piece}`,
+			`Paid: ${v.amount} (shipping included)`,
+			'',
+			'We usually ship it within 2 working days with Swiss Post to:',
+			v.address,
+			'',
+			`Questions? Just reply to this email or write to ${v.email}.`,
+			`If something is wrong with the piece, everything about returns is here: ${v.returns}`,
+			'',
+			'Enjoy it!',
+			'secondsurf',
+		],
+		countries: { CH: 'Switzerland', LI: 'Liechtenstein' },
+	},
+};
+
+/** Order confirmation to the customer, in the language they paid in. Replies go to the shop's address. */
+async function confirm(env: Parameters<Handler>[0]['env'], session: Session) {
+	const to = session.customer_details?.email;
+	if (!to || !env.RESEND_API_KEY) return;
+	const lang = (['de', 'fr', 'it', 'en'].includes(session.metadata?.lang ?? '') ? session.metadata!.lang : 'de') as Lang;
+	const text = CONFIRMATION[lang];
+	const ship = session.collected_information?.shipping_details ?? session.shipping_details;
+	const a = ship?.address;
+	const address = [
+		ship?.name ?? session.customer_details?.name ?? '',
+		a?.line1 ?? '',
+		a?.line2 ?? '',
+		`${a?.postal_code ?? ''} ${a?.city ?? ''}`.trim(),
+		a?.country ? (text.countries[a.country] ?? a.country) : '',
+	]
+		.filter(Boolean)
+		.join('\n');
+	const lines = text.lines({
+		name: (ship?.name ?? session.customer_details?.name ?? '').split(' ')[0] || '',
+		piece: session.metadata?.product_name ?? session.metadata?.product_id ?? '',
+		amount: chf(session.amount_total),
+		address,
+		email: SITE.email,
+		returns: new URL(url(lang, '/returns/'), SITE.url).href,
+	});
+	await sendMail(env, { to, reply_to: SITE.email, subject: text.subject, text: lines.join('\n').replace(/^(Hallo|Bonjour|Ciao|Hello) $/m, '$1') });
 }
 
 export const onRequestPost: Handler = async ({ request, env }) => {
@@ -79,8 +197,9 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 		event.type === 'checkout.session.async_payment_succeeded';
 	if (paid) {
 		if (!(await firstTime(db, session.id))) return json({ ok: true, duplicate: true });
+		let alreadySold = false;
 		try {
-			await sell(env, session);
+			({ alreadySold } = await sell(env, session));
 		} catch (error) {
 			// Let Stripe retry later (it does for up to 3 days).
 			console.error('Marking as sold failed', error);
@@ -88,6 +207,8 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 			return json({ error: 'Try again.' }, 500);
 		}
 		if (db && PRODUCT_ID.test(id)) await holdSold(db, id).catch(() => {});
+		// A double sale gets no confirmation: the owner refunds that customer (see the owner's email).
+		if (!alreadySold) await confirm(env, session).catch((error) => console.error('Order confirmation failed', error));
 		// Paid through an accepted price offer: close the offer.
 		const offerId = Number(session.metadata?.offer_id);
 		if (offerId > 0) {
