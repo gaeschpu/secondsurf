@@ -1,15 +1,36 @@
 ---
+// New Drop: pieces with `drop:` = currentDrop. Until the drop time (nextDropAt in src/settings/site.json, Swiss time)
+// the page shows a big countdown and a reminder button (email via /api/drop/remind, or calendar via /drop.ics and Google).
+// The pieces are already in the page but hidden; they appear by themselves when the countdown ends.
 import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
 import JsonLd from '../../components/JsonLd.astro';
 import ProductGrid from '../../components/ProductGrid.astro';
 import { getNewDrop } from '../../lib/products';
-import { langPaths, useT, type Lang } from '../../i18n';
-import { OWNER, SITE, SOCIALS } from '../../config';
+import { langPaths, url, useT, htmlLang, type Lang } from '../../i18n';
+import { DROP, OWNER, SITE, SOCIALS } from '../../config';
 
 export const getStaticPaths = langPaths;
 const { lang } = Astro.props as { lang: Lang };
 const t = useT(lang);
 const products = await getNewDrop();
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
+
+const at = DROP.at;
+const dateText = at
+	? new Intl.DateTimeFormat(htmlLang[lang], { timeZone: 'Europe/Zurich', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(at)
+	: '';
+// Google Calendar: a 1-hour event at the drop time.
+const stamp = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+const google = at
+	? `https://calendar.google.com/calendar/render?${new URLSearchParams({
+			action: 'TEMPLATE',
+			text: 'secondsurf ☆ New Drop',
+			dates: `${stamp(at)}/${stamp(new Date(at.getTime() + 3600_000))}`,
+			details: new URL(url(lang, '/new/'), SITE.url).href,
+			location: new URL(url(lang, '/new/'), SITE.url).href,
+		})}`
+	: '';
 ---
 
 <Base lang={lang} title={t('shop.newTitle')} description={`${t('site.tagline')}: ${t('shop.intro')}`}>
@@ -25,10 +46,343 @@ const products = await getNewDrop();
 			sameAs: SOCIALS.map((s) => s.href),
 		}}
 	/>
-	<div class="container-wide">
+	<div class="container-wide drop-page" data-at={at?.toISOString() ?? ''} data-lang={lang} data-sitekey={siteKey} data-off={t('drop.off')}>
 		<header class="page-head">
 			<h1>{t('shop.newTitle')}</h1>
 		</header>
-		<ProductGrid lang={lang} products={products} filter />
+
+		{
+			at && (
+				<section class="countdown" aria-labelledby="countdown-title">
+					<p id="countdown-title" class="countdown-title">{t('drop.next')}</p>
+					<div class="clock" role="timer" aria-live="off">
+						{(['days', 'hours', 'minutes', 'seconds'] as const).map((unit) => (
+							<div class="unit">
+								<span class="value" data-unit={unit}>
+									--
+								</span>
+								<span class="name">{t(`drop.${unit}`)}</span>
+							</div>
+						))}
+					</div>
+					<p class="countdown-date">{t('drop.on').replace('{date}', dateText)}</p>
+
+					<button type="button" class="btn remind-toggle" aria-expanded="false" aria-controls="remind-panel">
+						<Icon name="bell" size={18} />
+						{t('drop.remind')}
+					</button>
+
+					<div class="remind-panel" id="remind-panel" hidden>
+						<p class="remind-intro">{t('drop.remindIntro')}</p>
+						<form class="remind-form" novalidate data-sent={t('drop.emailSent')} data-error={t('drop.error')} data-email={t('form.email')} data-captcha={t('form.captcha')}>
+							<label>
+								<span class="sr-only">{t('contact.email')}</span>
+								<input name="email" type="email" autocomplete="email" required maxlength="200" placeholder={t('contact.email')} />
+							</label>
+							<div class="captcha" />
+							<button class="btn" type="submit">{t('drop.emailSend')}</button>
+							<p class="small muted">
+								{t('drop.emailNote')} <a href={url(lang, '/privacy/')}>{t('legal.privacy')}</a>
+							</p>
+							<p class="status" role="status" aria-live="polite" />
+						</form>
+						<p class="calendar-title">{t('drop.calendar')}</p>
+						<div class="calendar">
+							<a class="btn-line" href="/drop.ics" download="secondsurf-drop.ics">
+								<Icon name="calendar" size={18} /> Apple / Outlook
+							</a>
+							<a class="btn-line" href={google} target="_blank" rel="noopener">
+								<Icon name="calendar" size={18} /> {t('drop.google')}
+							</a>
+						</div>
+					</div>
+
+					<p class="shop-link">
+						<a href={url(lang, '/shop/')}>{t('drop.inShop')} →</a>
+					</p>
+				</section>
+			)
+		}
+
+		<section class="live" hidden>
+			<p class="live-title">{t('drop.live')}</p>
+			{products.length === 0 && (
+				<p>
+					{t('drop.liveText')} <a href="">{t('drop.reload')}</a>
+				</p>
+			)}
+		</section>
+
+		<div class="drop-grid" hidden={Boolean(at)}>
+			<ProductGrid lang={lang} products={products} filter />
+		</div>
 	</div>
 </Base>
+
+{siteKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>}
+
+<script>
+	declare const turnstile: { render: (el: HTMLElement, options: object) => string; getResponse: (id: string) => string; reset: (id: string) => void } | undefined;
+
+	const page = document.querySelector<HTMLElement>('.drop-page')!;
+	const at = page.dataset.at ? new Date(page.dataset.at).getTime() : 0;
+	const countdown = page.querySelector<HTMLElement>('.countdown');
+	const live = page.querySelector<HTMLElement>('.live')!;
+	const grid = page.querySelector<HTMLElement>('.drop-grid')!;
+	const values = Object.fromEntries([...page.querySelectorAll<HTMLElement>('[data-unit]')].map((el) => [el.dataset.unit!, el]));
+	const pad = (n: number) => String(n).padStart(2, '0');
+
+	function goLive() {
+		countdown?.setAttribute('hidden', '');
+		grid.hidden = false;
+		live.hidden = false;
+		// The first visitor at drop time also sends the reminder emails (the server checks the time itself).
+		fetch('/api/drop/notify', { method: 'POST' }).catch(() => {});
+	}
+
+	if (at && countdown) {
+		const tick = () => {
+			const left = at - Date.now();
+			if (left <= 0) {
+				clearInterval(timer);
+				goLive();
+				return;
+			}
+			const s = Math.floor(left / 1000);
+			values.days.textContent = pad(Math.floor(s / 86400));
+			values.hours.textContent = pad(Math.floor((s % 86400) / 3600));
+			values.minutes.textContent = pad(Math.floor((s % 3600) / 60));
+			values.seconds.textContent = pad(s % 60);
+		};
+		const timer = setInterval(tick, 1000);
+		tick();
+	}
+
+	// Reminder panel.
+	const toggle = page.querySelector<HTMLButtonElement>('.remind-toggle');
+	const panel = page.querySelector<HTMLElement>('.remind-panel');
+	const form = page.querySelector<HTMLFormElement>('.remind-form');
+	let captcha: string | null = null;
+	toggle?.addEventListener('click', () => {
+		const open = panel!.hidden;
+		panel!.hidden = !open;
+		toggle.setAttribute('aria-expanded', String(open));
+		const sitekey = page.dataset.sitekey;
+		if (open && sitekey && captcha === null) {
+			const render = () => {
+				if (typeof turnstile === 'undefined') return setTimeout(render, 200);
+				captcha = turnstile.render(form!.querySelector<HTMLElement>('.captcha')!, { sitekey, language: page.dataset.lang, theme: 'light' });
+			};
+			captcha = '';
+			render();
+		}
+		if (open) form?.querySelector('input')?.focus();
+	});
+
+	// Logged-in customers get their email filled in.
+	try {
+		if (localStorage.getItem('account') === '1' && form) {
+			fetch('/api/account/me')
+				.then((r) => (r.ok ? r.json() : null))
+				.then((me) => {
+					const input = form.querySelector<HTMLInputElement>('input[name=email]')!;
+					if (me?.email && !input.value) input.value = me.email;
+				})
+				.catch(() => {});
+		}
+	} catch {}
+
+	form?.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		const status = form.querySelector<HTMLElement>('.status')!;
+		const input = form.querySelector<HTMLInputElement>('input[name=email]')!;
+		const button = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
+		if (!input.checkValidity()) {
+			status.textContent = form.dataset.email!;
+			return input.focus();
+		}
+		const token = captcha && typeof turnstile !== 'undefined' ? turnstile.getResponse(captcha) : '';
+		if (page.dataset.sitekey && !token) {
+			status.textContent = form.dataset.captcha!;
+			return;
+		}
+		button.disabled = true;
+		try {
+			const res = await fetch('/api/drop/remind', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email: input.value, lang: page.dataset.lang, 'cf-turnstile-response': token }),
+			});
+			const data = await res.json().catch(() => ({}));
+			if (!res.ok) throw new Error(data.error);
+			status.textContent = form.dataset.sent!;
+			input.value = '';
+		} catch (error) {
+			status.textContent = (error as Error).message === 'captcha' ? form.dataset.captcha! : form.dataset.error!;
+		} finally {
+			button.disabled = false;
+			if (captcha && typeof turnstile !== 'undefined') turnstile.reset(captcha);
+		}
+	});
+
+	// After unsubscribing from the email link.
+	if (new URLSearchParams(location.search).get('reminder') === 'off') {
+		const note = document.createElement('p');
+		note.className = 'off-note';
+		note.textContent = page.dataset.off ?? '';
+		page.querySelector('.page-head')!.after(note);
+	}
+</script>
+
+<style>
+	.countdown {
+		display: grid;
+		justify-items: center;
+		gap: 1.25rem;
+		margin: 1rem auto 3rem;
+		padding: clamp(1.5rem, 5vw, 3rem) var(--gutter);
+		border: 1.5px solid var(--ink);
+		background: var(--bg-raised);
+		text-align: center;
+	}
+	.countdown[hidden],
+	.live[hidden],
+	.drop-grid[hidden],
+	.remind-panel[hidden] {
+		display: none;
+	}
+	.countdown-title {
+		font-size: var(--step-1);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	.clock {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: clamp(0.5rem, 2vw, 1.25rem);
+		width: min(100%, 44rem);
+	}
+	.unit {
+		display: grid;
+		gap: 0.35rem;
+		padding: clamp(0.75rem, 2.5vw, 1.5rem) 0.25rem;
+		background: var(--ink);
+		color: var(--bg);
+	}
+	.value {
+		font-family: var(--font-display);
+		font-size: clamp(2.6rem, 1.5rem + 6vw, 6rem);
+		font-weight: 700;
+		line-height: 1;
+		font-variant-numeric: tabular-nums;
+	}
+	.name {
+		font-size: var(--step--1);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		opacity: 0.8;
+	}
+	.countdown-date {
+		font-size: var(--step-0);
+		color: var(--ink-soft);
+	}
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.6rem;
+		min-height: 3.4rem;
+		padding: 0.9rem 2rem;
+		border: 1.5px solid var(--ink);
+		border-radius: 0;
+		background: var(--ink);
+		color: var(--bg);
+		font-size: var(--step-0);
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+	.btn:hover {
+		border-color: var(--ink-soft);
+		background: var(--ink-soft);
+		color: var(--bg);
+	}
+	.btn:disabled {
+		opacity: 0.6;
+	}
+	.remind-panel {
+		display: grid;
+		gap: 1rem;
+		width: min(100%, 30rem);
+		padding: 1.25rem;
+		border: 1px solid var(--line);
+		background: var(--bg);
+		text-align: left;
+	}
+	.remind-intro {
+		font-weight: 600;
+	}
+	.remind-form {
+		display: grid;
+		gap: 0.75rem;
+	}
+	.remind-form input {
+		width: 100%;
+		min-height: 3.2rem;
+		padding: 0.7rem 0.85rem;
+		border: 1px solid var(--line);
+		border-radius: 0;
+		background: var(--bg-raised);
+		font-size: max(1rem, var(--step-0));
+	}
+	.status:empty {
+		display: none;
+	}
+	.status {
+		font-weight: 600;
+	}
+	.calendar-title {
+		margin-top: 0.25rem;
+		font-weight: 600;
+	}
+	.calendar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+	}
+	.btn-line {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.65rem 1rem;
+		border: 1.5px solid var(--ink);
+		color: var(--ink);
+		font-weight: 700;
+		text-decoration: none;
+	}
+	.btn-line:hover {
+		background: var(--bg-sunken);
+		color: var(--ink);
+	}
+	.shop-link {
+		margin-top: 0.5rem;
+		font-weight: 600;
+	}
+	.drop-page :global(.off-note) {
+		margin-bottom: 1rem;
+		padding: 0.75rem 1rem;
+		background: var(--accent-tint);
+		font-weight: 600;
+	}
+	.live {
+		margin: 1rem 0 2rem;
+		text-align: center;
+	}
+	.live-title {
+		font-family: var(--font-display);
+		font-size: var(--step-3);
+		font-weight: 700;
+	}
+</style>

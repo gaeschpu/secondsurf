@@ -13,6 +13,28 @@ export const SITE = {
 	currentDrop: settings.currentDrop,
 };
 
+/**
+ * When the current drop goes live, as Swiss local time ("2026-11-12T16:00", the format Pages CMS saves).
+ * Until then, the New Drop page shows a countdown and a reminder button; reminder emails go out at this time.
+ */
+export const DROP = {
+	number: settings.currentDrop,
+	at: zurichTime(settings.nextDropAt ?? ''),
+};
+
+/** "2026-11-12T16:00" in Swiss time (CET or CEST) to a Date. A time with Z or an offset is taken as is. */
+export function zurichTime(value: string): Date | null {
+	if (!value) return null;
+	if (/[zZ]|[+-]\d\d:?\d\d$/.test(value)) return new Date(value);
+	const asUtc = new Date(`${value.length === 16 ? `${value}:00` : value}Z`);
+	if (Number.isNaN(asUtc.getTime())) return null;
+	// The offset of Zurich at that moment, e.g. +01:00 in winter, +02:00 in summer.
+	const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Zurich', timeZoneName: 'shortOffset' }).formatToParts(asUtc);
+	const offset = parts.find((p) => p.type === 'timeZoneName')?.value.match(/GMT([+-]\d+)(?::(\d+))?/);
+	const minutes = offset ? Number(offset[1]) * 60 + Math.sign(Number(offset[1])) * Number(offset[2] ?? 0) : 60;
+	return new Date(asUtc.getTime() - minutes * 60_000);
+}
+
 /** Who runs the shop, for the imprint and the legal pages. */
 export const OWNER = {
 	name: settings.ownerName,

@@ -21,3 +21,14 @@ export async function sendMail(env: Env, mail: { to: string; subject: string; te
 	});
 	if (!res.ok) throw new Error(`Resend answered ${res.status}`);
 }
+
+/** Up to 100 emails in one request (Resend batch), so a Cloudflare function stays within its request limit. */
+export async function sendMailBatch(env: Env, mails: { to: string; subject: string; text: string; reply_to?: string }[]) {
+	const from = env.MAIL_FROM ?? 'secondsurf <noreply@secondsurf.ch>';
+	const res = await fetch(`${env.FORMS_TEST_API ?? 'https://api.resend.com'}/emails/batch`, {
+		method: 'POST',
+		headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+		body: JSON.stringify(mails.map((mail) => ({ from, ...mail }))),
+	});
+	if (!res.ok) throw new Error(`Resend answered ${res.status}`);
+}

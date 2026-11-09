@@ -15,7 +15,8 @@ content:
       - { name: addressLine2, label: Adresse Zeile 2 (PLZ Ort), type: string }
       - { name: uid, label: UID (falls vorhanden), type: string }
       - { name: legalReviewed, label: Rechtstexte geprüft (blendet den Vorlage-Hinweis aus), type: boolean }
-      - { name: currentDrop, label: Aktueller Drop, type: number, required: true }
+      - { name: currentDrop, label: Aktueller Drop (Nummer), type: number, required: true }
+      - { name: nextDropAt, label: "Nächster Drop: Datum und Zeit (Schweizer Zeit)", type: date, options: { time: true, format: "yyyy-MM-dd'T'HH:mm" } }
       - { name: freeShippingFrom, label: Gratis Versand ab (CHF), type: number, required: true }
       - { name: shippingPrice, label: Versand pro Bestellung (CHF), type: number, required: true }
       - name: announcement

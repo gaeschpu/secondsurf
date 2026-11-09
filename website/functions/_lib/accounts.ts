@@ -41,6 +41,8 @@ const SCHEMA = [
 	`CREATE INDEX IF NOT EXISTS attempts_key ON attempts (key, at)`,
 	/** Welcome discount (WELCOME in src/config.ts): one row per account once it has been used in a paid order. */
 	`CREATE TABLE IF NOT EXISTS welcome_used (user_id INTEGER PRIMARY KEY, session_id TEXT NOT NULL, used_at INTEGER NOT NULL)`,
+	/** Drop reminders: deleted once the "drop is live" email has gone out. */
+	`CREATE TABLE IF NOT EXISTS drop_reminders (email TEXT NOT NULL, drop_no INTEGER NOT NULL, lang TEXT NOT NULL, token TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL, PRIMARY KEY (email, drop_no))`,
 ];
 
 let schemaReady: Promise<unknown> | null = null;

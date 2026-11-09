@@ -29,6 +29,20 @@ Kundinnen und Kunden können unter **Profil** (Personen-Symbol oben) ein Konto m
 
 Kundendaten siehst du nicht im Dashboard. Will jemand sein Konto löschen, kann er das selbst im Profil tun.
 
+## Einen neuen Drop planen (Countdown und Erinnerung)
+
+Die Seite **New Drop** zeigt bis zum Start des nächsten Drops einen grossen Countdown mit dem Button **Erinnere mich**. Wer sich einträgt, bekommt sofort eine Bestätigung und zum Start eine E-Mail «Der Drop ist live». Danach wird die Adresse gelöscht. Man kann den Drop auch in den eigenen Kalender eintragen.
+
+So planst du einen Drop:
+
+1. In Pages CMS unter **Einstellungen**: **Aktueller Drop (Nummer)** um 1 erhöhen und **Nächster Drop: Datum und Zeit** setzen (Schweizer Zeit).
+2. Neue Pieces im Dashboard hinzufügen. Sie bekommen automatisch die neue Drop-Nummer.
+3. Zum Start-Zeitpunkt erscheinen die Pieces auf der New-Drop-Seite, und die Erinnerungen gehen raus (spätestens innert einer Stunde).
+
+Wichtig: Pieces, die du vor dem Start hinzufügst, sind im **Shop** und in den Kategorien sofort sichtbar, nur auf der New-Drop-Seite warten sie bis zum Start. Willst du sie geheim halten, füge sie erst kurz vor dem Start hinzu.
+
+Die vorherigen Pieces bleiben im Shop und in ihren Kategorien.
+
 ## Willkommens-Rabatt (WELCOME10)
 
 Wer zum ersten Mal auf die Website kommt, sieht nach ein paar Sekunden ein Fenster: 10 % auf die erste Bestellung mit einem Konto. Nach dem Erstellen des Kontos steht der Code **WELCOME10** im Profil und in der Bestätigungs-E-Mail.

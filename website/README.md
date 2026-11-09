@@ -122,6 +122,16 @@ Setup, once: in **Cloudflare → Workers & Pages → D1 SQL Database → Create*
 
 To test locally: `npm run build`, then `npx wrangler pages dev dist --d1 DB=accounts-test`.
 
+## Drops: countdown and reminders
+
+`currentDrop` and `nextDropAt` (Swiss local time, e.g. `2026-11-12T16:00`) in `src/settings/site.json` drive the New Drop page
+(`src/pages/[...lang]/new.astro`): before `nextDropAt` it shows a countdown and an **Erinnere mich** button; the drop's pieces are already
+in the page, hidden, and appear when the countdown ends. The button offers an email reminder (`functions/api/drop/[[path]].ts`, table
+`drop_reminders` in D1, Turnstile-protected, confirmation with an unsubscribe link) and a calendar entry (`/drop.ics`, Google Calendar link).
+At drop time `POST /api/drop/notify` emails everyone in batches of 100 and deletes the addresses. It does nothing before the drop and never
+emails twice, so anyone may call it: the New Drop page calls it when the countdown ends, and `.github/workflows/drop-reminder.yml`
+calls it every hour as a backup. Resend's free plan sends up to 100 emails a day.
+
 ## Welcome discount (WELCOME10)
 
 `src/components/WelcomePopup.astro` (in every page via `Base.astro`) shows a popup a few seconds into the first visit:

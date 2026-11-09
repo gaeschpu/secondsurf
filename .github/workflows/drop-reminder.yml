@@ -1,0 +1,17 @@
+# Backup for the drop reminder emails: once an hour, ask the site to send them.
+# The site only sends after the drop time and never twice, so calling it often is harmless.
+# The New Drop page already triggers it when the countdown ends; this catches the case where nobody is on the page.
+name: Drop reminders
+
+on:
+  schedule:
+    - cron: '5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Send drop reminders if the drop is live
+        run: curl -fsS -X POST https://secondsurf.ch/api/drop/notify
