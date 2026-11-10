@@ -1,0 +1,356 @@
+---
+// The auction box on a piece page. The page is static, so the box asks /api/auctions/view whether the piece is being
+// auctioned; if so it shows itself and hides the normal "Buy" / price offer part ([data-sale]) and the list price.
+// Countdown every second, fresh data every 10 seconds. Bidding needs a login with a confirmed email (functions/api/auctions).
+import { url, type Lang } from '../i18n';
+import { auctionTexts } from '../i18n/auction';
+
+interface Props {
+	lang: Lang;
+	id: string;
+}
+
+const { lang, id } = Astro.props;
+const a = auctionTexts[lang];
+const back = url(lang, `/item/${id}/`);
+---
+
+<section
+	class="auction-box"
+	data-auction
+	data-id={id}
+	data-lang={lang}
+	data-texts={JSON.stringify(a)}
+	data-prefix={url(lang, '/').replace(/\/$/, '')}
+	aria-live="polite"
+	hidden
+>
+	<p class="eyebrow">{a.title}</p>
+	<div class="clock" data-clock-row>
+		<span>{a.endsIn}</span>
+		<strong data-clock>--:--:--</strong>
+	</div>
+	<p class="small muted" data-ends></p>
+	<p class="now">
+		<span class="small" data-price-label></span>
+		<strong data-price></strong>
+		<span class="small muted" data-bids></span>
+	</p>
+	<p class="you" data-you hidden></p>
+	<p class="waiting" data-waiting hidden>{a.waiting}</p>
+	<div class="won" data-won hidden>
+		<p data-won-text></p>
+		<a class="btn big" data-pay>{a.pay}</a>
+	</div>
+
+	<form class="bid" data-bid novalidate hidden>
+		<label>
+			<span>{a.limit}</span>
+			<input name="max" type="number" inputmode="decimal" min="1" step="1" required />
+		</label>
+		<p class="small muted" data-minimum></p>
+		<label class="check terms" data-terms hidden>
+			<input type="checkbox" name="acceptTerms" />
+			<span>{a.terms} <a href={url(lang, '/terms/')} target="_blank" rel="noopener">{a.termsLink}</a></span>
+		</label>
+		<button class="btn big" type="submit" data-submit>{a.bid}</button>
+		<p class="small muted">{a.limitHint}</p>
+		<p class="status" role="status" data-status></p>
+	</form>
+
+	<div class="login" data-login hidden>
+		<p>{a.login}</p>
+		<a class="btn" href={`${url(lang, '/account/')}?back=${encodeURIComponent(back)}`}>{a.loginButton}</a>
+	</div>
+	<p class="reason" data-reason hidden></p>
+
+	<p class="small muted extend" data-extend>{a.extendNote}</p>
+	<details class="history" data-history hidden>
+		<summary>{a.history}</summary>
+		<ol></ol>
+	</details>
+</section>
+
+<script>
+	import type { AuctionTexts } from '../i18n/auction';
+
+	type View = {
+		auction: null | {
+			status: 'running' | 'payment';
+			startPrice: number;
+			price: number;
+			bids: number;
+			endsAt: number;
+			serverNow: number;
+			minimum: number;
+			history: { bidder: string; amount: number; auto: boolean; at: number }[];
+		};
+		you: null | {
+			verified: boolean;
+			acceptedTerms: boolean;
+			reason: string | null;
+			leading: boolean;
+			yourMax: number | null;
+			minimum: number;
+			buyer: boolean;
+			payToken: string | null;
+			payUntil: number | null;
+		};
+	};
+
+	const found = document.querySelector<HTMLElement>('[data-auction]');
+	if (found) {
+		const box: HTMLElement = found;
+		const t: AuctionTexts = JSON.parse(box.dataset.texts!);
+		const lang = box.dataset.lang!;
+		const id = box.dataset.id!;
+		const $ = <T extends HTMLElement = HTMLElement>(sel: string) => box.querySelector<T>(sel)!;
+		const locale = { de: 'de-CH', fr: 'fr-CH', it: 'it-CH', en: 'en-GB' }[lang] ?? 'de-CH';
+		const chf = (n: number) => `CHF ${n.toFixed(2).replace(/\.00$/, '.–')}`;
+		const date = (ms: number) =>
+			new Intl.DateTimeFormat(locale, { timeZone: 'Europe/Zurich', weekday: 'short', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(ms);
+		const fill = (text: string, v: Record<string, string>) => text.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? '');
+		const form = $<HTMLFormElement>('[data-bid]');
+		const input = form.elements.namedItem('max') as HTMLInputElement;
+		const terms = form.elements.namedItem('acceptTerms') as HTMLInputElement;
+		let view: View | null = null;
+		let offset = 0;
+		let reloading = false;
+
+		const toggleSale = (auction: boolean) => {
+			box.hidden = !auction;
+			document.querySelectorAll<HTMLElement>('[data-sale], [data-list-price]').forEach((el) => (el.hidden = auction));
+		};
+
+		function tick() {
+			const a = view?.auction;
+			if (!a || a.status !== 'running') return;
+			const left = Math.max(0, a.endsAt - (Date.now() + offset));
+			const s = Math.floor(left / 1000);
+			const d = Math.floor(s / 86400);
+			const hms = [Math.floor((s % 86400) / 3600), Math.floor((s % 3600) / 60), s % 60].map((n) => String(n).padStart(2, '0')).join(':');
+			$('[data-clock]').textContent = d > 0 ? `${d}${t.days} ${hms}` : hms;
+			box.classList.toggle('final', s < 120);
+			if (left === 0 && !reloading) load();
+		}
+
+		function render(v: View) {
+			view = v;
+			const a = v.auction;
+			toggleSale(Boolean(a));
+			if (!a) return;
+			offset = a.serverNow - Date.now();
+			const running = a.status === 'running';
+			const you = v.you;
+
+			$('[data-clock-row]').hidden = !running;
+			$('[data-ends]').textContent = running ? fill(t.endsAt, { date: date(a.endsAt) }) : '';
+			$('[data-price-label]').textContent = a.bids ? t.current : t.start;
+			$('[data-price]').textContent = chf(a.bids ? a.price : a.startPrice);
+			$('[data-bids]').textContent = a.bids === 0 ? t.noBids : a.bids === 1 ? t.oneBid : fill(t.bids, { n: String(a.bids) });
+			$('[data-extend]').hidden = !running;
+
+			const youText = $('[data-you]');
+			youText.hidden = true;
+			if (running && you?.yourMax) {
+				youText.textContent = fill(you.leading ? t.leading : t.outbid, { amount: chf(you.yourMax) });
+				youText.className = `you ${you.leading ? 'ahead' : 'behind'}`;
+				youText.hidden = false;
+			}
+
+			$('[data-waiting]').hidden = running || Boolean(you?.buyer);
+			$('[data-won]').hidden = !(a.status === 'payment' && you?.buyer && you.payToken);
+			if (a.status === 'payment' && you?.buyer && you.payToken) {
+				$('[data-won-text]').textContent = fill(t.youWon, { date: you.payUntil ? date(you.payUntil) : '' });
+				$<HTMLAnchorElement>('[data-pay]').href = `${box.dataset.prefix}/auction/?t=${you.payToken}`;
+			}
+
+			// Who may bid: logged out → login; a reason (blocked, unconfirmed email …) → that; otherwise the form.
+			$('[data-login]').hidden = !running || Boolean(you);
+			const reason = running && you ? you.reason ?? (you.verified ? null : 'verify') : null;
+			const reasonText = $('[data-reason]');
+			reasonText.hidden = !reason;
+			reasonText.textContent = reason ? (t.errors as Record<string, string>)[reason] ?? t.errors.generic : '';
+			form.hidden = !running || !you || Boolean(reason);
+			if (running && you && !reason) {
+				const min = you.minimum;
+				input.min = String(min);
+				if (document.activeElement !== input && (!input.value || Number(input.value) < min)) input.value = String(min);
+				$('[data-minimum]').textContent = fill(t.minimum, { amount: chf(min) });
+				$('[data-terms]').hidden = you.acceptedTerms;
+				$('[data-submit]').textContent = you.leading ? t.raise : t.bid;
+			}
+
+			const list = $('[data-history] ol');
+			list.replaceChildren(
+				...a.history.map((h) => {
+					const li = document.createElement('li');
+					li.textContent = `${h.bidder} · ${chf(h.amount)}${h.auto ? ` (${t.auto})` : ''} · ${new Intl.DateTimeFormat(locale, { timeZone: 'Europe/Zurich', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(h.at)}`;
+					return li;
+				}),
+			);
+			$('[data-history]').hidden = a.history.length === 0;
+			tick();
+		}
+
+		async function load() {
+			reloading = true;
+			try {
+				const res = await fetch(`/api/auctions/view?id=${encodeURIComponent(id)}`, { cache: 'no-store' });
+				if (res.ok) render(await res.json());
+			} catch {
+				// Keep showing the last state; the next poll tries again.
+			} finally {
+				reloading = false;
+			}
+		}
+
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			const status = $('[data-status]');
+			const max = Number(input.value);
+			const you = view?.you;
+			if (!you || !view?.auction) return;
+			if (!(max >= you.minimum)) return (status.textContent = fill(t.errors.tooLow, { amount: chf(you.minimum) }));
+			if (!you.acceptedTerms && !terms.checked) return (status.textContent = t.errors.terms);
+			const button = $<HTMLButtonElement>('[data-submit]');
+			button.disabled = true;
+			status.textContent = '…';
+			try {
+				const res = await fetch('/api/auctions/bid', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id, max, acceptTerms: terms.checked }),
+				});
+				const data = await res.json().catch(() => ({}));
+				if (!res.ok) {
+					const text = (t.errors as Record<string, string>)[data.error] ?? t.errors.generic;
+					status.textContent = fill(text, { amount: chf(data.minimum ?? you.minimum) });
+				} else status.textContent = data.leading ? t.placedLeading : t.placedOutbid;
+			} catch {
+				status.textContent = t.errors.generic;
+			} finally {
+				button.disabled = false;
+				input.value = '';
+				await load();
+			}
+		});
+
+		load();
+		setInterval(tick, 1000);
+		setInterval(() => {
+			if (!document.hidden) load();
+		}, 10_000);
+	}
+</script>
+
+<style>
+	.auction-box {
+		display: grid;
+		gap: 0.6rem;
+		margin: 1rem 0 1.5rem;
+		padding: 1.25rem;
+		border: 2px solid var(--ink);
+		background: var(--bg-raised);
+	}
+	.auction-box[hidden],
+	.auction-box [hidden] {
+		display: none !important;
+	}
+	.auction-box .eyebrow {
+		margin: 0;
+	}
+	.clock {
+		display: flex;
+		align-items: baseline;
+		gap: 0.6rem;
+	}
+	.clock strong {
+		font-size: var(--step-2, 1.6rem);
+		font-variant-numeric: tabular-nums;
+		letter-spacing: 0.02em;
+	}
+	.auction-box.final .clock strong {
+		color: #b42318;
+	}
+	.now {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.25rem 0.75rem;
+		margin: 0.25rem 0 0;
+	}
+	.now strong {
+		font-size: var(--step-1, 1.3rem);
+	}
+	.you {
+		margin: 0;
+		padding: 0.5rem 0.75rem;
+		font-weight: 600;
+	}
+	.you.ahead {
+		background: #dcfce7;
+		color: #14532d;
+	}
+	.you.behind {
+		background: #fee2e2;
+		color: #7f1d1d;
+	}
+	.bid {
+		display: grid;
+		gap: 0.5rem;
+	}
+	.bid label > span {
+		display: block;
+		margin-bottom: 0.25rem;
+		font-weight: 600;
+	}
+	.bid input[type='number'] {
+		width: 100%;
+		max-width: 12rem;
+		padding: 0.6rem 0.75rem;
+		border: 1.5px solid var(--line);
+		background: var(--bg);
+		font: inherit;
+		font-size: var(--step-0, 1rem);
+	}
+	.terms {
+		display: flex;
+		gap: 0.5rem;
+		align-items: flex-start;
+		font-size: var(--step--1);
+	}
+	.terms input {
+		margin-top: 0.2rem;
+	}
+	.bid p,
+	.login p,
+	.reason,
+	.waiting,
+	.extend {
+		margin: 0;
+	}
+	.status:empty {
+		display: none;
+	}
+	.login {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.75rem;
+	}
+	.reason {
+		padding: 0.5rem 0.75rem;
+		background: var(--sand-tint, #f5efe3);
+	}
+	.history summary {
+		cursor: pointer;
+		font-weight: 600;
+	}
+	.history ol {
+		margin: 0.5rem 0 0;
+		padding-left: 1.25rem;
+		font-size: var(--step--1);
+		font-variant-numeric: tabular-nums;
+	}
+</style>

@@ -8,6 +8,7 @@
 import { WELCOME } from '../../src/config.ts';
 import { currentUser, database, normalizeCode, welcomePrice, welcomeUsed } from '../_lib/accounts.ts';
 import type { Handler } from '../_lib/auth.ts';
+import { auctionBlocksSale } from '../_lib/auctions.ts';
 import { asLang, checkoutReady, langPrefix, loadPiece, redirect, startCheckout } from '../_lib/checkout.ts';
 import { PRODUCT_ID } from '../_lib/product.ts';
 
@@ -22,6 +23,8 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 	if (!checkoutReady(env)) return redirect(`${itemUrl}#checkout-error`);
 	const piece = await loadPiece(env, request, id);
 	if (!piece || piece.sold) return redirect(itemUrl);
+	// Being auctioned (or waiting for the winner's payment): only the auction can sell it.
+	if (await auctionBlocksSale(env, id)) return redirect(itemUrl);
 
 	const code = normalizeCode(form?.get('code'));
 	if (!code) return startCheckout({ env, request, lang, piece, price: piece.price, backUrl: itemUrl });

@@ -17,6 +17,8 @@ const form = $('add-form');
 /** model: who wears it in the photo ('women', 'men' or '' for no model), for "models first" in the shop. */
 /** @type {{ blob: Blob, url: string, model: string }[]} */
 let photos = [];
+/** The pieces from the last list load, for the auction form. */
+let pieceList = [];
 
 async function api(path, options = {}) {
 	const res = await fetch(`/api/admin/${path}`, {
@@ -372,6 +374,7 @@ function fillSelect(name, options) {
 
 async function loadProducts() {
 	const { products, options } = await api('products');
+	pieceList = products;
 	if (!form.elements.category.options.length) {
 		fillSelect('category', options.categories);
 		fillSelect('size', options.sizes.map((size) => ({ id: size, label: size })));
@@ -386,6 +389,7 @@ async function loadDashboard() {
 	$('dashboard').hidden = false;
 	showPage();
 	loadOffers().catch((error) => show($('offers-error'), error.message));
+	loadAuctions().catch((error) => show($('auctions-error'), error.message));
 }
 
 loadDashboard().catch((error) => {
@@ -396,9 +400,11 @@ loadDashboard().catch((error) => {
 // ---------- Pages ----------
 
 function showPage() {
-	const page = location.hash === '#offers' ? 'offers' : 'pieces';
+	const page = location.hash === '#offers' ? 'offers' : location.hash === '#auctions' ? 'auctions' : 'pieces';
 	$('pieces-page').hidden = page !== 'pieces';
 	$('offers-page').hidden = page !== 'offers';
+	$('auctions-page').hidden = page !== 'auctions';
+	if (page === 'auctions' && !$('dashboard').hidden) loadAuctions().catch((error) => show($('auctions-error'), error.message));
 	for (const tab of document.querySelectorAll('.tabs a')) {
 		if (tab.dataset.page === page) tab.setAttribute('aria-current', 'page');
 		else tab.removeAttribute('aria-current');
@@ -543,4 +549,142 @@ function offerButton(label, className, offer, body) {
 		}
 	});
 	return button;
+}
+
+// ---------- Auctions ----------
+
+const AUCTION_GROUPS = [
+	['running', 'Running'],
+	['payment', 'Waiting for payment'],
+	['paid', 'Paid'],
+	['ended', 'Ended without sale (unsold, cancelled or not paid)'],
+];
+const auctionForm = $('auction-form');
+
+/** "2026-11-20T18:00" for a datetime-local input, in the browser's (Swiss) time. */
+const localInput = (date) => {
+	const pad = (n) => String(n).padStart(2, '0');
+	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+for (const button of auctionForm.querySelectorAll('[data-days]')) {
+	button.addEventListener('click', () => {
+		// n days from now, on the full hour: easy to remember for bidders.
+		const end = new Date(Date.now() + Number(button.dataset.days) * 86400000);
+		end.setMinutes(0, 0, 0);
+		auctionForm.elements.endsAt.value = localInput(end);
+	});
+}
+
+function fillAuctionPieces(auctions) {
+	const busy = new Set(auctions.filter((a) => a.status === 'running' || a.status === 'payment').map((a) => a.product_id));
+	const select = auctionForm.elements.productId;
+	const chosen = select.value;
+	const options = pieceList
+		.filter((p) => !p.sold && !p.draft && !busy.has(p.id))
+		.map((p) => new Option(`${p.brand} ${p.title} (CHF ${p.price})`, p.id));
+	select.replaceChildren(new Option('Choose…', ''), ...options);
+	select.value = chosen;
+}
+
+auctionForm.elements.productId.addEventListener('change', () => {
+	// Suggest a start price: half the normal price, at least CHF 1.
+	const piece = pieceList.find((p) => p.id === auctionForm.elements.productId.value);
+	if (piece && !auctionForm.elements.startPrice.value) auctionForm.elements.startPrice.value = String(Math.max(1, Math.round(piece.price / 2)));
+});
+
+auctionForm.addEventListener('submit', async (event) => {
+	event.preventDefault();
+	show($('auction-error'));
+	show($('auction-status'));
+	const f = auctionForm.elements;
+	const endsAt = f.endsAt.value ? new Date(f.endsAt.value).getTime() : NaN;
+	if (!f.productId.value) return show($('auction-error'), 'Choose a piece.');
+	if (!(Number(f.startPrice.value) >= 1)) return show($('auction-error'), 'Enter a start price of at least CHF 1.');
+	if (!endsAt) return show($('auction-error'), 'Choose when it ends (or tap 3, 5 or 7 days).');
+	const button = auctionForm.querySelector('button[type=submit]');
+	button.disabled = true;
+	try {
+		await api('auctions', { method: 'POST', body: { productId: f.productId.value, startPrice: Number(f.startPrice.value), endsAt } });
+		auctionForm.reset();
+		show($('auction-status'), 'The auction is running. It shows on the piece page right away.');
+		await loadAuctions();
+	} catch (error) {
+		show($('auction-error'), error.message);
+	} finally {
+		button.disabled = false;
+	}
+});
+
+async function loadAuctions() {
+	const { auctions } = await api('auctions');
+	show($('auctions-error'));
+	fillAuctionPieces(auctions);
+	const open = auctions.filter((a) => a.status === 'running' || a.status === 'payment').length;
+	$('auctions-count').textContent = String(open);
+	$('auctions-count').hidden = open === 0;
+	const groups = AUCTION_GROUPS.map(([key, title]) => {
+		const list = auctions.filter((a) => (key === 'ended' ? ['unsold', 'cancelled', 'failed'].includes(a.status) : a.status === key));
+		if (!list.length) return null;
+		const section = el('div', 'auction-group');
+		const ul = el('ul', 'offers');
+		ul.append(...list.map(renderAuction));
+		section.append(el('h3', '', `${title} (${list.length})`), ul);
+		return section;
+	}).filter(Boolean);
+	$('auctions').replaceChildren(...(groups.length ? groups : [el('p', 'hint', 'No auctions yet.')]));
+}
+
+function renderAuction(a) {
+	const item = el('li', a.status === 'running' || a.status === 'payment' ? 'offer' : 'offer closed');
+	const label = {
+		running: 'Running',
+		payment: a.round === 2 ? 'Second chance – waiting for payment' : 'Won – waiting for payment',
+		paid: 'Paid ✓ – ship it',
+		unsold: 'Ended without bids',
+		cancelled: 'Cancelled',
+		failed: 'Not paid – back on normal sale',
+	}[a.status];
+	const tone = { running: 'pending', payment: 'accepted', paid: 'paid' }[a.status] ?? 'declined';
+	item.append(el('span', `state ${tone}`, label));
+	const title = el('strong');
+	const link = el('a', '', a.product_name);
+	link.href = `/item/${a.product_id}/`;
+	link.target = '_blank';
+	title.append(link);
+	item.append(title);
+	const amounts = el('p', 'amounts');
+	const shown = a.status === 'payment' || a.status === 'paid' ? a.buyer_price : a.price;
+	amounts.append(el('strong', '', chf(shown)), ` · start ${chf(a.start_price)} · ${a.bids} bid${a.bids === 1 ? '' : 's'}`);
+	item.append(amounts);
+	if (a.status === 'running') {
+		item.append(el('p', 'when', `Ends ${when(a.ends_at)}${a.leader_email ? ` · ahead: ${a.leader_email}` : ''}`));
+		if (a.bids === 0) {
+			const actions = el('div', 'actions');
+			const cancel = el('button', 'danger', 'Cancel auction');
+			cancel.type = 'button';
+			cancel.addEventListener('click', async () => {
+				if (!confirm(`Cancel the auction for ${a.product_name}?`)) return;
+				cancel.disabled = true;
+				show($('auctions-error'));
+				try {
+					await api(`auctions/${a.id}`, { method: 'DELETE' });
+					await loadAuctions();
+				} catch (error) {
+					show($('auctions-error'), error.message);
+					cancel.disabled = false;
+				}
+			});
+			actions.append(cancel);
+			item.append(actions);
+		}
+	} else if (a.status === 'payment' || a.status === 'paid') {
+		const who = el('p', 'who');
+		const mail = el('a', '', a.buyer_email ?? '–');
+		if (a.buyer_email) mail.href = `mailto:${a.buyer_email}`;
+		who.append('Buyer: ', mail);
+		item.append(who);
+		if (a.status === 'payment') item.append(el('p', 'when', `Pays by ${when(a.pay_until)}`));
+	} else item.append(el('p', 'when', `Ended ${when(a.ends_at)}`));
+	return item;
 }

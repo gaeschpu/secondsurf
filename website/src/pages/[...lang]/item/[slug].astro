@@ -5,6 +5,7 @@ import Base from '../../../layouts/Base.astro';
 import Icon from '../../../components/Icon.astro';
 import WishButton from '../../../components/WishButton.astro';
 import OfferForm from '../../../components/OfferForm.astro';
+import AuctionBox from '../../../components/AuctionBox.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { chf, l, langPaths, url, useT, type Lang } from '../../../i18n';
 import { CATEGORIES, CHECKOUT, CONDITIONS, SITE } from '../../../config';
@@ -111,7 +112,7 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 				{p.draft && <p class="small"><span class="todo">DRAFT</span> {t('shop.example')}</p>}
 				<p class="eyebrow">{p.brand}</p>
 				<h1>{name}{p.staffPick && ' ★'}</h1>
-				<p class="price">{chf(p.price)}</p>
+				<p class="price" data-list-price>{chf(p.price)}</p>
 				<dl>
 					<dt>{t('shop.size')}</dt>
 					<dd>{p.size}{p.sizeNote && ` · ${p.sizeNote}`}</dd>
@@ -125,6 +126,9 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 					)}
 				</dl>
 				{p.description && <p class="desc">{l(p.description, lang)}</p>}
+				{/* Shows itself only while the piece is auctioned, and then hides [data-sale] and the list price. */}
+				{!p.sold && <AuctionBox lang={lang} id={product.id} />}
+				<div data-sale>
 				{
 					p.sold ? (
 						<p class="sold-note">{t('shop.sold')}</p>
@@ -167,8 +171,9 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 						</>
 					)
 				}
+				</div>
 				{!p.sold && <p class="wish-row"><WishButton lang={lang} id={product.id} withLabel /></p>}
-				{!p.sold && <OfferForm lang={lang} id={product.id} price={p.price} />}
+				{!p.sold && <div data-sale><OfferForm lang={lang} id={product.id} price={p.price} /></div>}
 				<p class="back small"><a href={url(lang, '/shop/')}>← {t('shop.back')}</a></p>
 			</div>
 		</article>

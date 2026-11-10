@@ -54,6 +54,32 @@ Wer zum ersten Mal auf die Website kommt, sieht nach ein paar Sekunden ein Fenst
 
 Code und Prozent stehen in `src/config.ts` (`WELCOME`).
 
+## Eine Auktion starten
+
+Jedes Piece kann statt zum Festpreis versteigert werden, wie bei Ricardo.
+
+1. Öffne `/admin/` und tippe oben auf **Auctions**.
+2. Wähle das Piece, gib den **Startpreis** ein und wähle das Ende (oder tippe auf **3 days**, **5 days** oder **7 days**).
+3. Tippe auf **Start auction**. Die Auktion erscheint sofort auf der Seite des Pieces, im Shop hat die Karte ein rotes Schild «Auktion».
+
+So läuft es:
+
+- Mitbieten kann nur, wer ein Konto mit bestätigter E-Mail hat und vor dem ersten Gebot die Auktionsbedingungen (AGB Ziffer 9) akzeptiert.
+- Man bietet mit einem **Limit**: Die Website bietet automatisch in Schritten von CHF 1, bis zu diesem Limit. Wer überboten wird, bekommt eine E-Mail.
+- Kommt in den letzten 2 Minuten ein Gebot, verlängert sich die Auktion um 2 Minuten.
+- Während der Auktion kann niemand das Piece normal kaufen oder einen Preis vorschlagen.
+- Ohne Gebote kannst du die Auktion mit **Cancel auction** abbrechen. Sobald jemand geboten hat, geht das nicht mehr.
+
+Nach dem Ende:
+
+- Die Gewinnerin oder der Gewinner bekommt eine E-Mail und sieht die Zahlung im Profil unter **Meine Auktionen**. Bezahlt wird innert 48 Stunden mit Stripe (dazu die normalen Versandkosten, ohne Rabattcode). Du bekommst eine kurze E-Mail.
+- Nach 24 Stunden ohne Zahlung geht eine Erinnerung raus.
+- Nach 48 Stunden ohne Zahlung wird das Konto für Auktionen gesperrt, und die Person mit dem zweithöchsten Gebot bekommt das Piece zu ihrem eigenen Höchstgebot angeboten (freiwillig, wieder 48 Stunden).
+- Bezahlt auch sie nicht, ist das Piece wieder normal im Verkauf. Du bekommst jeweils eine E-Mail.
+- Ist bezahlt, wird das Piece automatisch als verkauft markiert, wie bei jeder Online-Bestellung. Dann verschickst du es.
+
+Neue Konten ohne bisherigen Kauf können gleichzeitig nur bei einer Auktion vorne liegen.
+
 ## Ein Piece als verkauft markieren
 
 So verkaufst du im Moment: Kundinnen und Kunden tippen auf **Anfragen**, du bekommst eine E-Mail und schickst ihnen die Zahlungsangaben. Sie bezahlen sofort. Reserviert wird nichts: Wer zuerst bezahlt, bekommt das Piece.

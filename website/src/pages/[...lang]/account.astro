@@ -4,11 +4,13 @@
 import Base from '../../layouts/Base.astro';
 import { langPaths, url, useT, type Lang } from '../../i18n';
 import { accountTexts } from '../../i18n/account';
+import { auctionTexts } from '../../i18n/auction';
 
 export const getStaticPaths = langPaths;
 const { lang } = Astro.props as { lang: Lang };
 const t = useT(lang);
 const a = accountTexts[lang];
+const au = auctionTexts[lang];
 const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 ---
 
@@ -116,6 +118,12 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 				</label>
 			</section>
 
+			<!-- Auctions the customer bid in (functions/api/auctions, route mine). Hidden until there is one. -->
+			<section class="block my-auctions" aria-labelledby="auctions-title" data-auction-texts={JSON.stringify(au)} hidden>
+				<h2 id="auctions-title">{au.mine}</h2>
+				<ul class="auction-list"></ul>
+			</section>
+
 			<section class="block" aria-labelledby="address-title">
 				<h2 id="address-title">{a.addresses}</h2>
 				<ul class="address-list"></ul>
@@ -218,6 +226,47 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 	let me: Profile | null = null;
 
 	const chf = (amount: number) => (Number.isInteger(amount) ? `CHF ${amount}.–` : `CHF ${amount.toFixed(2)}`);
+
+	// ------------------------------------------------ my auctions
+	type MyAuction = {
+		productId: string;
+		name: string;
+		status: string;
+		price: number;
+		endsAt: number;
+		yourMax: number;
+		leading: boolean;
+		outcome: 'running' | 'pay' | 'paid' | 'lost';
+		payUntil: number | null;
+		payLink: string | null;
+	};
+	async function renderAuctions() {
+		const section = root.querySelector<HTMLElement>('.my-auctions')!;
+		const au = JSON.parse(section.dataset.auctionTexts!) as Record<string, string>;
+		const res = await fetch(`/api/auctions/mine?lang=${lang}`, { cache: 'no-store' });
+		const list: MyAuction[] = res.ok ? (await res.json()).auctions : [];
+		section.hidden = list.length === 0;
+		const locale = ({ de: 'de-CH', fr: 'fr-CH', it: 'it-CH', en: 'en-GB' } as Record<string, string>)[lang] ?? 'de-CH';
+		const date = (ms: number) => new Intl.DateTimeFormat(locale, { timeZone: 'Europe/Zurich', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(ms);
+		const fill = (text: string, v: Record<string, string>) => text.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? '');
+		const prefix = lang === 'de' ? '' : `/${lang}`;
+		section.querySelector('.auction-list')!.replaceChildren(
+			...list.map((item) => {
+				const name = el('a', { href: `${prefix}/item/${item.productId}/`, textContent: item.name });
+				const state =
+					item.outcome === 'running'
+						? `${fill(item.leading ? au.mineLeading : au.mineOutbid, { amount: chf(item.yourMax) })} · ${fill(au.mineEnds, { date: date(item.endsAt) })}`
+						: item.outcome === 'pay'
+							? fill(au.minePay, { date: item.payUntil ? date(item.payUntil) : '' })
+							: item.outcome === 'paid'
+								? au.minePaid
+								: au.mineLost;
+				const li = el('li', { className: `auction-item ${item.outcome}${item.leading ? ' leading' : ''}` }, el('p', { className: 'name' }, name), el('p', { className: 'price' }, chf(item.price)), el('p', { className: 'small state' }, state));
+				if (item.payLink) li.append(el('a', { className: 'btn', href: item.payLink, textContent: au.pay }));
+				return li;
+			}),
+		);
+	}
 	const local = (value: Localized) => (typeof value === 'string' ? value : value[lang] || value.de || '');
 	const message = (error: unknown) => a.errors[(error as ApiError).code as keyof AccountTexts['errors']] ?? a.errors.generic;
 	const el = <K extends keyof HTMLElementTagNameMap>(tag: K, props: Partial<HTMLElementTagNameMap[K]> = {}, ...children: (Node | string)[]) => {
@@ -459,6 +508,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 		root.querySelectorAll<HTMLInputElement>('#models-choice input').forEach((input) => (input.checked = input.value === (me!.models ?? '')));
 		renderAddresses();
 		await renderWishlist();
+		renderAuctions().catch(() => {});
 		// Emails come in the language the customer last used the site in.
 		if (me.lang !== lang) api('me', 'PATCH', { lang }).catch(() => {});
 	}
@@ -769,6 +819,50 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 	}
 	.stay {
 		margin-top: 0.25rem;
+	}
+	/* My auctions: one row per auction, the one to pay stands out. */
+	.auction-list {
+		display: grid;
+		gap: 0.75rem;
+		margin: 1rem 0 0;
+		padding: 0;
+		list-style: none;
+	}
+	.auction-list :global(.auction-item) {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 0.2rem 1rem;
+		align-items: center;
+		padding: 0.9rem 1rem;
+		border: 1px solid var(--line);
+		background: var(--bg-raised);
+	}
+	.auction-list :global(.auction-item p) {
+		margin: 0;
+	}
+	.auction-list :global(.name) {
+		font-weight: 700;
+		text-transform: uppercase;
+		font-size: var(--step--1);
+	}
+	.auction-list :global(.price) {
+		font-weight: 700;
+		text-align: right;
+	}
+	.auction-list :global(.state) {
+		grid-column: 1 / -1;
+		color: var(--ink-soft);
+	}
+	.auction-list :global(.auction-item .btn) {
+		grid-column: 1 / -1;
+		justify-self: start;
+		margin-top: 0.4rem;
+	}
+	.auction-list :global(.auction-item.pay) {
+		border: 2px solid var(--ink);
+	}
+	.auction-list :global(.auction-item.leading .state) {
+		color: #166534;
 	}
 	/* Gender: woman, man or other (decides whose model photos come first, src/scripts/models.ts). */
 	.models {

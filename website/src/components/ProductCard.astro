@@ -7,6 +7,7 @@ import WishButton from './WishButton.astro';
 import { chf, l, url, useT, type Lang } from '../i18n';
 import type { Product } from '../lib/products';
 import { modelTag } from '../scripts/models';
+import { auctionTexts } from '../i18n/auction';
 
 interface Props {
 	lang: Lang;
@@ -21,7 +22,7 @@ const name = l(p.title, lang);
 const slider = photos.length > 1;
 ---
 
-<li class="product" data-size={p.size} data-brand={p.brand} data-price={p.price}>
+<li class="product" data-id={product.id} data-size={p.size} data-brand={p.brand} data-price={p.price}>
 	<a href={url(lang, `/item/${product.id}/`)} class:list={['card-link', { sold: p.sold }]}>
 		<div class="media">
 			{
@@ -56,6 +57,8 @@ const slider = photos.length > 1;
 			}
 			{p.sold && <span class="badge">{t('shop.sold')}</span>}
 			{p.draft && <span class="badge draft">DRAFT</span>}
+			{/* Shown by the script below while the piece is being auctioned. */}
+			{!p.sold && <span class="badge auction" data-auction-badge hidden>{auctionTexts[lang].badge}</span>}
 		</div>
 		<p class="title"><strong>{p.brand}</strong> {name}{p.staffPick && ' ★'}</p>
 		<p class="meta">
@@ -80,6 +83,17 @@ const slider = photos.length > 1;
 
 <script>
 	import { applyOrder, modelOrder } from '../scripts/models';
+
+	// Pieces being auctioned get an "Auktion" badge (one request for the whole page).
+	const cards = document.querySelectorAll<HTMLElement>('.product [data-auction-badge]');
+	if (cards.length)
+		fetch('/api/auctions/active')
+			.then((res) => (res.ok ? res.json() : []))
+			.then((list: { id: string }[]) => {
+				const ids = new Set(list.map((a) => a.id));
+				cards.forEach((badge) => (badge.hidden = !ids.has(badge.closest<HTMLElement>('.product')!.dataset.id!)));
+			})
+			.catch(() => {});
 
 	// Arrows scroll the photo strip one photo at a time; the dots and arrows follow the scroll position (swipe too).
 	for (const card of document.querySelectorAll<HTMLElement>('.product')) {
@@ -241,6 +255,13 @@ const slider = photos.length > 1;
 		font-weight: 700;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
+	}
+	.badge[hidden] {
+		display: none;
+	}
+	.badge.auction {
+		background: #b42318;
+		color: #fff;
 	}
 	.badge.draft {
 		left: auto;

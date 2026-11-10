@@ -235,6 +235,18 @@ button:disabled {
 .previews .remove {
 	right: 0.25rem;
 }
+.quick {
+	display: flex;
+	gap: 0.5rem;
+	margin: -0.25rem 0 0.75rem;
+}
+.quick button {
+	flex: 1;
+}
+.auction-group h3 {
+	margin: 1.5rem 0 0.5rem;
+	font-size: 1rem;
+}
 .previews .model {
 	position: static;
 	display: block;

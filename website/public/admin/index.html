@@ -28,6 +28,7 @@
 				<nav class="tabs" aria-label="Dashboard pages">
 					<a href="#pieces" data-page="pieces" aria-current="page">Pieces</a>
 					<a href="#offers" data-page="offers">Offers <span id="offers-count" class="count" hidden></span></a>
+					<a href="#auctions" data-page="auctions">Auctions <span id="auctions-count" class="count" hidden></span></a>
 				</nav>
 				<button id="logout" class="link" type="button">Log out</button>
 			</header>
@@ -46,6 +47,32 @@
 					<p id="offers-error" class="error" role="alert" hidden></p>
 					<p id="offers-status" class="status" role="status" hidden></p>
 					<ul id="offers" class="offers"></ul>
+				</section>
+			</main>
+
+			<main id="auctions-page" hidden>
+				<form id="auction-form" class="card" novalidate>
+					<h1>Start an auction</h1>
+					<p class="hint">
+						Customers with an account bid with a limit; the site bids for them in CHF 1 steps. A bid in the last 2 minutes adds 2 minutes.
+						While the auction runs (and until the winner has paid), the piece can't be bought normally. The winner pays within 48 hours.
+					</p>
+					<label>Piece <select name="productId" required></select></label>
+					<label>Start price (CHF) <input name="startPrice" type="number" inputmode="numeric" min="1" step="1" required /></label>
+					<label>Ends (Swiss time) <input name="endsAt" type="datetime-local" required /></label>
+					<div class="quick" role="group" aria-label="Quick end">
+						<button type="button" data-days="3">3 days</button>
+						<button type="button" data-days="5">5 days</button>
+						<button type="button" data-days="7">7 days</button>
+					</div>
+					<p id="auction-error" class="error" role="alert" hidden></p>
+					<p id="auction-status" class="status" role="status" hidden></p>
+					<button class="primary" type="submit">Start auction</button>
+				</form>
+				<section>
+					<h2>Auctions</h2>
+					<p id="auctions-error" class="error" role="alert" hidden></p>
+					<div id="auctions"></div>
 				</section>
 			</main>
 

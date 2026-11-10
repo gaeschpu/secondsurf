@@ -1,7 +1,8 @@
 ---
 // AGB, from the owner's document (raw-docs/legal forms/AGB_secondsurf.pdf, Stand 05.11.2026), in all four languages.
 // German is the contract language (2.5); the other versions say so. Section 6 follows the returns page:
-// only wrong, damaged or not-as-described pieces. Shipping figures come from src/settings/site.json.
+// only wrong, damaged or not-as-described pieces. Section 9 (auctions) follows functions/_lib/auctions.ts; it was added
+// on 10.11.2026 and is not in the owner's PDF yet. Shipping figures come from src/settings/site.json.
 import LegalPage from '../../components/LegalPage.astro';
 import { chf, langPaths, url, useT, type Lang } from '../../i18n';
 import { OWNER, SHIPPING, SITE } from '../../config';
@@ -27,7 +28,7 @@ type Section = { title: string; paragraphs: (string | string[])[] };
 const content: Record<Lang, { subtitle: string; note?: string; sections: Section[]; updated: string }> = {
 	de: {
 		subtitle: 'secondsurf.ch – Second-Hand-Surfkleidung',
-		updated: 'Stand: 05.11.2026',
+		updated: 'Stand: 10.11.2026',
 		sections: [
 			{
 				title: '1. Geltungsbereich und Anbieter',
@@ -103,12 +104,27 @@ const content: Record<Lang, { subtitle: string; note?: string; sections: Section
 				],
 			},
 			{
-				title: '9. Schlussbestimmungen',
+				title: '9. Auktionen',
 				paragraphs: [
-					'9.1 Es gilt ausschliesslich Schweizer Recht unter Ausschluss des UN-Kaufrechts (CISG). Zwingende Verbraucherschutzbestimmungen des Wohnsitzlandes des Kunden bleiben vorbehalten.',
-					'9.2 Gerichtsstand ist Biel/Bienne, Kanton Bern. Für Konsumentinnen und Konsumenten gilt zusätzlich der gesetzliche Gerichtsstand an ihrem Wohnsitz (Art. 32 ZPO).',
-					'9.3 Sollte eine Bestimmung dieser AGB unwirksam sein, bleiben die übrigen Bestimmungen gültig.',
-					'9.4 secondsurf kann diese AGB jederzeit anpassen. Für eine Bestellung gilt die Fassung, die zum Zeitpunkt der Bestellung auf der Website veröffentlicht war.',
+					'9.1 Einzelne Artikel bietet secondsurf in Auktionen an. Startpreis und Ende stehen auf der Artikelseite. Während einer Auktion und bis zur Zahlung des Höchstbietenden kann der Artikel nicht zum Festpreis gekauft werden.',
+					'9.2 Mitbieten können nur Kunden mit einem Kundenkonto und bestätigter E-Mail-Adresse, die vor ihrem ersten Gebot diese Auktionsbedingungen akzeptiert haben.',
+					'9.3 Jedes Gebot ist ein verbindliches Angebot zum Kauf des Artikels und kann nicht zurückgezogen werden. Der Kunde gibt ein Höchstgebot (Limit) an. secondsurf bietet für ihn automatisch, jeweils CHF 1 über dem nächsten Gebot, bis zu diesem Limit. Bei gleich hohen Limiten gilt das früher abgegebene.',
+					'9.4 Geht in den letzten 2 Minuten ein Gebot ein, verlängert sich die Auktion bis 2 Minuten nach diesem Gebot.',
+					'9.5 Mit dem Ende der Auktion kommt der Kaufvertrag zwischen secondsurf und dem Höchstbietenden zum angezeigten Endpreis zustande. Er erhält eine E-Mail und findet die Zahlung in seinem Kundenkonto.',
+					'9.6 Der Höchstbietende bezahlt den Endpreis zuzüglich der Versandkosten nach Ziffer 4 innert 48 Stunden nach Ende der Auktion über den Checkout (Ziffer 3). Rabattcodes gelten bei Auktionen nicht.',
+					'9.7 Bezahlt er nicht fristgerecht, kann secondsurf vom Vertrag zurücktreten und sein Kundenkonto für weitere Auktionen sperren. secondsurf kann den Artikel dann der Person mit dem zweithöchsten Gebot zu deren Höchstgebot anbieten. Für diese Person ist das Angebot freiwillig; nimmt sie es an, bezahlt sie ebenfalls innert 48 Stunden.',
+					'9.8 Kunden ohne bisherigen bezahlten Kauf können gleichzeitig nur bei einer Auktion vorne liegen oder eine unbezahlte Auktion gewonnen haben.',
+					'9.9 Ersteigerte Artikel sind von jeder freiwilligen Rücknahme ausgeschlossen. Die Rückgabe nach Ziffer 6.2 (falscher, beim Versand beschädigter oder nicht beschreibungsgemässer Artikel) und die Gewährleistung nach Ziffer 7 gelten auch für Auktionen.',
+					'9.10 secondsurf kann eine Auktion abbrechen, solange noch kein Gebot eingegangen ist.',
+				],
+			},
+			{
+				title: '10. Schlussbestimmungen',
+				paragraphs: [
+					'10.1 Es gilt ausschliesslich Schweizer Recht unter Ausschluss des UN-Kaufrechts (CISG). Zwingende Verbraucherschutzbestimmungen des Wohnsitzlandes des Kunden bleiben vorbehalten.',
+					'10.2 Gerichtsstand ist Biel/Bienne, Kanton Bern. Für Konsumentinnen und Konsumenten gilt zusätzlich der gesetzliche Gerichtsstand an ihrem Wohnsitz (Art. 32 ZPO).',
+					'10.3 Sollte eine Bestimmung dieser AGB unwirksam sein, bleiben die übrigen Bestimmungen gültig.',
+					'10.4 secondsurf kann diese AGB jederzeit anpassen. Für eine Bestellung gilt die Fassung, die zum Zeitpunkt der Bestellung auf der Website veröffentlicht war.',
 				],
 			},
 		],
@@ -116,7 +132,7 @@ const content: Record<Lang, { subtitle: string; note?: string; sections: Section
 	fr: {
 		subtitle: 'secondsurf.ch – Vêtements de surf de seconde main',
 		note: 'Traduction fournie à titre d’information. Seule la version allemande fait foi (ch. 2.5).',
-		updated: 'État au 05.11.2026',
+		updated: 'État au 10.11.2026',
 		sections: [
 			{
 				title: '1. Champ d’application et fournisseur',
@@ -192,12 +208,27 @@ const content: Record<Lang, { subtitle: string; note?: string; sections: Section
 				],
 			},
 			{
-				title: '9. Dispositions finales',
+				title: '9. Enchères',
 				paragraphs: [
-					'9.1 Le droit suisse est exclusivement applicable, à l’exclusion de la Convention de Vienne (CVIM). Les dispositions impératives de protection des consommateurs du pays de domicile du client sont réservées.',
-					'9.2 Le for est à Biel/Bienne, canton de Berne. Pour les consommatrices et consommateurs, le for légal de leur domicile s’applique en outre (art. 32 CPC).',
-					'9.3 Si une disposition des présentes CGV est invalide, les autres dispositions restent valables.',
-					'9.4 secondsurf peut modifier ces CGV à tout moment. La version publiée sur le site au moment de la commande s’applique à celle-ci.',
+					'9.1 secondsurf propose certains articles aux enchères. Le prix de départ et la fin figurent sur la page de l’article. Pendant une enchère et jusqu’au paiement du meilleur enchérisseur, l’article ne peut pas être acheté au prix fixe.',
+					'9.2 Seuls les clients disposant d’un compte client avec une adresse e-mail confirmée, qui ont accepté les présentes conditions des enchères avant leur première offre, peuvent enchérir.',
+					'9.3 Chaque offre est une offre ferme d’achat de l’article et ne peut pas être retirée. Le client indique une offre maximale (limite). secondsurf enchérit automatiquement pour lui, chaque fois CHF 1 au-dessus de l’offre suivante, jusqu’à cette limite. À limites égales, la première déposée l’emporte.',
+					'9.4 Si une offre arrive dans les 2 dernières minutes, l’enchère est prolongée jusqu’à 2 minutes après cette offre.',
+					'9.5 À la fin de l’enchère, le contrat de vente est conclu entre secondsurf et le meilleur enchérisseur au prix final affiché. Il reçoit un e-mail et trouve le paiement dans son compte client.',
+					'9.6 Le meilleur enchérisseur paie le prix final, plus les frais d’envoi selon le chiffre 4, dans les 48 heures suivant la fin de l’enchère via le checkout (chiffre 3). Les codes de réduction ne s’appliquent pas aux enchères.',
+					'9.7 S’il ne paie pas dans le délai, secondsurf peut se départir du contrat et bloquer son compte client pour d’autres enchères. secondsurf peut alors proposer l’article à la personne ayant fait la deuxième offre la plus haute, à son offre maximale. Pour cette personne, l’offre est facultative ; si elle l’accepte, elle paie également dans les 48 heures.',
+					'9.8 Les clients sans achat payé jusqu’ici ne peuvent être en tête que d’une seule enchère à la fois ou avoir gagné une seule enchère non payée.',
+					'9.9 Les articles remportés aux enchères sont exclus de toute reprise volontaire. Le retour selon le chiffre 6.2 (article erroné, endommagé pendant l’envoi ou non conforme à la description) et la garantie selon le chiffre 7 s’appliquent aussi aux enchères.',
+					'9.10 secondsurf peut annuler une enchère tant qu’aucune offre n’a été faite.',
+				],
+			},
+			{
+				title: '10. Dispositions finales',
+				paragraphs: [
+					'10.1 Le droit suisse est exclusivement applicable, à l’exclusion de la Convention de Vienne (CVIM). Les dispositions impératives de protection des consommateurs du pays de domicile du client sont réservées.',
+					'10.2 Le for est à Biel/Bienne, canton de Berne. Pour les consommatrices et consommateurs, le for légal de leur domicile s’applique en outre (art. 32 CPC).',
+					'10.3 Si une disposition des présentes CGV est invalide, les autres dispositions restent valables.',
+					'10.4 secondsurf peut modifier ces CGV à tout moment. La version publiée sur le site au moment de la commande s’applique à celle-ci.',
 				],
 			},
 		],
@@ -205,7 +236,7 @@ const content: Record<Lang, { subtitle: string; note?: string; sections: Section
 	it: {
 		subtitle: 'secondsurf.ch – Abbigliamento da surf di seconda mano',
 		note: 'Traduzione a scopo informativo. Fa fede unicamente la versione tedesca (n. 2.5).',
-		updated: 'Stato: 05.11.2026',
+		updated: 'Stato: 10.11.2026',
 		sections: [
 			{
 				title: '1. Campo d’applicazione e fornitore',
@@ -281,12 +312,27 @@ const content: Record<Lang, { subtitle: string; note?: string; sections: Section
 				],
 			},
 			{
-				title: '9. Disposizioni finali',
+				title: '9. Aste',
 				paragraphs: [
-					'9.1 Si applica esclusivamente il diritto svizzero, con esclusione della Convenzione di Vienna (CISG). Restano riservate le disposizioni imperative di protezione dei consumatori del paese di domicilio del cliente.',
-					'9.2 Il foro competente è Biel/Bienne, Canton Berna. Per i consumatori vale inoltre il foro legale del loro domicilio (art. 32 CPC).',
-					'9.3 Se una disposizione delle presenti CG fosse invalida, le altre restano valide.',
-					'9.4 secondsurf può modificare queste CG in qualsiasi momento. Per un ordine vale la versione pubblicata sul sito al momento dell’ordine.',
+					'9.1 secondsurf offre alcuni articoli all’asta. Il prezzo di partenza e la fine sono indicati sulla pagina dell’articolo. Durante un’asta e fino al pagamento del miglior offerente, l’articolo non può essere acquistato a prezzo fisso.',
+					'9.2 Possono fare offerte solo i clienti con un account cliente e un indirizzo e-mail confermato che hanno accettato le presenti condizioni delle aste prima della loro prima offerta.',
+					'9.3 Ogni offerta è una proposta vincolante di acquisto dell’articolo e non può essere ritirata. Il cliente indica un’offerta massima (limite). secondsurf offre automaticamente per lui, ogni volta CHF 1 sopra l’offerta successiva, fino a questo limite. A parità di limite vale quello inserito prima.',
+					'9.4 Se arriva un’offerta negli ultimi 2 minuti, l’asta si prolunga fino a 2 minuti dopo tale offerta.',
+					'9.5 Con la fine dell’asta il contratto di vendita è concluso tra secondsurf e il miglior offerente al prezzo finale indicato. Riceve un’e-mail e trova il pagamento nel suo account cliente.',
+					'9.6 Il miglior offerente paga il prezzo finale, più le spese di spedizione secondo la cifra 4, entro 48 ore dalla fine dell’asta tramite il checkout (cifra 3). I codici sconto non valgono per le aste.',
+					'9.7 Se non paga entro il termine, secondsurf può recedere dal contratto e bloccare il suo account cliente per altre aste. secondsurf può allora offrire l’articolo alla persona con la seconda offerta più alta, alla sua offerta massima. Per questa persona l’offerta è facoltativa; se la accetta, paga anch’essa entro 48 ore.',
+					'9.8 I clienti senza un acquisto pagato finora possono essere in testa a una sola asta alla volta o aver vinto una sola asta non pagata.',
+					'9.9 Gli articoli vinti all’asta sono esclusi da qualsiasi ripresa volontaria. Il reso secondo la cifra 6.2 (articolo sbagliato, danneggiato durante la spedizione o non conforme alla descrizione) e la garanzia secondo la cifra 7 valgono anche per le aste.',
+					'9.10 secondsurf può annullare un’asta finché non è stata fatta alcuna offerta.',
+				],
+			},
+			{
+				title: '10. Disposizioni finali',
+				paragraphs: [
+					'10.1 Si applica esclusivamente il diritto svizzero, con esclusione della Convenzione di Vienna (CISG). Restano riservate le disposizioni imperative di protezione dei consumatori del paese di domicilio del cliente.',
+					'10.2 Il foro competente è Biel/Bienne, Canton Berna. Per i consumatori vale inoltre il foro legale del loro domicilio (art. 32 CPC).',
+					'10.3 Se una disposizione delle presenti CG fosse invalida, le altre restano valide.',
+					'10.4 secondsurf può modificare queste CG in qualsiasi momento. Per un ordine vale la versione pubblicata sul sito al momento dell’ordine.',
 				],
 			},
 		],
@@ -294,7 +340,7 @@ const content: Record<Lang, { subtitle: string; note?: string; sections: Section
 	en: {
 		subtitle: 'secondsurf.ch – Second-hand surf clothing',
 		note: 'This translation is for information only. The German version is the binding one (section 2.5).',
-		updated: 'Last updated: 5 November 2026',
+		updated: 'Last updated: 10 November 2026',
 		sections: [
 			{
 				title: '1. Scope and provider',
@@ -370,12 +416,27 @@ const content: Record<Lang, { subtitle: string; note?: string; sections: Section
 				],
 			},
 			{
-				title: '9. Final provisions',
+				title: '9. Auctions',
 				paragraphs: [
-					'9.1 Swiss law applies exclusively, excluding the UN Convention on Contracts for the International Sale of Goods (CISG). Mandatory consumer protection provisions of the customer’s country of residence remain reserved.',
-					'9.2 The place of jurisdiction is Biel/Bienne, Canton of Bern. For consumers, the statutory place of jurisdiction at their place of residence also applies (Art. 32 Swiss Civil Procedure Code).',
-					'9.3 Should a provision of these terms be invalid, the remaining provisions remain valid.',
-					'9.4 secondsurf may change these terms at any time. An order is governed by the version published on the website at the time of the order.',
+					'9.1 secondsurf offers some items in auctions. The starting price and the end are shown on the item page. During an auction and until the highest bidder has paid, the item cannot be bought at a fixed price.',
+					'9.2 Only customers with a customer account and a confirmed email address who have accepted these auction terms before their first bid can bid.',
+					'9.3 Every bid is a binding offer to buy the item and cannot be withdrawn. The customer enters a maximum bid (limit). secondsurf bids for them automatically, each time CHF 1 above the next bid, up to that limit. With equal limits, the one placed first wins.',
+					'9.4 If a bid arrives in the last 2 minutes, the auction is extended to 2 minutes after that bid.',
+					'9.5 When the auction ends, the purchase contract is concluded between secondsurf and the highest bidder at the final price shown. They receive an email and find the payment in their customer account.',
+					'9.6 The highest bidder pays the final price plus shipping costs under section 4 within 48 hours of the end of the auction through the checkout (section 3). Discount codes do not apply to auctions.',
+					'9.7 If they do not pay in time, secondsurf may withdraw from the contract and block their customer account from further auctions. secondsurf may then offer the item to the person with the second-highest bid, at their maximum bid. For that person the offer is optional; if they accept it, they also pay within 48 hours.',
+					'9.8 Customers without a previous paid purchase can only be ahead in one auction at a time or have won one unpaid auction.',
+					'9.9 Items won at auction are excluded from any voluntary return. Returns under section 6.2 (wrong item, damaged in transit or not as described) and the warranty under section 7 also apply to auctions.',
+					'9.10 secondsurf may cancel an auction as long as no bid has been placed.',
+				],
+			},
+			{
+				title: '10. Final provisions',
+				paragraphs: [
+					'10.1 Swiss law applies exclusively, excluding the UN Convention on Contracts for the International Sale of Goods (CISG). Mandatory consumer protection provisions of the customer’s country of residence remain reserved.',
+					'10.2 The place of jurisdiction is Biel/Bienne, Canton of Bern. For consumers, the statutory place of jurisdiction at their place of residence also applies (Art. 32 Swiss Civil Procedure Code).',
+					'10.3 Should a provision of these terms be invalid, the remaining provisions remain valid.',
+					'10.4 secondsurf may change these terms at any time. An order is governed by the version published on the website at the time of the order.',
 				],
 			},
 		],

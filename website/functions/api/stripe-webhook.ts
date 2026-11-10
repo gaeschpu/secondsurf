@@ -1,10 +1,13 @@
 // POST /api/stripe-webhook: Stripe tells us when a checkout is paid or has expired.
 // Paid: the piece is marked as sold (a commit, so the site rebuilds), the owner gets an email with the shipping address,
 // and the customer an order confirmation in their language (AGB 2.3).
+// Paid through an auction (metadata auction_id): the auction is marked as paid. Every paid order is recorded (purchases),
+// because accounts without one may only hold one auction at a time (functions/_lib/auctions.ts).
 // Expired or failed: the hold is released so someone else can buy the piece.
 // In Stripe: Developers → Webhooks → add https://secondsurf.ch/api/stripe-webhook with the events listed in the README.
 
 import { database, markWelcomeUsed } from '../_lib/accounts.ts';
+import { auctionsDb, now as nowSeconds, recordPurchase } from '../_lib/auctions.ts';
 import { json, type Handler } from '../_lib/auth.ts';
 import { commit, PRODUCTS_DIR, readText } from '../_lib/github.ts';
 import { sendMail } from '../_lib/mail.ts';
@@ -20,7 +23,7 @@ type Session = {
 	payment_status: string;
 	payment_intent?: string | null;
 	amount_total?: number | null;
-	metadata?: { product_id?: string; offer_id?: string; welcome_user?: string; discount?: string; lang?: string; product_name?: string };
+	metadata?: { product_id?: string; offer_id?: string; auction_id?: string; auction_buyer?: string; welcome_user?: string; discount?: string; lang?: string; product_name?: string };
 	customer_details?: { name?: string | null; email?: string | null; phone?: string | null } | null;
 	collected_information?: { shipping_details?: { name?: string; address?: Address } | null } | null;
 	shipping_details?: { name?: string; address?: Address } | null;
@@ -215,6 +218,21 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 			const offers = await offersDb(env).catch(() => null);
 			await offers?.prepare("UPDATE offers SET status = 'paid', updated_at = ? WHERE id = ?").bind(now(), offerId).run().catch(() => {});
 		}
+		// Paid through an auction: close it, but only for the buyer it was waiting for.
+		const auctionId = Number(session.metadata?.auction_id);
+		const auctions = env.DB ? await auctionsDb(env).catch(() => null) : null;
+		if (auctionId > 0 && auctions) {
+			const result = await auctions
+				.prepare("UPDATE auctions SET status = 'paid', updated_at = ? WHERE id = ? AND status = 'payment' AND buyer_id = ?")
+				.bind(nowSeconds(), auctionId, Number(session.metadata?.auction_buyer))
+				.run()
+				.catch(() => null);
+			if (!result?.meta.changes) console.error('Auction payment arrived for an auction that had moved on', auctionId);
+			// The buyer's account counts as having bought, even if they gave Stripe another email.
+			const buyer = await auctions.prepare('SELECT email FROM users WHERE id = ?').bind(Number(session.metadata?.auction_buyer)).first<{ email: string }>().catch(() => null);
+			if (buyer) await recordPurchase(auctions, `${session.id}:account`, buyer.email).catch(() => {});
+		}
+		if (auctions && session.customer_details?.email) await recordPurchase(auctions, session.id, session.customer_details.email).catch(() => {});
 		// Paid with the welcome code: it can't be used again on this account.
 		const welcomeUser = Number(session.metadata?.welcome_user);
 		if (welcomeUser > 0 && env.DB) {

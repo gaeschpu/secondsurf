@@ -234,6 +234,8 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 					db.prepare('DELETE FROM users WHERE id = ?').bind(user.id),
 				),
 			);
+			// Auction tables exist only once auctions were used. Bids stay (as proof of finished auctions), without a name.
+			await db.prepare('DELETE FROM auction_terms WHERE user_id = ?').bind(user.id).run().catch(() => {});
 			return json({ ok: true }, 200, { 'Set-Cookie': endSessionCookie });
 		}
 

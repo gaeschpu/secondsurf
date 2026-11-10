@@ -3,6 +3,7 @@
 // Stores the offer, emails the owner and confirms to the customer with a link to follow it.
 
 import { database, tooMany, type User } from './accounts.ts';
+import { auctionBlocksSale } from './auctions.ts';
 import { json, type Env } from './auth.ts';
 import { asLang, checkoutReady, loadPiece, titleIn } from './checkout.ts';
 import { mailCustomer, mailOwner, minimumOffer, newToken, now, offersDb, type Offer } from './offers.ts';
@@ -30,6 +31,7 @@ export async function createOffer(
 
 	const piece = await loadPiece(env, request, id);
 	if (!piece || piece.sold) return json({ error: 'sold' }, 409);
+	if (await auctionBlocksSale(env, id)) return json({ error: 'auction' }, 409);
 	if (amount < minimumOffer(piece.price)) return json({ error: 'tooLow', minimum: minimumOffer(piece.price) }, 400);
 	if (amount >= piece.price) return json({ error: 'notLower' }, 400);
 	if (await tooMany(await database(env), `offer:${user.id}`, 10, 60)) return json({ error: 'tooMany' }, 429);

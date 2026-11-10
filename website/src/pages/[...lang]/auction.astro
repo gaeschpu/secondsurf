@@ -1,0 +1,89 @@
+---
+// /auction/?t=<token>: the winner (or the second bidder, if the winner didn't pay) pays here within 48 hours.
+// The link is in their emails and in "Meine Auktionen" in the profile. Data from GET /api/auctions/pay.
+import Base from '../../layouts/Base.astro';
+import { langPaths, url, useT, type Lang } from '../../i18n';
+import { auctionTexts } from '../../i18n/auction';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+const a = auctionTexts[lang];
+---
+
+<Base lang={lang} title={a.payTitle} description={a.payTitle} noindex>
+	<div class="container page-head auction-page" data-texts={JSON.stringify(a)} data-lang={lang} data-prefix={url(lang, '/').replace(/\/$/, '')}>
+		<h1>{a.payTitle}</h1>
+		<p id="reserved" class="checkout-msg small" role="status">{t('checkout.reserved')}</p>
+		<p id="checkout-error" class="checkout-msg small" role="status">{t('checkout.error')}</p>
+		<p class="state" data-state>{a.payLoading}</p>
+		<p data-until hidden></p>
+		<form class="actions" method="post" action="/api/auctions/checkout" data-pay hidden>
+			<input type="hidden" name="t" />
+			<input type="hidden" name="lang" value={lang} />
+			<button class="btn big" type="submit">{a.pay}</button>
+		</form>
+		<p class="small"><a data-piece hidden>{a.toPiece} →</a></p>
+	</div>
+</Base>
+
+<script>
+	import type { AuctionTexts } from '../../i18n/auction';
+
+	const page = document.querySelector<HTMLElement>('.auction-page')!;
+	const t: AuctionTexts = JSON.parse(page.dataset.texts!);
+	const lang = page.dataset.lang!;
+	const token = new URL(location.href).searchParams.get('t') ?? '';
+	const $ = <T extends HTMLElement>(sel: string) => page.querySelector<T>(sel)!;
+	const chf = (n: number) => `CHF ${n.toFixed(2).replace(/\.00$/, '.–')}`;
+	const fill = (text: string, v: Record<string, string>) => text.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? '');
+	const locale = { de: 'de-CH', fr: 'fr-CH', it: 'it-CH', en: 'en-GB' }[lang] ?? 'de-CH';
+	const date = (ms: number) =>
+		new Intl.DateTimeFormat(locale, { timeZone: 'Europe/Zurich', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(ms);
+
+	type Pay = { productId: string; name: string; price: number; payUntil: number; round: number; paid: boolean; expired: boolean; canPay: boolean };
+
+	async function load() {
+		try {
+			const res = await fetch(`/api/auctions/pay?t=${encodeURIComponent(token)}&lang=${lang}`, { cache: 'no-store' });
+			if (res.status === 404 || !token) return ($('[data-state]').textContent = t.payNotFound);
+			if (!res.ok) throw new Error();
+			const v: Pay = await res.json();
+			$('[data-state]').textContent = fill(v.round === 2 ? t.paySecond : t.payWon, { item: v.name, amount: chf(v.price) });
+			const until = $('[data-until]');
+			until.textContent = v.paid ? t.payPaid : v.expired ? t.payExpired : fill(t.payUntil, { date: date(v.payUntil) });
+			until.hidden = false;
+			$('[data-pay]').hidden = !v.canPay;
+			$<HTMLInputElement>('[data-pay] input[name=t]').value = token;
+			const piece = $<HTMLAnchorElement>('[data-piece]');
+			piece.href = `${page.dataset.prefix}/item/${v.productId}/`;
+			piece.hidden = false;
+		} catch {
+			$('[data-state]').textContent = t.errors.generic;
+		}
+	}
+	load();
+</script>
+
+<style>
+	.auction-page {
+		min-height: 50vh;
+	}
+	.state {
+		font-size: var(--step-1, 1.2rem);
+	}
+	.actions {
+		margin: 1.5rem 0;
+	}
+	.actions[hidden] {
+		display: none;
+	}
+	.checkout-msg {
+		display: none;
+		padding: 0.75rem 1rem;
+		border-left: 3px solid var(--accent, currentColor);
+	}
+	.checkout-msg:target {
+		display: block;
+	}
+</style>

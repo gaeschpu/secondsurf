@@ -1,0 +1,18 @@
+# Auctions: every 10 minutes, ask the site to end auctions whose time is up, send payment reminders after 24 hours and
+# pass unpaid wins on after 48 hours (functions/_lib/auctions.ts). Each step happens only once, so calling often is harmless.
+# The piece pages and the profile do the same whenever someone opens them; this catches the quiet times.
+# GitHub may start scheduled runs a few minutes late; that only delays emails, never the end of an auction.
+name: Auctions
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: End auctions and handle payment deadlines
+        run: curl -fsS -X POST https://secondsurf.ch/api/auctions/tick

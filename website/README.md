@@ -186,6 +186,26 @@ Until it's paid, the piece is not reserved: whoever pays first gets it.
 Needs the same setup as the forms below (Resend, Turnstile) plus the D1 binding `DB`, where offers are stored.
 Code: `functions/_lib/offer-create.ts` (sent to `/api/account/offer`), `functions/api/offers/`, `functions/api/admin/offers/`, `src/components/OfferForm.astro`, `src/pages/[...lang]/offer.astro`.
 
+## Auctions (Ricardo style)
+
+Started in `/admin/#auctions` (start price + end). Everything lives in D1, so starting or ending an auction needs no rebuild:
+the piece page asks `/api/auctions/view` and, while an auction runs or waits for payment, shows the auction box
+(`src/components/AuctionBox.astro`) instead of the buy/offer part. `/api/checkout` and offers refuse the piece during that time.
+
+- Rules, states, bidding and emails: `functions/_lib/auctions.ts`. API: `functions/api/auctions/[[path]].ts`; admin:
+  `functions/api/admin/auctions/`. Texts: `src/i18n/auction.ts`. Terms: section 9 of `src/pages/[...lang]/terms.astro`.
+- Bidding is by limit (proxy bidding): the price is one step (CHF 1) above the second-highest limit; equal limits → the earlier
+  one leads. A bid is written with a conditional UPDATE on the auction's `version` in one D1 batch with its rows, so
+  simultaneous bids can't both win. A bid in the last 2 minutes moves the end to 2 minutes after it.
+- Bidders need a verified email, accepted terms (table `auction_terms`) and no block (`auction_blocks`, by email). Accounts
+  without a paid order (table `purchases`, filled by the Stripe webhook) can lead one auction at a time and can't bid with an
+  unpaid win.
+- After the end the winner pays within 48 h on `/auction/?t=…` (also in the profile) through `startCheckout` with
+  `auction_id` in the metadata; the webhook marks the auction paid and the piece sold. Reminder after 24 h; after 48 h the
+  winner is blocked and the second-highest bidder gets an optional offer at their own limit; then the piece is back on sale.
+- These steps run in `settle()` whenever an auction is viewed, bid on or listed, and every 10 minutes from
+  `.github/workflows/auction-tick.yml` (`POST /api/auctions/tick`, safe to call any time).
+
 ## Forms (contact, stockist, sell once)
 
 The forms send through `functions/api/forms.ts`: Turnstile stops bots, Resend emails you and sends the customer a short confirmation.
