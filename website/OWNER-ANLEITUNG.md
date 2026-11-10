@@ -9,6 +9,15 @@ Du brauchst zwei Adressen. Speichere beide am besten auf dem Startbildschirm dei
 
 Nach jedem Speichern baut sich die Website neu auf. Änderungen sind meist nach 1 bis 2 Minuten sichtbar.
 
+## Das Dashboard aufs Handy legen
+
+Das Dashboard (`/admin/`) ist dein Admin-Bereich: Pieces hinzufügen, Preise ändern, Preisvorschläge annehmen und Auktionen starten. Du findest es auch über den kleinen Link **Admin** ganz unten auf jeder Seite, oder im Profil, wenn du mit info.secondsurf@gmail.com angemeldet bist.
+
+- **iPhone (Safari):** `/admin/` öffnen → Teilen-Symbol → **Zum Home-Bildschirm**.
+- **Android (Chrome):** `/admin/` öffnen → Menü ⋮ → **Zum Startbildschirm hinzufügen**.
+
+Danach öffnet es sich wie eine App («ss Admin»). Nach dem Anmelden bleibst du 30 Tage eingeloggt.
+
 ## Ein neues Piece hinzufügen
 
 1. Öffne `/admin/` und melde dich an.

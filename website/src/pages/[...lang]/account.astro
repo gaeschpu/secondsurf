@@ -5,6 +5,7 @@ import Base from '../../layouts/Base.astro';
 import { langPaths, url, useT, type Lang } from '../../i18n';
 import { accountTexts } from '../../i18n/account';
 import { auctionTexts } from '../../i18n/auction';
+import { SITE } from '../../config';
 
 export const getStaticPaths = langPaths;
 const { lang } = Astro.props as { lang: Lang };
@@ -96,6 +97,10 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 			<div class="hello-row">
 				<p class="hello"></p>
 				<button type="button" class="btn-line" id="logout">{a.logout}</button>
+			</div>
+			<!-- Only for the shop's own account (SITE.email): a shortcut to the dashboard, which has its own password. -->
+			<div class="owner-row" data-owner-email={SITE.email} hidden>
+				<a class="btn" href="/admin/">Admin-Dashboard →</a>
 			</div>
 			<p class="verify" hidden>
 				<span class="verify-text"></span>
@@ -490,6 +495,8 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 		$('#reset').hidden = true;
 		$('#profile').hidden = false;
 		$('.hello').textContent = a.hello.replace('{name}', me.name);
+		const owner = root.querySelector<HTMLElement>('.owner-row')!;
+		owner.hidden = me.email.toLowerCase() !== owner.dataset.ownerEmail!.toLowerCase();
 		$('.account-email').textContent = me.email;
 		(document.querySelector('#name-form input[name=name]') as HTMLInputElement).value = me.name;
 		(document.querySelector('#name-form input[name=phone]') as HTMLInputElement).value = me.phone ?? '';
@@ -816,6 +823,12 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 	}
 	.alerts {
 		margin-top: 1.5rem;
+	}
+	.owner-row {
+		margin: 0 0 1.25rem;
+	}
+	.owner-row[hidden] {
+		display: none;
 	}
 	.stay {
 		margin-top: 0.25rem;

@@ -1,0 +1,14 @@
+{
+	"name": "secondsurf Admin",
+	"short_name": "ss Admin",
+	"description": "Pieces, price offers and auctions of secondsurf",
+	"start_url": "/admin/",
+	"scope": "/admin/",
+	"display": "standalone",
+	"background_color": "#f5f2ec",
+	"theme_color": "#0e5f6e",
+	"icons": [
+		{ "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+		{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+	]
+}
