@@ -208,7 +208,8 @@ const back = url(lang, `/item/${id}/`);
 		form.addEventListener('submit', async (event) => {
 			event.preventDefault();
 			const status = $('[data-status]');
-			const max = Number(input.value);
+			// Whole francs only (the server rounds down too).
+			const max = Math.floor(Number(input.value));
 			const you = view?.you;
 			if (!you || !view?.auction) return;
 			if (!(max >= you.minimum)) return (status.textContent = fill(t.errors.tooLow, { amount: chf(you.minimum) }));
