@@ -1,6 +1,6 @@
 ---
 // /auctions/: every running auction, auction lots (pieces and bundles that are only auctioned, auctionOnly) and shop pieces
-// alike, the ones ending soonest first. Auctions live in D1, so the page is filled in the browser from
+// alike, the ones ending soonest first. Each card shows the piece's real photo (without a model, `real` in products.json). Auctions live in D1, so the page is filled in the browser from
 // /api/auctions/active (price, bids, end) and /products.json (photo, name). Bidding happens on the piece page.
 import Base from '../../layouts/Base.astro';
 import { langPaths, url, useT, type Lang } from '../../i18n';
@@ -29,7 +29,7 @@ const a = auctionTexts[lang];
 	import type { AuctionTexts } from '../../i18n/auction';
 
 	type Active = { id: string; price: number; bids: number; endsAt: number };
-	type Piece = { id: string; brand: string; title: string | Record<string, string>; size: string; photo: string | null; auctionOnly?: boolean };
+	type Piece = { id: string; brand: string; title: string | Record<string, string>; size: string; photo: string | null; real?: string | null; auctionOnly?: boolean };
 
 	const page = document.querySelector<HTMLElement>('.auctions-page')!;
 	const t: AuctionTexts = JSON.parse(page.dataset.texts!);
@@ -78,7 +78,7 @@ const a = auctionTexts[lang];
 					li.className = 'lot';
 					li.innerHTML = `
 						<a class="lot-link" href="${href}">
-							<div class="media">${p.photo ? `<img src="${p.photo}" alt="" loading="lazy" />` : ''}<span class="badge">${t.badge}</span></div>
+							<div class="media">${p.real ?? p.photo ? `<img src="${p.real ?? p.photo}" alt="" loading="lazy" />` : ''}<span class="badge">${t.badge}</span></div>
 							<p class="title"><strong></strong> <span></span></p>
 							<p class="meta"><span class="size"></span><span class="bids"></span></p>
 							<p class="price"><span class="label"></span> <strong></strong></p>

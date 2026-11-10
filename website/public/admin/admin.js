@@ -332,6 +332,22 @@ function renderProduct(product) {
 		return api(`products/${product.id}`, { method: 'DELETE' });
 	});
 	actions.append(sold, remove);
+	// Put a shop piece up for auction: opens the Auctions tab with this piece chosen.
+	if (!product.sold) {
+		const auction = document.createElement('button');
+		auction.type = 'button';
+		auction.textContent = 'Auction';
+		auction.addEventListener('click', () => {
+			location.hash = '#auctions';
+			const select = auctionForm.elements.productId;
+			if (![...select.options].some((o) => o.value === product.id)) select.append(new Option(`${product.brand} ${product.title} (CHF ${product.price})`, product.id));
+			select.value = product.id;
+			auctionForm.elements.startPrice.value = String(Math.max(1, Math.round(product.price / 2)));
+			auctionForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			show($('auction-status'), `${product.brand} ${product.title} is chosen. Check the start price, choose the end (3, 5 or 7 days) and tap Start auction.`);
+		});
+		actions.append(auction);
+	}
 	meta.append(priceEditor(product), actions);
 
 	item.append(thumb, meta);
