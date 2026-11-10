@@ -6,6 +6,7 @@ import Icon from '../../../components/Icon.astro';
 import WishButton from '../../../components/WishButton.astro';
 import OfferForm from '../../../components/OfferForm.astro';
 import AuctionBox from '../../../components/AuctionBox.astro';
+import { auctionTexts } from '../../../i18n/auction';
 import JsonLd from '../../../components/JsonLd.astro';
 import { chf, l, langPaths, url, useT, type Lang } from '../../../i18n';
 import { CATEGORIES, CHECKOUT, CONDITIONS, SITE } from '../../../config';
@@ -25,6 +26,9 @@ const name = l(p.title, lang);
 const category = CATEGORIES.find((c) => c.id === p.category)!;
 const inquireHref = `${url(lang, '/contact/')}?item=${encodeURIComponent(`${p.brand} ${name} (${p.size}, ${chf(p.price)}) – ${product.id}`)}`;
 const ogImage = p.photos[0] && (await getImage({ src: p.photos[0], width: 1200, format: 'jpeg' })).src;
+// Auction lot (auctionOnly): never sold at a fixed price, only through its auction (see /auctions/).
+const lot = p.auctionOnly;
+const au = auctionTexts[lang];
 // Stripe Checkout (functions/api/checkout.ts) when it's switched on in src/settings/site.json, unless the piece has its own buyUrl.
 const checkout = CHECKOUT.enabled && !p.buyUrl;
 ---
@@ -56,7 +60,15 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 	/>
 	<div class="container-wide">
 		<p class="crumbs small">
-			<a href={url(lang, '/shop/')}>{t('nav.shopAll')}</a> / <a href={url(lang, `/shop/${category.id}/`)}>{l(category.label, lang)}</a>
+			{
+				lot ? (
+					<a href={url(lang, '/auctions/')}>{au.pageTitle}</a>
+				) : (
+					<>
+						<a href={url(lang, '/shop/')}>{t('nav.shopAll')}</a> / <a href={url(lang, `/shop/${category.id}/`)}>{l(category.label, lang)}</a>
+					</>
+				)
+			}
 		</p>
 		<article class="item">
 			<div class="photos" data-gallery>
@@ -112,7 +124,7 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 				{p.draft && <p class="small"><span class="todo">DRAFT</span> {t('shop.example')}</p>}
 				<p class="eyebrow">{p.brand}</p>
 				<h1>{name}{p.staffPick && ' ★'}</h1>
-				<p class="price" data-list-price>{chf(p.price)}</p>
+				{!lot && <p class="price" data-list-price>{chf(p.price)}</p>}
 				<dl>
 					<dt>{t('shop.size')}</dt>
 					<dd>{p.size}{p.sizeNote && ` · ${p.sizeNote}`}</dd>
@@ -128,9 +140,16 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 				{p.description && <p class="desc">{l(p.description, lang)}</p>}
 				{/* Shows itself only while the piece is auctioned, and then hides [data-sale] and the list price. */}
 				{!p.sold && <AuctionBox lang={lang} id={product.id} />}
-				<div data-sale>
 				{
-					p.sold ? (
+					lot && !p.sold && (
+						<p class="lot-note" data-sale>
+							{au.lotIdle} <a href={url(lang, '/auctions/')}>{au.toAuctions} →</a>
+						</p>
+					)
+				}
+				<div data-sale hidden={lot && !p.sold}>
+				{
+					lot && !p.sold ? null : p.sold ? (
 						<p class="sold-note">{t('shop.sold')}</p>
 					) : checkout ? (
 						<>
@@ -173,8 +192,8 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 				}
 				</div>
 				{!p.sold && <p class="wish-row"><WishButton lang={lang} id={product.id} withLabel /></p>}
-				{!p.sold && <div data-sale><OfferForm lang={lang} id={product.id} price={p.price} /></div>}
-				<p class="back small"><a href={url(lang, '/shop/')}>← {t('shop.back')}</a></p>
+				{!p.sold && !lot && <div data-sale><OfferForm lang={lang} id={product.id} price={p.price} /></div>}
+				<p class="back small">{lot ? <a href={url(lang, '/auctions/')}>← {au.toAuctions}</a> : <a href={url(lang, '/shop/')}>← {t('shop.back')}</a>}</p>
 			</div>
 		</article>
 	</div>
@@ -235,6 +254,15 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 </script>
 
 <style>
+	.lot-note {
+		margin: 1rem 0;
+		padding: 0.9rem 1rem;
+		border-left: 3px solid var(--accent);
+		background: var(--accent-tint);
+	}
+	.lot-note[hidden] {
+		display: none;
+	}
 	.crumbs {
 		padding-top: 1.5rem;
 		color: var(--ink-soft);

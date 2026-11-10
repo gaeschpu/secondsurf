@@ -4,11 +4,10 @@
 
 import { database } from '../../../_lib/accounts.ts';
 import { json, type Handler } from '../../../_lib/auth.ts';
-import { auctionsDb, now, settleAll, type Auction } from '../../../_lib/auctions.ts';
+import { auctionsDb, createAuction, settleAll, type Auction } from '../../../_lib/auctions.ts';
 import { loadPiece, titleIn } from '../../../_lib/checkout.ts';
 import { PRODUCT_ID } from '../../../_lib/product.ts';
 
-const MAX_DAYS = 30;
 
 export const onRequestGet: Handler = async ({ request, env, waitUntil }) => {
 	if (!env.DB) return json({ error: 'The D1 database (binding DB) is missing.' }, 503);
@@ -37,26 +36,13 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 	const startPrice = Math.round(Number(body?.startPrice));
 	const endsAt = Math.floor(Number(body?.endsAt) / 1000);
 	if (!PRODUCT_ID.test(id)) return json({ error: 'Choose a piece.' }, 400);
-	if (!(startPrice >= 1)) return json({ error: 'Enter a start price of at least CHF 1.' }, 400);
-	if (!(endsAt > now() + 10 * 60) || endsAt > now() + MAX_DAYS * 86400) return json({ error: `Choose an end between 10 minutes and ${MAX_DAYS} days from now.` }, 400);
 
 	const piece = await loadPiece(env, request, id);
 	if (!piece) return json({ error: 'This piece isn’t on the site (yet). Wait until it has been published.' }, 404);
 	if (piece.sold) return json({ error: 'This piece is sold.' }, 409);
 
-	const names = Object.fromEntries((['de', 'fr', 'it', 'en'] as const).map((lang) => [lang, `${piece.brand} ${titleIn(piece, lang)}`]));
-	const t = now();
-	try {
-		await db
-			.prepare(
-				`INSERT INTO auctions (product_id, product_name, names, start_price, price, ends_at, status, created_at, updated_at)
-				 VALUES (?, ?, ?, ?, ?, ?, 'running', ?, ?)`,
-			)
-			.bind(id, names.de, JSON.stringify(names), startPrice, startPrice, endsAt, t, t)
-			.run();
-	} catch {
-		// The unique index: this piece already has a running auction or one waiting for payment.
-		return json({ error: 'This piece already has an auction.' }, 409);
-	}
+	const names = Object.fromEntries((['de', 'fr', 'it', 'en'] as const).map((lang) => [lang, `${piece.brand} ${titleIn(piece, lang)}`])) as Record<'de' | 'fr' | 'it' | 'en', string>;
+	const error = await createAuction(db, id, names, startPrice, endsAt);
+	if (error) return json({ error }, error.includes('already') ? 409 : 400);
 	return json({ ok: true });
 };

@@ -46,6 +46,11 @@ const products = defineCollection({
 				.default({ women: [], men: [] }),
 			/** Drop number (see currentDrop in src/config.ts). */
 			drop: z.number().int().optional(),
+			/**
+			 * Auction lot: only sold by auction (a single piece or a bundle). Never listed in the shop, the categories, New Drop
+			 * or the home page, never buyable at a fixed price; shown on /auctions/ while its auction runs.
+			 */
+			auctionOnly: z.boolean().default(false),
 			/** Shown in the "Staff Picks" row on the home page. */
 			staffPick: z.boolean().default(false),
 			sold: z.boolean().default(false),

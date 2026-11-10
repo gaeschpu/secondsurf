@@ -124,6 +124,33 @@ export async function auctionsDb(env: Env): Promise<D1Database | null> {
 	return db;
 }
 
+// ---------------------------------------------------------------- starting
+
+export const MAX_DAYS = 30;
+
+/**
+ * Starts an auction. names = "Brand title" per language. endsAt in seconds. Returns an error message for the dashboard,
+ * or null when it runs. Used by /api/admin/auctions (an existing piece) and /api/admin/products (a new auction lot).
+ */
+export async function createAuction(db: D1Database, productId: string, names: Record<Lang, string>, startPrice: number, endsAt: number) {
+	if (!(startPrice >= 1)) return 'Enter a start price of at least CHF 1.';
+	if (!(endsAt > now() + 10 * 60) || endsAt > now() + MAX_DAYS * 86400) return `Choose an end between 10 minutes and ${MAX_DAYS} days from now.`;
+	const t = now();
+	try {
+		await db
+			.prepare(
+				`INSERT INTO auctions (product_id, product_name, names, start_price, price, ends_at, status, created_at, updated_at)
+				 VALUES (?, ?, ?, ?, ?, ?, 'running', ?, ?)`,
+			)
+			.bind(productId, names.de, JSON.stringify(names), startPrice, startPrice, endsAt, t, t)
+			.run();
+	} catch {
+		// The unique index: this piece already has a running auction or one waiting for payment.
+		return 'This piece already has an auction.';
+	}
+	return null;
+}
+
 // ---------------------------------------------------------------- reading
 
 /** The open auction of a piece (running or waiting for payment), or null. */

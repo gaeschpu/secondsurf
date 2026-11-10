@@ -24,7 +24,7 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 	const piece = await loadPiece(env, request, id);
 	if (!piece || piece.sold) return redirect(itemUrl);
 	// Being auctioned (or waiting for the winner's payment): only the auction can sell it.
-	if (await auctionBlocksSale(env, id)) return redirect(itemUrl);
+	if (piece.auctionOnly || (await auctionBlocksSale(env, id))) return redirect(itemUrl);
 
 	const code = normalizeCode(form?.get('code'));
 	if (!code) return startCheckout({ env, request, lang, piece, price: piece.price, backUrl: itemUrl });

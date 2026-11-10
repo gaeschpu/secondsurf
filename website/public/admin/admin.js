@@ -211,6 +211,14 @@ form.addEventListener('submit', async (event) => {
 	show($('add-error'));
 	show($('add-status'));
 	if (!photos.length) return show($('add-error'), 'Add at least one photo.');
+	// An auction lot has no fixed price: the start price stands in for it (it's never shown as a price to buy at).
+	const lot = form.elements.auctionOnly.checked;
+	const lotEnd = form.elements.lotEnd.value ? new Date(form.elements.lotEnd.value).getTime() : NaN;
+	if (lot) {
+		if (!(Number(form.elements.lotStart.value) >= 1)) return show($('add-error'), 'Enter the start price of the auction (at least CHF 1).');
+		if (!lotEnd) return show($('add-error'), 'Choose when the auction ends (or tap 3, 5 or 7 days).');
+		form.elements.price.value = form.elements.lotStart.value;
+	}
 	if (!form.reportValidity()) return;
 
 	const fields = new FormData(form);
@@ -224,7 +232,7 @@ form.addEventListener('submit', async (event) => {
 			shas.push(sha);
 		}
 		show($('add-status'), 'Saving…');
-		await api('products', {
+		const result = await api('products', {
 			method: 'POST',
 			body: {
 				brand: fields.get('brand'),
@@ -235,7 +243,9 @@ form.addEventListener('submit', async (event) => {
 				price: fields.get('price'),
 				measurements: fields.get('measurements'),
 				description: fields.get('description'),
-				staffPick: fields.get('staffPick') === 'on',
+				staffPick: fields.get('staffPick') === 'on' && !lot,
+				auctionOnly: lot,
+				...(lot ? { auction: { startPrice: Number(fields.get('lotStart')), endsAt: lotEnd } } : {}),
 				photos: shas,
 				models: photos.map((photo) => photo.model),
 				translations: {
@@ -248,10 +258,18 @@ form.addEventListener('submit', async (event) => {
 		photos = [];
 		renderPreviews();
 		form.reset();
+		$('lot-auction').hidden = true;
 		aiTexts = null;
 		$('ai-note').hidden = true;
-		show($('add-status'), 'Published! It shows in the shop after the site rebuilds, usually within 2 minutes.');
+		show(
+			$('add-status'),
+			result.warning ??
+				(lot
+					? 'Published and the auction is running! The lot shows on the Auctions page after the site rebuilds, usually within 2 minutes.'
+					: 'Published! It shows in the shop after the site rebuilds, usually within 2 minutes.'),
+		);
 		await loadProducts();
+		if (lot) loadAuctions().catch(() => {});
 	} catch (error) {
 		show($('add-status'));
 		show($('add-error'), error.message);
@@ -293,6 +311,7 @@ function renderProduct(product) {
 	details.textContent = `CHF ${product.price} · ${product.size}`;
 	meta.append(name, details);
 	for (const [active, label] of [
+		[product.auctionOnly, 'Auction only'],
 		[product.sold, 'Sold'],
 		[product.draft, 'Hidden draft'],
 	]) {
@@ -688,3 +707,27 @@ function renderAuction(a) {
 	} else item.append(el('p', 'when', `Ended ${when(a.ends_at)}`));
 	return item;
 }
+
+// ---------- Auction lots (Add a piece → "Auction only") ----------
+
+form.elements.auctionOnly.addEventListener('change', () => {
+	const lot = form.elements.auctionOnly.checked;
+	$('lot-auction').hidden = !lot;
+	// No fixed price for a lot: the price field is filled from the start price when publishing.
+	form.elements.price.closest('label').hidden = lot;
+	form.elements.price.required = !lot;
+	if (lot && !form.elements.lotStart.value && form.elements.price.value) form.elements.lotStart.value = form.elements.price.value;
+});
+
+for (const button of document.querySelectorAll('[data-lot-days]')) {
+	button.addEventListener('click', () => {
+		const end = new Date(Date.now() + Number(button.dataset.lotDays) * 86400000);
+		end.setMinutes(0, 0, 0);
+		form.elements.lotEnd.value = localInput(end);
+	});
+}
+
+form.addEventListener('reset', () => {
+	form.elements.price.closest('label').hidden = false;
+	form.elements.price.required = true;
+});

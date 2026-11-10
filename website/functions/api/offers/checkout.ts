@@ -17,7 +17,7 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 	const price = agreedPrice(offer);
 	if (price === null || Date.now() / 1000 > payableUntil(offer) || !checkoutReady(env)) return redirect(`${back}#checkout-error`);
 	const piece = await loadPiece(env, request, offer.product_id);
-	if (!piece || piece.sold || (await auctionBlocksSale(env, offer.product_id))) return redirect(`${origin}${langPrefix(offer.lang)}/item/${offer.product_id}/`);
+	if (!piece || piece.sold || piece.auctionOnly || (await auctionBlocksSale(env, offer.product_id))) return redirect(`${origin}${langPrefix(offer.lang)}/item/${offer.product_id}/`);
 
 	return startCheckout({ env, request, lang: offer.lang, piece, price, backUrl: back, metadata: { offer_id: String(offer.id) } });
 };

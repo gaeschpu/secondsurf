@@ -243,6 +243,16 @@ button:disabled {
 .quick button {
 	flex: 1;
 }
+.lot {
+	padding: 0.75rem;
+	border: 1.5px dashed var(--accent);
+	border-radius: 8px;
+	margin-bottom: 0.75rem;
+}
+label[hidden],
+.lot[hidden] {
+	display: none;
+}
 .auction-group h3 {
 	margin: 1.5rem 0 0.5rem;
 	font-size: 1rem;

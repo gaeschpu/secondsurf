@@ -1,0 +1,192 @@
+---
+// /auctions/: every running auction, auction lots (pieces and bundles that are only auctioned, auctionOnly) and shop pieces
+// alike, the ones ending soonest first. Auctions live in D1, so the page is filled in the browser from
+// /api/auctions/active (price, bids, end) and /products.json (photo, name). Bidding happens on the piece page.
+import Base from '../../layouts/Base.astro';
+import { langPaths, url, useT, type Lang } from '../../i18n';
+import { auctionTexts } from '../../i18n/auction';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+const a = auctionTexts[lang];
+---
+
+<Base lang={lang} title={a.pageTitle} description={a.pageIntro}>
+	<div class="container-wide auctions-page" data-texts={JSON.stringify(a)} data-lang={lang} data-prefix={url(lang, '/').replace(/\/$/, '')}>
+		<header class="page-head">
+			<h1>{a.pageTitle}</h1>
+			<p>{a.pageIntro}</p>
+			<p class="how small"><strong>{a.pageHow}:</strong> {a.pageSteps} · <a href={url(lang, '/terms/')}>{a.termsLink}</a></p>
+		</header>
+		<p class="state" data-state>{a.payLoading}</p>
+		<ul class="lots" data-lots></ul>
+		<p class="small"><a href={url(lang, '/shop/')}>{t('nav.shopAll')} →</a></p>
+	</div>
+</Base>
+
+<script>
+	import type { AuctionTexts } from '../../i18n/auction';
+
+	type Active = { id: string; price: number; bids: number; endsAt: number };
+	type Piece = { id: string; brand: string; title: string | Record<string, string>; size: string; photo: string | null; auctionOnly?: boolean };
+
+	const page = document.querySelector<HTMLElement>('.auctions-page')!;
+	const t: AuctionTexts = JSON.parse(page.dataset.texts!);
+	const lang = page.dataset.lang!;
+	const list = page.querySelector<HTMLElement>('[data-lots]')!;
+	const state = page.querySelector<HTMLElement>('[data-state]')!;
+	const chf = (n: number) => `CHF ${n.toFixed(2).replace(/\.00$/, '.–')}`;
+	const fill = (text: string, v: Record<string, string>) => text.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? '');
+	const titleOf = (p: Piece) => (typeof p.title === 'string' ? p.title : p.title[lang] || p.title.de || '');
+	let offset = 0;
+
+	function left(endsAt: number) {
+		const s = Math.max(0, Math.floor((endsAt - (Date.now() + offset)) / 1000));
+		const d = Math.floor(s / 86400);
+		const hms = [Math.floor((s % 86400) / 3600), Math.floor((s % 3600) / 60), s % 60].map((n) => String(n).padStart(2, '0')).join(':');
+		return d > 0 ? `${d}${t.days} ${hms}` : hms;
+	}
+
+	function tick() {
+		for (const clock of list.querySelectorAll<HTMLElement>('[data-ends]')) {
+			const endsAt = Number(clock.dataset.ends);
+			clock.textContent = left(endsAt);
+			clock.closest('.lot')?.classList.toggle('final', endsAt - (Date.now() + offset) < 120_000);
+		}
+	}
+
+	async function load() {
+		try {
+			const [res, pieces] = await Promise.all([
+				fetch('/api/auctions/active', { cache: 'no-store' }),
+				fetch('/products.json').then((r) => (r.ok ? (r.json() as Promise<Piece[]>) : [])),
+			]);
+			const date = res.headers.get('Date');
+			if (date) offset = new Date(date).getTime() - Date.now();
+			const active: Active[] = res.ok ? await res.json() : [];
+			const byId = new Map(pieces.map((p) => [p.id, p] as const));
+			// Only auctions whose page is already built (a new lot needs a minute or two after publishing).
+			const lots = active.filter((x) => byId.has(x.id)).sort((x, y) => x.endsAt - y.endsAt);
+			state.textContent = lots.length ? '' : t.pageEmpty;
+			state.hidden = lots.length > 0;
+			list.replaceChildren(
+				...lots.map((x) => {
+					const p = byId.get(x.id)!;
+					const href = `${page.dataset.prefix}/item/${x.id}/`;
+					const li = document.createElement('li');
+					li.className = 'lot';
+					li.innerHTML = `
+						<a class="lot-link" href="${href}">
+							<div class="media">${p.photo ? `<img src="${p.photo}" alt="" loading="lazy" />` : ''}<span class="badge">${t.badge}</span></div>
+							<p class="title"><strong></strong> <span></span></p>
+							<p class="meta"><span class="size"></span><span class="bids"></span></p>
+							<p class="price"><span class="label"></span> <strong></strong></p>
+							<p class="clock"><span>${t.endsIn}</span> <strong data-ends="${x.endsAt}"></strong></p>
+							<span class="btn">${t.toBid}</span>
+						</a>`;
+					li.querySelector('.title strong')!.textContent = p.brand;
+					li.querySelector('.title span')!.textContent = titleOf(p);
+					li.querySelector('.size')!.textContent = p.size;
+					li.querySelector('.bids')!.textContent = x.bids === 0 ? t.noBids : x.bids === 1 ? t.oneBid : fill(t.bids, { n: String(x.bids) });
+					li.querySelector('.price .label')!.textContent = x.bids ? t.current : t.start;
+					li.querySelector('.price strong')!.textContent = chf(x.price);
+					return li;
+				}),
+			);
+			tick();
+		} catch {
+			state.textContent = t.errors.generic;
+		}
+	}
+
+	load();
+	setInterval(tick, 1000);
+	setInterval(() => {
+		if (!document.hidden) load();
+	}, 15_000);
+</script>
+
+<style>
+	.how {
+		color: var(--ink-soft);
+	}
+	.state:empty,
+	.state[hidden] {
+		display: none;
+	}
+	.state {
+		padding: 2rem 0;
+		font-size: var(--step-1, 1.2rem);
+	}
+	.lots {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+		gap: 2rem 1.25rem;
+		margin: 1rem 0 2.5rem;
+		padding: 0;
+		list-style: none;
+	}
+	.lots :global(.lot-link) {
+		display: grid;
+		gap: 0.35rem;
+		color: var(--ink);
+		text-decoration: none;
+	}
+	.lots :global(.media) {
+		position: relative;
+		aspect-ratio: 4 / 5;
+		overflow: hidden;
+		border-radius: var(--radius-sm);
+		background: var(--bg-sunken);
+	}
+	.lots :global(.media img) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	.lots :global(.badge) {
+		position: absolute;
+		top: 0.6rem;
+		left: 0.6rem;
+		padding: 0.2em 0.7em;
+		border-radius: 999px;
+		background: #b42318;
+		color: #fff;
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+	.lots :global(.title) {
+		margin: 0.4rem 0 0;
+		font-size: var(--step--1);
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+	}
+	.lots :global(.meta),
+	.lots :global(.price),
+	.lots :global(.clock) {
+		display: flex;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin: 0;
+		font-size: var(--step--1);
+		color: var(--ink-soft);
+	}
+	.lots :global(.price strong),
+	.lots :global(.clock strong) {
+		color: var(--ink);
+		font-variant-numeric: tabular-nums;
+	}
+	.lots :global(.price strong) {
+		font-size: var(--step-0, 1rem);
+	}
+	.lots :global(.final .clock strong) {
+		color: #b42318;
+	}
+	.lots :global(.btn) {
+		justify-self: start;
+		margin-top: 0.3rem;
+	}
+</style>

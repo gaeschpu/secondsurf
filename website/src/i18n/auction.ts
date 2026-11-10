@@ -62,6 +62,14 @@ const de = {
 	minePaid: 'Gewonnen und bezahlt',
 	mineLost: 'Beendet, jemand anderes hat gewonnen',
 	mineEnds: 'endet {date}',
+	pageTitle: 'Auktionen',
+	pageIntro: 'Einzelstücke und Bundles, die es nur hier gibt. Biete mit deinem Limit, wir bieten automatisch für dich. Wer am Schluss vorne ist, bekommt das Piece.',
+	pageEmpty: 'Gerade läuft keine Auktion. Schau bald wieder vorbei!',
+	pageHow: 'So funktioniert’s',
+	pageSteps: 'Konto mit bestätigter E-Mail · Limit eingeben · nach dem Ende innert 48 Stunden bezahlen',
+	toBid: 'Mitbieten',
+	lotIdle: 'Dieses Auktionsstück ist gerade nicht in einer Auktion. Schau auf der Auktionsseite, was gerade läuft.',
+	toAuctions: 'Alle Auktionen',
 };
 
 export type AuctionTexts = typeof de;
@@ -124,6 +132,14 @@ const fr: AuctionTexts = {
 	minePaid: 'Gagnée et payée',
 	mineLost: 'Terminée, quelqu’un d’autre a gagné',
 	mineEnds: 'se termine {date}',
+	pageTitle: 'Enchères',
+	pageIntro: 'Des pièces uniques et des lots qu’on ne trouve qu’ici. Enchéris avec ta limite, nous enchérissons automatiquement pour toi. La personne en tête à la fin remporte la pièce.',
+	pageEmpty: 'Aucune enchère en cours pour le moment. Repasse bientôt !',
+	pageHow: 'Comment ça marche',
+	pageSteps: 'Compte avec e-mail confirmé · indique ta limite · après la fin, paie dans les 48 heures',
+	toBid: 'Enchérir',
+	lotIdle: 'Cette pièce n’est pas aux enchères en ce moment. Regarde sur la page des enchères ce qui est en cours.',
+	toAuctions: 'Toutes les enchères',
 };
 
 const it: AuctionTexts = {
@@ -184,6 +200,14 @@ const it: AuctionTexts = {
 	minePaid: 'Vinta e pagata',
 	mineLost: 'Terminata, ha vinto qualcun altro',
 	mineEnds: 'termina {date}',
+	pageTitle: 'Aste',
+	pageIntro: 'Pezzi unici e bundle che trovi solo qui. Offri con il tuo limite, noi offriamo automaticamente per te. Chi è in testa alla fine si aggiudica il pezzo.',
+	pageEmpty: 'Al momento non c’è nessuna asta in corso. Ripassa presto!',
+	pageHow: 'Come funziona',
+	pageSteps: 'Account con e-mail confermata · inserisci il tuo limite · dopo la fine paga entro 48 ore',
+	toBid: 'Fai un’offerta',
+	lotIdle: 'Questo pezzo al momento non è all’asta. Guarda sulla pagina delle aste cosa è in corso.',
+	toAuctions: 'Tutte le aste',
 };
 
 const en: AuctionTexts = {
@@ -244,6 +268,14 @@ const en: AuctionTexts = {
 	minePaid: 'Won and paid',
 	mineLost: 'Ended, someone else won',
 	mineEnds: 'ends {date}',
+	pageTitle: 'Auctions',
+	pageIntro: 'One-offs and bundles you only find here. Bid with your limit and we bid for you automatically. Whoever is ahead at the end gets the piece.',
+	pageEmpty: 'No auction is running right now. Check back soon!',
+	pageHow: 'How it works',
+	pageSteps: 'Account with confirmed email · enter your limit · after the end, pay within 48 hours',
+	toBid: 'Bid',
+	lotIdle: 'This piece isn’t in an auction right now. See what’s running on the auctions page.',
+	toAuctions: 'All auctions',
 };
 
 export const auctionTexts: Record<Lang, AuctionTexts> = { de, fr, it, en };

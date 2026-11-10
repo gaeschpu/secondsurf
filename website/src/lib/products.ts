@@ -5,10 +5,15 @@ import { SITE } from '../config';
 
 export type Product = CollectionEntry<'products'>;
 
-/** All products that should be visible: drafts only show in `npm run dev`. Newest (highest folder number) first. */
-export async function getProducts(): Promise<Product[]> {
+/** Every published piece, auction lots included: drafts only show in `npm run dev`. Newest (highest folder number) first. */
+export async function getAllProducts(): Promise<Product[]> {
 	const all = await getCollection('products', (p) => import.meta.env.DEV || !p.data.draft);
 	return all.sort((a, b) => b.id.localeCompare(a.id, undefined, { numeric: true }));
+}
+
+/** The shop's pieces: like getAllProducts, without the auction lots (auctionOnly), which only live on /auctions/. */
+export async function getProducts(): Promise<Product[]> {
+	return (await getAllProducts()).filter((p) => !p.data.auctionOnly);
 }
 
 /** Available first, sold pieces at the end. */

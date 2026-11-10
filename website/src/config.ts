@@ -78,7 +78,8 @@ export const CATEGORIES = [
 export type CategoryId = (typeof CATEGORIES)[number]['id'];
 
 /** Sizes offered in the size filter, in this order. */
-export const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One size'] as const;
+/** "Mix" is for auction bundles with pieces in several sizes. */
+export const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One size', 'Mix'] as const;
 
 /** Condition grades for second-hand pieces. */
 export const CONDITIONS = {

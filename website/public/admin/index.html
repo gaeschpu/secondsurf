@@ -111,6 +111,21 @@
 						<label class="check"><input name="staffPick" type="checkbox" /> Show in Staff Picks</label>
 					</details>
 
+					<label class="check lot-toggle"><input name="auctionOnly" type="checkbox" /> Auction only – not in the shop (a piece or a bundle)</label>
+					<div id="lot-auction" class="lot" hidden>
+						<p class="hint">
+							The auction starts as soon as you publish, and the lot shows on the Auctions page. It never appears in the shop and can't be
+							bought at a fixed price. For a bundle, choose size <b>Mix</b> and list the pieces (with their sizes) in the description.
+						</p>
+						<label>Start price (CHF) <input name="lotStart" type="number" inputmode="numeric" min="1" step="1" /></label>
+						<label>Ends (Swiss time) <input name="lotEnd" type="datetime-local" /></label>
+						<div class="quick" role="group" aria-label="Quick end">
+							<button type="button" data-lot-days="3">3 days</button>
+							<button type="button" data-lot-days="5">5 days</button>
+							<button type="button" data-lot-days="7">7 days</button>
+						</div>
+					</div>
+
 					<p id="add-error" class="error" role="alert" hidden></p>
 					<p id="add-status" class="status" role="status" hidden></p>
 					<button id="publish" class="primary" type="submit">Publish</button>

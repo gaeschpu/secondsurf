@@ -16,6 +16,8 @@ export interface NewProduct {
 	measurements: string;
 	description: string;
 	staffPick: boolean;
+	/** Only sold by auction (functions/_lib/auctions.ts), never in the shop. */
+	auctionOnly: boolean;
 	photos: string[];
 	/** Per photo: 'women', 'men' or '' (no model). */
 	models: string[];
@@ -50,6 +52,7 @@ export function parseNewProduct(body: any): NewProduct | string {
 		measurements: text(body?.measurements, 200),
 		description: text(body?.description, 2000),
 		staffPick: body?.staffPick === true,
+		auctionOnly: body?.auctionOnly === true,
 		photos: Array.isArray(body?.photos) ? body.photos : [],
 		models: Array.isArray(body?.models) ? body.models.map((m: unknown) => (m === 'women' || m === 'men' ? m : '')) : [],
 		titleTranslations: translations(body?.translations?.title, 120),
@@ -110,6 +113,7 @@ export function toMarkdown(product: NewProduct, drop: number) {
 		...modelsYaml(product),
 		`drop: ${drop}`,
 		...(product.staffPick ? ['staffPick: true'] : []),
+		...(product.auctionOnly ? ['auctionOnly: true'] : []),
 		'---',
 		'',
 	];
@@ -160,6 +164,7 @@ export function summarize(id: string, markdown: string) {
 		size: unquote(scalar('size') ?? ''),
 		sold: /^sold:\s*true\b/m.test(body),
 		draft: /^draft:\s*true\b/m.test(body),
+		auctionOnly: /^auctionOnly:\s*true\b/m.test(body),
 		photo: body.match(/^\s+-\s+\.\/(\S+)/m)?.[1] ?? null,
 	};
 }

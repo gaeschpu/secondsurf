@@ -15,6 +15,8 @@ export type Listed = {
 	category: string;
 	price: number;
 	sold: boolean;
+	/** Auction lot: only the auction can sell it. */
+	auctionOnly?: boolean;
 	image: string | null;
 };
 

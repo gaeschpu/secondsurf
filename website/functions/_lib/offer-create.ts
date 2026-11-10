@@ -31,7 +31,7 @@ export async function createOffer(
 
 	const piece = await loadPiece(env, request, id);
 	if (!piece || piece.sold) return json({ error: 'sold' }, 409);
-	if (await auctionBlocksSale(env, id)) return json({ error: 'auction' }, 409);
+	if (piece.auctionOnly || (await auctionBlocksSale(env, id))) return json({ error: 'auction' }, 409);
 	if (amount < minimumOffer(piece.price)) return json({ error: 'tooLow', minimum: minimumOffer(piece.price) }, 400);
 	if (amount >= piece.price) return json({ error: 'notLower' }, 400);
 	if (await tooMany(await database(env), `offer:${user.id}`, 10, 60)) return json({ error: 'tooMany' }, 429);

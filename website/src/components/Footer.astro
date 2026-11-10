@@ -19,6 +19,7 @@ const columns = [
 		links: [
 			{ href: '/new/', label: t('nav.new') },
 			{ href: '/shop/', label: t('nav.shopAll') },
+			{ href: '/auctions/', label: t('nav.auctions') },
 			...CATEGORIES.slice(0, 5).map((c) => ({ href: `/shop/${c.id}/`, label: l(c.label, lang) })),
 		],
 	},
