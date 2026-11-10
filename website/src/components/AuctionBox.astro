@@ -43,18 +43,23 @@ const back = url(lang, `/item/${id}/`);
 		<a class="btn big" data-pay>{a.pay}</a>
 	</div>
 
+	<!-- Two ways to bid: one tap for the minimum (current bid + CHF 1), or a limit the site bids up to automatically. -->
 	<form class="bid" data-bid novalidate hidden>
-		<label>
-			<span>{a.limit}</span>
-			<input name="max" type="number" inputmode="decimal" min="1" step="1" required />
-		</label>
-		<p class="small muted" data-minimum></p>
 		<label class="check terms" data-terms hidden>
 			<input type="checkbox" name="acceptTerms" />
 			<span>{a.terms} <a href={url(lang, '/terms/')} target="_blank" rel="noopener">{a.termsLink}</a></span>
 		</label>
-		<button class="btn big" type="submit" data-submit>{a.bid}</button>
-		<p class="small muted">{a.limitHint}</p>
+		<button class="btn big" type="button" data-quick></button>
+		<p class="small muted">{a.stepNote}</p>
+		<div class="limit">
+			<label>
+				<span>{a.limit}</span>
+				<input name="max" type="number" inputmode="numeric" min="1" step="1" />
+			</label>
+			<button class="btn-line" type="submit" data-submit>{a.setLimit}</button>
+			<p class="small muted" data-minimum></p>
+			<p class="small muted">{a.limitHint}</p>
+		</div>
 		<p class="status" role="status" data-status></p>
 	</form>
 
@@ -175,10 +180,14 @@ const back = url(lang, `/item/${id}/`);
 			if (running && you && !reason) {
 				const min = you.minimum;
 				input.min = String(min);
-				if (document.activeElement !== input && (!input.value || Number(input.value) < min)) input.value = String(min);
+				input.placeholder = String(min + 9);
 				$('[data-minimum]').textContent = fill(t.minimum, { amount: chf(min) });
 				$('[data-terms]').hidden = you.acceptedTerms;
-				$('[data-submit]').textContent = you.leading ? t.raise : t.bid;
+				// The leader can't outbid themselves, only raise their limit.
+				const quick = $<HTMLButtonElement>('[data-quick]');
+				quick.hidden = you.leading;
+				quick.textContent = fill(t.quickBid, { amount: chf(min) });
+				$('[data-submit]').textContent = you.leading ? t.raise : t.setLimit;
 			}
 
 			const list = $('[data-history] ol');
@@ -205,16 +214,14 @@ const back = url(lang, `/item/${id}/`);
 			}
 		}
 
-		form.addEventListener('submit', async (event) => {
-			event.preventDefault();
+		/** Sends a bid: the minimum (one tap) or a limit. Whole francs, at least the minimum; anything else is refused. */
+		async function send(max: number, button: HTMLButtonElement) {
 			const status = $('[data-status]');
-			// Whole francs only (the server rounds down too).
-			const max = Math.floor(Number(input.value));
 			const you = view?.you;
 			if (!you || !view?.auction) return;
+			if (!Number.isInteger(max)) return (status.textContent = t.errors.wholeFrancs);
 			if (!(max >= you.minimum)) return (status.textContent = fill(t.errors.tooLow, { amount: chf(you.minimum) }));
 			if (!you.acceptedTerms && !terms.checked) return (status.textContent = t.errors.terms);
-			const button = $<HTMLButtonElement>('[data-submit]');
 			button.disabled = true;
 			status.textContent = '…';
 			try {
@@ -235,6 +242,15 @@ const back = url(lang, `/item/${id}/`);
 				input.value = '';
 				await load();
 			}
+		}
+
+		form.addEventListener('submit', (event) => {
+			event.preventDefault();
+			if (!input.value.trim()) return ($('[data-status]').textContent = fill(t.errors.tooLow, { amount: chf(view?.you?.minimum ?? 1) }));
+			send(Number(input.value), $<HTMLButtonElement>('[data-submit]'));
+		});
+		$<HTMLButtonElement>('[data-quick]').addEventListener('click', (event) => {
+			if (view?.you) send(view.you.minimum, event.currentTarget as HTMLButtonElement);
 		});
 
 		load();
@@ -305,6 +321,35 @@ const back = url(lang, `/item/${id}/`);
 		display: block;
 		margin-bottom: 0.25rem;
 		font-weight: 600;
+	}
+	.limit {
+		display: grid;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+		padding-top: 0.9rem;
+		border-top: 1px solid var(--line);
+	}
+	.limit .btn-line {
+		justify-self: start;
+		padding: 0.65em 1.4em;
+		border: 1.5px solid var(--ink);
+		border-radius: 999px;
+		background: transparent;
+		color: var(--ink);
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
+	}
+	.limit .btn-line:hover {
+		background: var(--ink);
+		color: var(--bg);
+	}
+	.limit .btn-line:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+	.bid [data-quick][hidden] {
+		display: none;
 	}
 	.bid input[type='number'] {
 		width: 100%;

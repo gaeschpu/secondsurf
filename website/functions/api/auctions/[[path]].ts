@@ -100,9 +100,10 @@ export const onRequest: Handler = async ({ request, env, params, waitUntil }) =>
 		if (!user) return fail('login', 401);
 		const body = (await request.json().catch(() => ({}))) as { id?: unknown; max?: unknown; acceptTerms?: unknown };
 		const id = typeof body.id === 'string' ? body.id : '';
-		// Whole francs only: limits and steps are CHF 1 (STEP in functions/_lib/auctions.ts).
-		const max = Math.floor(Number(body.max));
+		const max = Number(body.max);
 		if (!PRODUCT_ID.test(id) || !Number.isFinite(max) || max <= 0 || max > 100000) return fail('invalid');
+		// Whole francs only, never rounded: steps are CHF 1 (STEP in functions/_lib/auctions.ts).
+		if (!Number.isInteger(max)) return fail('wholeFrancs');
 		if (user.verified !== 1) return fail('verify', 403);
 		if (await tooMany(accounts, `bid:${user.id}`, 30, 10)) return fail('tooMany', 429);
 		if (!(await acceptedTerms(db, user.id))) {
