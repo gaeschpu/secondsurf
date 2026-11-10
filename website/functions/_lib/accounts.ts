@@ -43,6 +43,8 @@ const SCHEMA = [
 	`CREATE TABLE IF NOT EXISTS welcome_used (user_id INTEGER PRIMARY KEY, session_id TEXT NOT NULL, used_at INTEGER NOT NULL)`,
 	/** Profile choices: models = the customer's gender, 'women' | 'men' | 'other' ('' = not given). It decides whose model photos come first. */
 	`CREATE TABLE IF NOT EXISTS preferences (user_id INTEGER PRIMARY KEY, models TEXT NOT NULL DEFAULT '')`,
+	/** The customer's phone number (asked at sign-up since November 2026, so older accounts may have none). */
+	`CREATE TABLE IF NOT EXISTS phones (user_id INTEGER PRIMARY KEY, phone TEXT NOT NULL)`,
 	/** Drop reminders: deleted once the "drop is live" email has gone out. */
 	`CREATE TABLE IF NOT EXISTS drop_reminders (email TEXT NOT NULL, drop_no INTEGER NOT NULL, lang TEXT NOT NULL, token TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL, PRIMARY KEY (email, drop_no))`,
 ];
@@ -133,6 +135,22 @@ const sessionToken = (request: Request) =>
 
 /** The customer's gender: 'women', 'men', 'other' or '' (not given). */
 export const asModels = (value: unknown) => (value === 'women' || value === 'men' || value === 'other' ? value : '');
+
+/** A phone number as typed, if it looks like one: an optional +, then 7 to 15 digits (spaces, dots, dashes and brackets allowed). */
+export function asPhone(value: unknown) {
+	if (typeof value !== 'string') return null;
+	const phone = value.trim().replace(/\s+/g, ' ');
+	if (phone.length > 30 || !/^\+?[\d\s().\-/]+$/.test(phone)) return null;
+	const digits = phone.replace(/\D/g, '').length;
+	return digits >= 7 && digits <= 15 ? phone : null;
+}
+
+export async function setPhone(db: D1Database, userId: number, phone: string) {
+	await db
+		.prepare('INSERT INTO phones (user_id, phone) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET phone = excluded.phone')
+		.bind(userId, phone)
+		.run();
+}
 
 export async function setModels(db: D1Database, userId: number, models: string) {
 	await db

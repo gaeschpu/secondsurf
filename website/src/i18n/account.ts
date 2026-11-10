@@ -10,6 +10,7 @@ const de = {
 	tabLogin: 'Anmelden',
 	tabRegister: 'Konto erstellen',
 	name: 'Name',
+	phoneNumber: 'Telefonnummer',
 	email: 'E-Mail',
 	password: 'Passwort',
 	passwordHint: 'Mindestens 10 Zeichen',
@@ -82,6 +83,7 @@ const de = {
 	required: 'Bitte ausfüllen.',
 	errors: {
 		invalid: 'Bitte fülle alle Felder richtig aus.',
+		phone: 'Bitte gib eine gültige Telefonnummer ein, zum Beispiel 079 123 45 67.',
 		'weak-password': 'Das Passwort braucht mindestens 10 Zeichen.',
 		'email-taken': 'Mit dieser E-Mail gibt es schon ein Konto. Melde dich an oder setze dein Passwort zurück.',
 		'wrong-login': 'E-Mail oder Passwort stimmt nicht.',
@@ -104,6 +106,7 @@ const fr: AccountTexts = {
 	tabLogin: 'Se connecter',
 	tabRegister: 'Créer un compte',
 	name: 'Nom',
+	phoneNumber: 'Numéro de téléphone',
 	email: 'E-mail',
 	password: 'Mot de passe',
 	passwordHint: 'Au moins 10 caractères',
@@ -176,6 +179,7 @@ const fr: AccountTexts = {
 	required: 'Champ obligatoire.',
 	errors: {
 		invalid: 'Remplis correctement tous les champs.',
+		phone: 'Indique un numéro de téléphone valable, par exemple 079 123 45 67.',
 		'weak-password': 'Le mot de passe doit contenir au moins 10 caractères.',
 		'email-taken': 'Un compte existe déjà avec cet e-mail. Connecte-toi ou réinitialise ton mot de passe.',
 		'wrong-login': 'E-mail ou mot de passe incorrect.',
@@ -196,6 +200,7 @@ const it: AccountTexts = {
 	tabLogin: 'Accedi',
 	tabRegister: 'Crea account',
 	name: 'Nome',
+	phoneNumber: 'Numero di telefono',
 	email: 'E-mail',
 	password: 'Password',
 	passwordHint: 'Almeno 10 caratteri',
@@ -268,6 +273,7 @@ const it: AccountTexts = {
 	required: 'Campo obbligatorio.',
 	errors: {
 		invalid: 'Compila correttamente tutti i campi.',
+		phone: 'Inserisci un numero di telefono valido, per esempio 079 123 45 67.',
 		'weak-password': 'La password deve avere almeno 10 caratteri.',
 		'email-taken': 'Esiste già un account con questa e-mail. Accedi o reimposta la password.',
 		'wrong-login': 'E-mail o password errata.',
@@ -288,6 +294,7 @@ const en: AccountTexts = {
 	tabLogin: 'Log in',
 	tabRegister: 'Create account',
 	name: 'Name',
+	phoneNumber: 'Phone number',
 	email: 'Email',
 	password: 'Password',
 	passwordHint: 'At least 10 characters',
@@ -360,6 +367,7 @@ const en: AccountTexts = {
 	required: 'Please fill this in.',
 	errors: {
 		invalid: 'Please fill in all fields correctly.',
+		phone: 'Please enter a valid phone number, for example 079 123 45 67.',
 		'weak-password': 'The password needs at least 10 characters.',
 		'email-taken': 'There is already an account with this email. Log in or reset your password.',
 		'wrong-login': 'Email or password is wrong.',

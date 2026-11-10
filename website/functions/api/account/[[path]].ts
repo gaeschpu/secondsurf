@@ -1,10 +1,10 @@
 // Customer accounts under /api/account/. Errors are short codes; the account page shows them in the customer's language.
 //
-// POST   register  { email, password, name, lang, models?, remember?, cf-turnstile-response }
+// POST   register  { email, password, name, phone, lang, models?, remember?, cf-turnstile-response }
 // POST   login     { email, password, remember? }   remember: false = logged out when the browser closes
 // POST   logout
 // GET    me                        profile, wishlist and addresses
-// PATCH  me        { name?, lang?, priceAlerts?, models? }   models: 'women' | 'men' | ''
+// PATCH  me        { name?, phone?, lang?, priceAlerts?, models? }   models: 'women' | 'men' | ''
 // DELETE me        { password }    deletes the account and everything in it
 // POST   password  { current, password }
 // POST   verify/resend
@@ -21,6 +21,8 @@ import { json, type D1Database, type Env, type Handler } from '../../_lib/auth.t
 import {
 	asLang,
 	asModels,
+	asPhone,
+	setPhone,
 	setModels,
 	canEmail,
 	checkPassword,
@@ -51,15 +53,17 @@ const emailOf = (value: unknown) => text(value, 200).toLowerCase();
 const fail = (error: string, status = 400) => json({ error }, status);
 
 async function profile(db: D1Database, env: Env, user: User) {
-	const [wishlist, addresses, usedWelcome, preferences] = await Promise.all([
+	const [wishlist, addresses, usedWelcome, preferences, phone] = await Promise.all([
 		db.prepare('SELECT product_id, saved_price FROM wishlist WHERE user_id = ? ORDER BY created_at DESC').bind(user.id).all<{ product_id: string; saved_price: number }>(),
 		db.prepare('SELECT list FROM addresses WHERE user_id = ?').bind(user.id).first<{ list: string }>(),
 		welcomeUsed(db, user.id),
 		db.prepare('SELECT models FROM preferences WHERE user_id = ?').bind(user.id).first<{ models: string }>(),
+		db.prepare('SELECT phone FROM phones WHERE user_id = ?').bind(user.id).first<{ phone: string }>(),
 	]);
 	return {
 		email: user.email,
 		name: user.name,
+		phone: phone?.phone ?? '',
 		lang: user.lang,
 		verified: user.verified === 1,
 		priceAlerts: user.price_alerts === 1,
@@ -123,6 +127,8 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 			const email = emailOf(body.email);
 			const name = text(body.name, 120).replace(/[\r\n]+/g, ' ');
 			if (!EMAIL.test(email) || !name) return fail('invalid');
+			const phone = asPhone(body.phone);
+			if (!phone) return fail('phone');
 			if (!isValidPassword(body.password)) return fail('weak-password');
 			if (await tooMany(db, `register:${ip}`, 5, 60)) return fail('too-many', 429);
 			if (await needsHuman(env, request, body)) return fail('captcha');
@@ -135,6 +141,7 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 				.run();
 			const user = (await db.prepare('SELECT * FROM users WHERE id = ?').bind(meta.last_row_id).first<User>())!;
 			if (asModels(body.models)) await setModels(db, user.id, asModels(body.models));
+			await setPhone(db, user.id, phone);
 			await sendVerification(env, db, user, origin);
 			return json(await profile(db, env, user), 201, { 'Set-Cookie': await startSession(db, user.id, body.remember !== false) });
 		}
@@ -208,10 +215,13 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 		if (route === 'me' && method === 'PATCH') {
 			const name = body.name === undefined ? user.name : text(body.name, 120).replace(/[\r\n]+/g, ' ');
 			if (!name) return fail('invalid');
+			const phone = body.phone === undefined ? undefined : asPhone(body.phone);
+			if (phone === null) return fail('phone');
 			const lang = body.lang === undefined ? user.lang : asLang(body.lang);
 			const alerts = body.priceAlerts === undefined ? user.price_alerts : body.priceAlerts ? 1 : 0;
 			await db.prepare('UPDATE users SET name = ?, lang = ?, price_alerts = ? WHERE id = ?').bind(name, lang, alerts, user.id).run();
 			if (body.models !== undefined) await setModels(db, user.id, asModels(body.models));
+			if (phone) await setPhone(db, user.id, phone);
 			return json(await profile(db, env, { ...user, name, lang, price_alerts: alerts }));
 		}
 
@@ -220,7 +230,7 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 			if (await tooMany(db, `login:${user.email}`, 10, 15)) return fail('too-many', 429);
 			if (!(await checkPassword(password, user.password)).ok) return fail('wrong-password', 401);
 			await db.batch(
-				['wishlist', 'addresses', 'preferences', 'sessions', 'tokens'].map((table) => db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).bind(user.id)).concat(
+				['wishlist', 'addresses', 'preferences', 'phones', 'sessions', 'tokens'].map((table) => db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).bind(user.id)).concat(
 					db.prepare('DELETE FROM users WHERE id = ?').bind(user.id),
 				),
 			);

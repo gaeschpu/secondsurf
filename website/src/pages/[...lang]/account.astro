@@ -44,6 +44,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 			<form id="register-form" class="stack" novalidate hidden>
 				<label><span>{a.name}</span><input name="name" autocomplete="name" required maxlength="120" /></label>
 				<label><span>{a.email}</span><input name="email" type="email" autocomplete="email" required maxlength="200" /></label>
+				<label><span>{a.phoneNumber}</span><input name="phone" type="tel" autocomplete="tel" inputmode="tel" required minlength="7" maxlength="30" placeholder="079 123 45 67" /></label>
 				<label>
 					<span>{a.password} <small class="muted">({a.passwordHint})</small></span>
 					<input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="200" />
@@ -154,6 +155,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 				<form id="name-form" class="stack" novalidate>
 					<p class="small muted account-email"></p>
 					<label><span>{a.name}</span><input name="name" autocomplete="name" required maxlength="120" /></label>
+					<label><span>{a.phoneNumber}</span><input name="phone" type="tel" autocomplete="tel" inputmode="tel" required minlength="7" maxlength="30" placeholder="079 123 45 67" /></label>
 					<div class="foot"><button class="btn-line" type="submit">{a.save}</button></div>
 					<p class="status" role="status" aria-live="polite"></p>
 				</form>
@@ -196,6 +198,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 	type Profile = {
 		email: string;
 		name: string;
+		phone: string;
 		lang: string;
 		verified: boolean;
 		priceAlerts: boolean;
@@ -238,7 +241,11 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 			const status = form.querySelector<HTMLElement>('.status')!;
 			const invalid = [...form.querySelectorAll<HTMLInputElement>('input')].find((input) => !input.checkValidity());
 			if (invalid) {
-				status.textContent = invalid.validity.tooShort ? a.errors['weak-password'] : invalid.validity.typeMismatch ? a.errors.invalid : a.required;
+				status.textContent =
+					invalid.name === 'phone' && !invalid.validity.valueMissing ? a.errors.phone
+					: invalid.validity.tooShort ? a.errors['weak-password']
+					: invalid.validity.typeMismatch ? a.errors.invalid
+					: a.required;
 				invalid.focus();
 				return;
 			}
@@ -436,6 +443,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 		$('.hello').textContent = a.hello.replace('{name}', me.name);
 		$('.account-email').textContent = me.email;
 		(document.querySelector('#name-form input[name=name]') as HTMLInputElement).value = me.name;
+		(document.querySelector('#name-form input[name=phone]') as HTMLInputElement).value = me.phone ?? '';
 		const unverified = !me.verified && me.canEmail;
 		$('.verify').hidden = !unverified;
 		$('.verify-text').textContent = a.verifyNote.replace('{email}', me.email);
@@ -493,7 +501,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 		}),
 	);
 	handle($<HTMLFormElement>('#name-form'), async (data) => {
-		me = await api<Profile>('me', 'PATCH', { name: data.name });
+		me = await api<Profile>('me', 'PATCH', { name: data.name, phone: data.phone });
 		$('.hello').textContent = a.hello.replace('{name}', me.name);
 		return a.saved;
 	});
