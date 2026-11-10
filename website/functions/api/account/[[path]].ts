@@ -1,16 +1,16 @@
 // Customer accounts under /api/account/. Errors are short codes; the account page shows them in the customer's language.
 //
-// POST   register  { email, password, name, lang, cf-turnstile-response }
-// POST   login     { email, password }
+// POST   register  { email, password, name, lang, models?, remember?, cf-turnstile-response }
+// POST   login     { email, password, remember? }   remember: false = logged out when the browser closes
 // POST   logout
 // GET    me                        profile, wishlist and addresses
-// PATCH  me        { name?, lang?, priceAlerts? }
+// PATCH  me        { name?, lang?, priceAlerts?, models? }   models: 'women' | 'men' | ''
 // DELETE me        { password }    deletes the account and everything in it
 // POST   password  { current, password }
 // POST   verify/resend
 // GET    verify?token=…&lang=…     link from the email, then opens the profile
 // POST   forgot    { email, lang, cf-turnstile-response }
-// POST   reset     { token, password }
+// POST   reset     { token, password, remember? }
 // PUT    addresses { addresses: [...] }
 // PUT    wishlist/<piece>, DELETE wishlist/<piece>
 // POST   offer     { id, amount, message?, lang }   price offer for a piece, see functions/_lib/offer-create.ts
@@ -20,6 +20,8 @@ import { url } from '../../../src/i18n/index.ts';
 import { json, type D1Database, type Env, type Handler } from '../../_lib/auth.ts';
 import {
 	asLang,
+	asModels,
+	setModels,
 	canEmail,
 	checkPassword,
 	createLink,
@@ -30,6 +32,7 @@ import {
 	oldSessionCookieClear,
 	welcomeUsed,
 	hashPassword,
+	isLongSession,
 	isValidPassword,
 	parseAddresses,
 	sendAccountMail,
@@ -48,10 +51,11 @@ const emailOf = (value: unknown) => text(value, 200).toLowerCase();
 const fail = (error: string, status = 400) => json({ error }, status);
 
 async function profile(db: D1Database, env: Env, user: User) {
-	const [wishlist, addresses, usedWelcome] = await Promise.all([
+	const [wishlist, addresses, usedWelcome, preferences] = await Promise.all([
 		db.prepare('SELECT product_id, saved_price FROM wishlist WHERE user_id = ? ORDER BY created_at DESC').bind(user.id).all<{ product_id: string; saved_price: number }>(),
 		db.prepare('SELECT list FROM addresses WHERE user_id = ?').bind(user.id).first<{ list: string }>(),
 		welcomeUsed(db, user.id),
+		db.prepare('SELECT models FROM preferences WHERE user_id = ?').bind(user.id).first<{ models: string }>(),
 	]);
 	return {
 		email: user.email,
@@ -59,6 +63,7 @@ async function profile(db: D1Database, env: Env, user: User) {
 		lang: user.lang,
 		verified: user.verified === 1,
 		priceAlerts: user.price_alerts === 1,
+		models: asModels(preferences?.models),
 		canEmail: canEmail(env),
 		wishlist: wishlist.results.map((row) => ({ id: row.product_id, savedPrice: row.saved_price })),
 		addresses: addresses ? JSON.parse(addresses.list) : [],
@@ -129,8 +134,9 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 				.bind(email, await hashPassword(body.password), name, lang, Math.floor(Date.now() / 1000))
 				.run();
 			const user = (await db.prepare('SELECT * FROM users WHERE id = ?').bind(meta.last_row_id).first<User>())!;
+			if (asModels(body.models)) await setModels(db, user.id, asModels(body.models));
 			await sendVerification(env, db, user, origin);
-			return json(await profile(db, env, user), 201, { 'Set-Cookie': await startSession(db, user.id) });
+			return json(await profile(db, env, user), 201, { 'Set-Cookie': await startSession(db, user.id, body.remember !== false) });
 		}
 
 		if (route === 'login' && method === 'POST') {
@@ -143,7 +149,7 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 			const check = await checkPassword(password, user?.password ?? 'pbkdf2$50000$AAAAAAAAAAAAAAAAAAAAAA==$');
 			if (!user || !check.ok) return fail('wrong-login', 401);
 			if (check.outdated) await db.prepare('UPDATE users SET password = ? WHERE id = ?').bind(await hashPassword(password), user.id).run();
-			return json(await profile(db, env, user), 200, { 'Set-Cookie': await startSession(db, user.id) });
+			return json(await profile(db, env, user), 200, { 'Set-Cookie': await startSession(db, user.id, body.remember !== false) });
 		}
 
 		if (route === 'logout' && method === 'POST') {
@@ -189,7 +195,7 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 				db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(userId),
 			]);
 			const user = (await db.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first<User>())!;
-			return json(await profile(db, env, user), 200, { 'Set-Cookie': await startSession(db, user.id) });
+			return json(await profile(db, env, user), 200, { 'Set-Cookie': await startSession(db, user.id, body.remember !== false) });
 		}
 
 		// ------------------------------------------------ logged in
@@ -205,6 +211,7 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 			const lang = body.lang === undefined ? user.lang : asLang(body.lang);
 			const alerts = body.priceAlerts === undefined ? user.price_alerts : body.priceAlerts ? 1 : 0;
 			await db.prepare('UPDATE users SET name = ?, lang = ?, price_alerts = ? WHERE id = ?').bind(name, lang, alerts, user.id).run();
+			if (body.models !== undefined) await setModels(db, user.id, asModels(body.models));
 			return json(await profile(db, env, { ...user, name, lang, price_alerts: alerts }));
 		}
 
@@ -213,7 +220,7 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 			if (await tooMany(db, `login:${user.email}`, 10, 15)) return fail('too-many', 429);
 			if (!(await checkPassword(password, user.password)).ok) return fail('wrong-password', 401);
 			await db.batch(
-				['wishlist', 'addresses', 'sessions', 'tokens'].map((table) => db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).bind(user.id)).concat(
+				['wishlist', 'addresses', 'preferences', 'sessions', 'tokens'].map((table) => db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).bind(user.id)).concat(
 					db.prepare('DELETE FROM users WHERE id = ?').bind(user.id),
 				),
 			);
@@ -230,7 +237,7 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 				db.prepare('UPDATE users SET password = ? WHERE id = ?').bind(await hashPassword(body.password), user.id),
 				db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(user.id),
 			]);
-			return json({ ok: true }, 200, { 'Set-Cookie': await startSession(db, user.id) });
+			return json({ ok: true }, 200, { 'Set-Cookie': await startSession(db, user.id, await isLongSession(db, request)) });
 		}
 
 		if (route === 'verify/resend' && method === 'POST') {

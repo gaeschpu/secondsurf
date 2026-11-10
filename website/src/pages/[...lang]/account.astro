@@ -33,6 +33,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 			<form id="login-form" class="stack" novalidate>
 				<label><span>{a.email}</span><input name="email" type="email" autocomplete="email" required maxlength="200" /></label>
 				<label><span>{a.password}</span><input name="password" type="password" autocomplete="current-password" required maxlength="200" /></label>
+				<label class="check stay"><input type="checkbox" name="remember" checked /><span>{a.stayLoggedIn}</span></label>
 				<div class="foot">
 					<button class="btn" type="submit">{a.login}</button>
 					<button type="button" class="link" data-show="forgot">{a.forgot}</button>
@@ -47,6 +48,16 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 					<span>{a.password} <small class="muted">({a.passwordHint})</small></span>
 					<input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="200" />
 				</label>
+				<fieldset class="models">
+					<legend>{a.models}</legend>
+					<div class="choices">
+						{[['women', a.modelsWomen], ['men', a.modelsMen], ['', a.modelsAny]].map(([value, label]) => (
+							<label class="choice"><input type="radio" name="models" value={value} checked={value === ''} /><span>{label}</span></label>
+						))}
+					</div>
+					<p class="small muted">{a.modelsHint}</p>
+				</fieldset>
+				<label class="check stay"><input type="checkbox" name="remember" checked /><span>{a.stayLoggedIn}</span></label>
 				<div class="captcha"></div>
 				<p class="small muted">{a.privacyNote} <a href={url(lang, '/privacy/')}>{t('legal.privacy')}</a>.</p>
 				<div class="foot"><button class="btn" type="submit">{a.register}</button></div>
@@ -131,6 +142,15 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
 			<section class="block" aria-labelledby="settings-title">
 				<h2 id="settings-title">{a.settings}</h2>
+				<fieldset class="models" id="models-choice">
+					<legend>{a.models}</legend>
+					<div class="choices">
+						{[['women', a.modelsWomen], ['men', a.modelsMen], ['', a.modelsAny]].map(([value, label]) => (
+							<label class="choice"><input type="radio" name="models" value={value} checked={value === ''} /><span>{label}</span></label>
+						))}
+					</div>
+					<p class="small muted">{a.modelsHint}</p>
+				</fieldset>
 				<form id="name-form" class="stack" novalidate>
 					<p class="small muted account-email"></p>
 					<label><span>{a.name}</span><input name="name" autocomplete="name" required maxlength="120" /></label>
@@ -168,6 +188,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 <script>
 	import { api, ApiError, forgetLogin, rememberLogin, seemsLoggedIn } from '../../scripts/account';
 	import type { AccountTexts } from '../../i18n/account';
+	import { rememberModels, type Models } from '../../scripts/models';
 
 	type Localized = string | Record<string, string | undefined>;
 	type Piece = { id: string; brand: string; title: Localized; size: string; price: number; sold: boolean; photo: string | null };
@@ -178,6 +199,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 		lang: string;
 		verified: boolean;
 		priceAlerts: boolean;
+		models: Models;
 		canEmail: boolean;
 		wishlist: { id: string; savedPrice: number }[];
 		addresses: Address[];
@@ -273,24 +295,27 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 	);
 
 	/** After logging in: save the piece the customer tapped, then go back to it. */
-	async function loggedIn(profile: Profile) {
+	async function loggedIn(profile: Profile, remember = true) {
 		const save = params.get('save');
 		const back = params.get('back');
 		if (save) {
 			await api(`wishlist/${encodeURIComponent(save)}`, 'PUT').catch(() => {});
 			profile = await api<Profile>('me');
 		}
-		rememberLogin(profile.wishlist.map((item) => item.id));
+		rememberLogin(profile.wishlist.map((item) => item.id), remember);
+		rememberModels(profile.models);
 		// Back to the page that sent the customer here (the heart, or a price offer).
 		if (back?.startsWith('/') && !back.startsWith('//')) return location.assign(back);
 		history.replaceState(null, '', location.pathname);
 		await showProfile(profile);
 	}
 
-	handle(forms.login, async (data) => loggedIn(await api<Profile>('login', 'POST', data)));
+	// "Stay logged in" unticked: the login ends when the browser closes.
+	const remember = (data: Record<string, string>) => data.remember === 'on';
+	handle(forms.login, async (data) => loggedIn(await api<Profile>('login', 'POST', { ...data, remember: remember(data) }), remember(data)));
 	handle(forms.register, async (data) => {
 		try {
-			await loggedIn(await api<Profile>('register', 'POST', { ...data, lang, ...captchaToken(forms.register) }));
+			await loggedIn(await api<Profile>('register', 'POST', { ...data, remember: remember(data), lang, ...captchaToken(forms.register) }), remember(data));
 		} finally {
 			resetCaptcha(forms.register);
 		}
@@ -422,6 +447,8 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 			$('.welcome-code-text').textContent = a.welcomeCodeText.replace('{percent}', String(me.welcome.percent));
 		}
 		$<HTMLInputElement>('#price-alerts').checked = me.priceAlerts;
+		rememberModels(me.models);
+		root.querySelectorAll<HTMLInputElement>('#models-choice input').forEach((input) => (input.checked = input.value === (me!.models ?? '')));
 		renderAddresses();
 		await renderWishlist();
 		// Emails come in the language the customer last used the site in.
@@ -453,6 +480,18 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 			notice(message(error));
 		}
 	});
+	root.querySelectorAll<HTMLInputElement>('#models-choice input').forEach((input) =>
+		input.addEventListener('change', async () => {
+			const before = me!.models;
+			try {
+				me = await api<Profile>('me', 'PATCH', { models: input.value });
+				rememberModels(me.models);
+			} catch (error) {
+				root.querySelectorAll<HTMLInputElement>('#models-choice input').forEach((other) => (other.checked = other.value === before));
+				notice(message(error));
+			}
+		}),
+	);
 	handle($<HTMLFormElement>('#name-form'), async (data) => {
 		me = await api<Profile>('me', 'PATCH', { name: data.name });
 		$('.hello').textContent = a.hello.replace('{name}', me.name);
@@ -719,6 +758,55 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 	}
 	.alerts {
 		margin-top: 1.5rem;
+	}
+	.stay {
+		margin-top: 0.25rem;
+	}
+	/* "Show models first": women, men or no preference. */
+	.models {
+		margin: 0 0 1.5rem;
+		padding: 0;
+		border: 0;
+	}
+	.models legend {
+		margin-bottom: 0.5rem;
+		padding: 0;
+		font-weight: 700;
+	}
+	.choices {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+	.choice {
+		position: relative;
+		display: block;
+	}
+	.choice input {
+		position: absolute;
+		opacity: 0;
+		pointer-events: none;
+	}
+	.choice span {
+		display: inline-block;
+		padding: 0.55em 1.1em;
+		border: 1.5px solid var(--line);
+		background: var(--bg-raised);
+		font-size: var(--step--1);
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.choice input:checked + span {
+		border-color: var(--ink);
+		background: var(--ink);
+		color: var(--bg);
+	}
+	.choice input:focus-visible + span {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+	.models .small {
+		margin-top: 0.5rem;
 	}
 	.address-list {
 		display: grid;

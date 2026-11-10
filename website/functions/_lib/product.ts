@@ -17,6 +17,8 @@ export interface NewProduct {
 	description: string;
 	staffPick: boolean;
 	photos: string[];
+	/** Per photo: 'women', 'men' or '' (no model). */
+	models: string[];
 	/** From the AI: the same title and description in the other languages. */
 	titleTranslations?: Translations;
 	descriptionTranslations?: Translations;
@@ -49,6 +51,7 @@ export function parseNewProduct(body: any): NewProduct | string {
 		description: text(body?.description, 2000),
 		staffPick: body?.staffPick === true,
 		photos: Array.isArray(body?.photos) ? body.photos : [],
+		models: Array.isArray(body?.models) ? body.models.map((m: unknown) => (m === 'women' || m === 'men' ? m : '')) : [],
 		titleTranslations: translations(body?.translations?.title, 120),
 		descriptionTranslations: translations(body?.translations?.description, 2000),
 	};
@@ -61,6 +64,14 @@ export function parseNewProduct(body: any): NewProduct | string {
 	if (product.photos.length < 1 || product.photos.length > MAX_PHOTOS) return `Add 1 to ${MAX_PHOTOS} photos.`;
 	if (!product.photos.every((sha) => typeof sha === 'string' && BLOB_SHA.test(sha))) return 'A photo did not upload correctly.';
 	return product;
+}
+
+/** Photo numbers per model gender, e.g. "models: { women: [3, 4], men: [1, 2] }". Nothing when no photo has a model. */
+function modelsYaml(product: NewProduct) {
+	const numbers = (gender: string) => product.photos.flatMap((_, i) => (product.models[i] === gender ? [i + 1] : []));
+	const women = numbers('women');
+	const men = numbers('men');
+	return women.length || men.length ? [`models: { women: [${women.join(', ')}], men: [${men.join(', ')}] }`] : [];
 }
 
 /** "0007-oneill-white-tee": the number sorts it, the rest becomes the address. */
@@ -96,6 +107,7 @@ export function toMarkdown(product: NewProduct, drop: number) {
 		...(product.description ? [`description: ${localizedYaml(product.description, product.descriptionTranslations)}`] : []),
 		'photos:',
 		...product.photos.map((_, i) => `  - ./${i + 1}.jpg`),
+		...modelsYaml(product),
 		`drop: ${drop}`,
 		...(product.staffPick ? ['staffPick: true'] : []),
 		'---',

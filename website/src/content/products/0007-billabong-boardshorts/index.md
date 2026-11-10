@@ -16,5 +16,6 @@ photos:
   - ./2.jpg
   - ./3.jpg
   - ./4.jpg
+models: { women: [], men: [1, 2] }
 drop: 1
 ---

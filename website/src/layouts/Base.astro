@@ -4,6 +4,7 @@ import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import WelcomePopup from '../components/WelcomePopup.astro';
+import CookieNotice from '../components/CookieNotice.astro';
 import { htmlLang, languages, stripLang, url, useT, type Lang } from '../i18n';
 import { SITE } from '../config';
 
@@ -83,6 +84,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
 		</main>
 		<Footer lang={lang} />
 		<WelcomePopup lang={lang} />
+		<CookieNotice lang={lang} />
 	</body>
 </html>
 

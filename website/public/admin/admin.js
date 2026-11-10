@@ -4,6 +4,8 @@ const MAX_PHOTOS = 8;
 const MAX_SIDE = 1600; // the site makes its own smaller versions from this
 const AI_SIDE = 1024; // enough for the AI to read labels, small enough to send quickly
 const AI_PHOTOS = 4;
+const MODEL_LABELS = { '': 'No model', women: 'Woman', men: 'Man' };
+const NEXT_MODEL = { '': 'women', women: 'men', men: '' };
 const JPEG_QUALITY = 0.85;
 
 /** What the AI wrote, so its translations are only used while the German text is unchanged. */
@@ -12,7 +14,8 @@ let aiTexts = null;
 const $ = (id) => document.getElementById(id);
 const form = $('add-form');
 
-/** @type {{ blob: Blob, url: string }[]} */
+/** model: who wears it in the photo ('women', 'men' or '' for no model), for "models first" in the shop. */
+/** @type {{ blob: Blob, url: string, model: string }[]} */
 let photos = [];
 
 async function api(path, options = {}) {
@@ -99,6 +102,16 @@ function renderPreviews() {
 					}),
 				);
 			}
+			const model = document.createElement('button');
+			model.type = 'button';
+			model.className = `model${photo.model ? ' on' : ''}`;
+			model.textContent = MODEL_LABELS[photo.model];
+			model.setAttribute('aria-label', `Photo ${index + 1}: ${MODEL_LABELS[photo.model]}. Tap to change.`);
+			model.addEventListener('click', () => {
+				photo.model = NEXT_MODEL[photo.model];
+				renderPreviews();
+			});
+			item.append(model);
 			item.append(
 				iconButton('✕', 'remove', `Remove photo ${index + 1}`, () => {
 					URL.revokeObjectURL(photo.url);
@@ -133,7 +146,7 @@ for (const input of document.querySelectorAll('.file')) {
 			}
 			try {
 				const blob = await shrink(file);
-				photos.push({ blob, url: URL.createObjectURL(blob) });
+				photos.push({ blob, url: URL.createObjectURL(blob), model: '' });
 				renderPreviews();
 			} catch {
 				show($('add-error'), `Couldn't read ${file.name}. Try a JPEG or PNG.`);
@@ -222,6 +235,7 @@ form.addEventListener('submit', async (event) => {
 				description: fields.get('description'),
 				staffPick: fields.get('staffPick') === 'on',
 				photos: shas,
+				models: photos.map((photo) => photo.model),
 				translations: {
 					title: translationsFor('title', fields.get('title')),
 					description: translationsFor('description', fields.get('description')),

@@ -1,0 +1,79 @@
+---
+// Cookie notice: the site only uses strictly necessary cookies (the login), so there is nothing to accept or refuse.
+// The bar says so once; "OK" hides it for good in this browser. Details are in the privacy policy.
+import { url, useT, type Lang } from '../i18n';
+
+interface Props {
+	lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+---
+
+<div class="cookie-notice" role="region" aria-label="Cookies" hidden>
+	<p>
+		{t('cookies.text')}{' '}
+		<a href={url(lang, '/privacy/')}>{t('cookies.more')}</a>
+	</p>
+	<button type="button" class="btn">{t('cookies.ok')}</button>
+</div>
+
+<script>
+	const KEY = 'cookie-notice';
+	const bar = document.querySelector<HTMLElement>('.cookie-notice');
+	let seen = false;
+	try {
+		seen = localStorage.getItem(KEY) !== null;
+	} catch {}
+	if (bar && !seen) {
+		bar.hidden = false;
+		bar.querySelector('button')!.addEventListener('click', () => {
+			bar.hidden = true;
+			try {
+				localStorage.setItem(KEY, String(Date.now()));
+			} catch {}
+		});
+	}
+</script>
+
+<style>
+	.cookie-notice {
+		position: fixed;
+		left: 50%;
+		bottom: max(1rem, env(safe-area-inset-bottom));
+		z-index: 50;
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		width: min(40rem, calc(100% - 2rem));
+		padding: 0.9rem 1rem 0.9rem 1.25rem;
+		border: 1.5px solid var(--ink);
+		background: var(--bg-raised);
+		color: var(--ink);
+		box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+		transform: translateX(-50%);
+	}
+	.cookie-notice[hidden] {
+		display: none;
+	}
+	.cookie-notice p {
+		margin: 0;
+		font-size: var(--step--1);
+		line-height: 1.45;
+	}
+	.cookie-notice a {
+		white-space: nowrap;
+	}
+	.cookie-notice .btn {
+		flex: none;
+		min-width: 4.5rem;
+	}
+	@media (max-width: 30rem) {
+		.cookie-notice {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0.75rem;
+		}
+	}
+</style>

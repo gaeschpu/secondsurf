@@ -9,6 +9,7 @@ import JsonLd from '../../../components/JsonLd.astro';
 import { chf, l, langPaths, url, useT, type Lang } from '../../../i18n';
 import { CATEGORIES, CHECKOUT, CONDITIONS, SITE } from '../../../config';
 import type { Product } from '../../../lib/products';
+import { modelTag } from '../../../scripts/models';
 
 export async function getStaticPaths() {
 	const products = await getCollection('products', (p) => import.meta.env.DEV || !p.data.draft);
@@ -71,6 +72,7 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 											sizes="(max-width: 48rem) 100vw, 55vw"
 											loading={i === 0 ? 'eager' : 'lazy'}
 											class:list={['slide', { sold: p.sold }]}
+											data-model={modelTag(p.models, i)}
 										/>
 									))}
 								</div>
@@ -174,9 +176,26 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 </Base>
 
 <script>
+	import { applyOrder, modelOrder } from '../../../scripts/models';
+
 	// Product page gallery: arrows, thumbnails and the counter all follow the scroll position, so swiping works too.
 	for (const gallery of document.querySelectorAll<HTMLElement>('[data-gallery]')) {
 		const track = gallery.querySelector<HTMLElement>('[data-track]');
+		// Models in the gender the customer chose come first (src/scripts/models.ts), in the big photos and the thumbnails.
+		const slides = track ? [...track.querySelectorAll<HTMLImageElement>('img')] : [];
+		const order = modelOrder(slides.map((img) => img.dataset.model));
+		if (order) {
+			const first = slides[order[0]];
+			first.alt = slides[0].alt;
+			first.loading = 'eager';
+			slides[0].alt = '';
+			const row = gallery.querySelector('.thumbs');
+			applyOrder(order, track, row);
+			row?.querySelectorAll('.thumb').forEach((thumb, n, all) => {
+				thumb.setAttribute('aria-label', `${n + 1} / ${all.length}`);
+				thumb.classList.toggle('on', n === 0);
+			});
+		}
 		const thumbs = [...gallery.querySelectorAll<HTMLButtonElement>('.thumb')];
 		const prev = gallery.querySelector<HTMLButtonElement>('.nav.prev');
 		const next = gallery.querySelector<HTMLButtonElement>('.nav.next');

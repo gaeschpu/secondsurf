@@ -6,6 +6,7 @@ import Icon from './Icon.astro';
 import WishButton from './WishButton.astro';
 import { chf, l, url, useT, type Lang } from '../i18n';
 import type { Product } from '../lib/products';
+import { modelTag } from '../scripts/models';
 
 interface Props {
 	lang: Lang;
@@ -34,6 +35,7 @@ const slider = photos.length > 1;
 								sizes="(max-width: 40rem) 50vw, 18rem"
 								loading={i === 0 ? undefined : 'lazy'}
 								class="photo"
+								data-model={modelTag(p.models, i)}
 							/>
 						))}
 					</div>
@@ -77,9 +79,21 @@ const slider = photos.length > 1;
 </li>
 
 <script>
+	import { applyOrder, modelOrder } from '../scripts/models';
+
 	// Arrows scroll the photo strip one photo at a time; the dots and arrows follow the scroll position (swipe too).
 	for (const card of document.querySelectorAll<HTMLElement>('.product')) {
 		const track = card.querySelector<HTMLElement>('[data-track]');
+		// Models in the gender the customer chose come first (src/scripts/models.ts).
+		const photos = track ? [...track.querySelectorAll<HTMLImageElement>('img')] : [];
+		const order = modelOrder(photos.map((img) => img.dataset.model));
+		if (order) {
+			const first = photos[order[0]];
+			first.alt = photos[0].alt;
+			first.loading = 'eager';
+			photos[0].alt = '';
+			applyOrder(order, track);
+		}
 		const dots = [...card.querySelectorAll<HTMLElement>('.dot')];
 		const prev = card.querySelector<HTMLButtonElement>('.nav.prev');
 		const next = card.querySelector<HTMLButtonElement>('.nav.next');

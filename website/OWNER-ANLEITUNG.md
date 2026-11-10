@@ -17,6 +17,8 @@ Nach jedem Speichern baut sich die Website neu auf. Änderungen sind meist nach 
 4. Kontrolliere alles, vor allem die Grösse, und tippe den Preis ein.
 5. Tippe auf **Publish**.
 
+**Models:** Unter jedem Foto steht **No model**. Tippe darauf, um ein Model-Foto als **Woman** oder **Man** zu markieren. Wer angemeldet ist und im Profil bei «Models zuerst zeigen» Frauen oder Männer gewählt hat, sieht diese Fotos zuerst. Bei schon veröffentlichten Pieces steht das im Feld `models` der Datei `index.md`, zum Beispiel `models: { women: [3, 4], men: [1, 2] }` (die Zahlen sind die Foto-Nummern).
+
 Die KI schreibt den Text auch auf Französisch, Italienisch und Englisch. Änderst du den deutschen Titel oder die Beschreibung, erscheint in den anderen Sprachen dein deutscher Text. Ohne KI füllst du einfach alles selbst aus.
 
 Die KI ist gratis: Sie läuft bei Cloudflare, das pro Tag ein Gratis-Kontingent hat (reicht für ungefähr 30 Pieces). Ist es aufgebraucht, sagt das Dashboard Bescheid, und am nächsten Tag geht es wieder. Kosten entstehen keine.

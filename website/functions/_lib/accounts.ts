@@ -41,6 +41,8 @@ const SCHEMA = [
 	`CREATE INDEX IF NOT EXISTS attempts_key ON attempts (key, at)`,
 	/** Welcome discount (WELCOME in src/config.ts): one row per account once it has been used in a paid order. */
 	`CREATE TABLE IF NOT EXISTS welcome_used (user_id INTEGER PRIMARY KEY, session_id TEXT NOT NULL, used_at INTEGER NOT NULL)`,
+	/** Profile choices: models = 'women' | 'men' | '' (whose model photos the shop shows first). */
+	`CREATE TABLE IF NOT EXISTS preferences (user_id INTEGER PRIMARY KEY, models TEXT NOT NULL DEFAULT '')`,
 	/** Drop reminders: deleted once the "drop is live" email has gone out. */
 	`CREATE TABLE IF NOT EXISTS drop_reminders (email TEXT NOT NULL, drop_no INTEGER NOT NULL, lang TEXT NOT NULL, token TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL, PRIMARY KEY (email, drop_no))`,
 ];
@@ -95,19 +97,31 @@ export const isValidPassword = (password: unknown): password is string =>
 // ---------------------------------------------------------------- sessions and one-time links
 
 const COOKIE = 'secondsurf_session';
+/** "Stay logged in": 60 days. Otherwise the cookie ends when the browser closes, and the server forgets the login after a day at the latest. */
 const SESSION_DAYS = 60;
+const SHORT_SESSION_DAYS = 1;
 
 const randomToken = () => b64(crypto.getRandomValues(new Uint8Array(32))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const sha256 = async (text: string) => b64(await crypto.subtle.digest('SHA-256', encoder.encode(text)));
 
-export async function startSession(db: D1Database, userId: number) {
+export async function startSession(db: D1Database, userId: number, remember = true) {
 	const token = randomToken();
+	const days = remember ? SESSION_DAYS : SHORT_SESSION_DAYS;
 	await db
 		.prepare('INSERT INTO sessions (hash, user_id, expires_at) VALUES (?, ?, ?)')
-		.bind(await sha256(token), userId, now() + SESSION_DAYS * 86400)
+		.bind(await sha256(token), userId, now() + days * 86400)
 		.run();
 	// Path /api: the checkout (/api/checkout) needs the login too, for the welcome discount.
-	return `${COOKIE}=${token}; Path=/api; Max-Age=${SESSION_DAYS * 86400}; HttpOnly; Secure; SameSite=Strict`;
+	// Without Max-Age the browser deletes the cookie when it closes.
+	return `${COOKIE}=${token}; Path=/api;${remember ? ` Max-Age=${days * 86400};` : ''} HttpOnly; Secure; SameSite=Strict`;
+}
+
+/** Whether the current login was made with "stay logged in" (it then runs longer than a short one can). */
+export async function isLongSession(db: D1Database, request: Request) {
+	const token = sessionToken(request);
+	if (!token) return true;
+	const row = await db.prepare('SELECT expires_at FROM sessions WHERE hash = ?').bind(await sha256(token)).first<{ expires_at: number }>();
+	return !row || row.expires_at - now() > SHORT_SESSION_DAYS * 86400;
 }
 
 export const endSessionCookie = `${COOKIE}=; Path=/api; Max-Age=0; HttpOnly; Secure; SameSite=Strict`;
@@ -116,6 +130,16 @@ export const oldSessionCookieClear = `${COOKIE}=; Path=/api/account; Max-Age=0; 
 
 const sessionToken = (request: Request) =>
 	(request.headers.get('Cookie') ?? '').match(new RegExp(`(?:^|;\\s*)${COOKIE}=([A-Za-z0-9_-]{43})(?:;|$)`))?.[1];
+
+/** Whose model photos come first: 'women', 'men' or '' (no choice). */
+export const asModels = (value: unknown) => (value === 'women' || value === 'men' ? value : '');
+
+export async function setModels(db: D1Database, userId: number, models: string) {
+	await db
+		.prepare('INSERT INTO preferences (user_id, models) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET models = excluded.models')
+		.bind(userId, asModels(models))
+		.run();
+}
 
 export interface User {
 	id: number;

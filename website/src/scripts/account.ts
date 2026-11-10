@@ -20,16 +20,37 @@ const store = {
 	},
 };
 
-export const seemsLoggedIn = () => store.get(HINT) === '1';
+// A login without "stay logged in" ends when the browser closes. The hint then says 'session', and a browser-session
+// cookie (gone after closing, like the login cookie) shows whether it still holds.
+const SESSION_COOKIE = 'login-open';
+const sessionCookie = (on: boolean) => {
+	document.cookie = `${SESSION_COOKIE}=${on ? '1' : ''}; Path=/; SameSite=Strict${on ? '' : '; Max-Age=0'}${location.protocol === 'https:' ? '; Secure' : ''}`;
+};
 
-export function rememberLogin(wishlist: string[]) {
-	store.set(HINT, '1');
+export function seemsLoggedIn() {
+	const hint = store.get(HINT);
+	if (hint === '1') return true;
+	if (hint !== 'session') return false;
+	if (document.cookie.split(/;\s*/).includes(`${SESSION_COOKIE}=1`)) return true;
+	forgetLogin();
+	return false;
+}
+
+/** remember: true = stay logged in, false = until the browser closes, undefined = keep what it is. */
+export function rememberLogin(wishlist: string[], remember?: boolean) {
+	if (remember !== undefined || !store.get(HINT)) {
+		store.set(HINT, remember === false ? 'session' : '1');
+		sessionCookie(remember === false);
+	}
 	store.set(WISHLIST, JSON.stringify(wishlist));
 }
 
 export function forgetLogin() {
+	sessionCookie(false);
 	store.set(HINT, null);
 	store.set(WISHLIST, null);
+	// "Models first" (src/scripts/models.ts) is only for logged-in customers.
+	store.set('models', null);
 }
 
 export function savedPieces(): Set<string> {

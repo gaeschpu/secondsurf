@@ -37,6 +37,13 @@ const products = defineCollection({
 			measurements: z.string().optional(),
 			/** First photo = the one on the card, the second one shows on hover. */
 			photos: z.array(image()).default([]),
+			/**
+			 * Which photos show a model, by photo number (1 = first photo), e.g. { women: [3, 4], men: [1, 2] }.
+			 * Logged-in customers who chose "women" or "men" in their profile see those model photos first.
+			 */
+			models: z
+				.object({ women: z.array(z.number().int().positive()).default([]), men: z.array(z.number().int().positive()).default([]) })
+				.default({ women: [], men: [] }),
 			/** Drop number (see currentDrop in src/config.ts). */
 			drop: z.number().int().optional(),
 			/** Shown in the "Staff Picks" row on the home page. */

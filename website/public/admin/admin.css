@@ -235,6 +235,26 @@ button:disabled {
 .previews .remove {
 	right: 0.25rem;
 }
+.previews .model {
+	position: static;
+	display: block;
+	width: 100%;
+	min-height: 2.75rem;
+	margin-top: 0.3rem;
+	border-radius: 8px;
+	color: var(--ink, inherit);
+	background: transparent;
+	border: 1.5px solid currentColor;
+	font-size: 0.85rem;
+	font-weight: 600;
+	opacity: 0.6;
+}
+.previews .model.on {
+	color: var(--on-accent);
+	background: var(--accent);
+	border-color: var(--accent);
+	opacity: 1;
+}
 .ai {
 	width: 100%;
 	min-height: 3rem;

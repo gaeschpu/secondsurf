@@ -184,6 +184,9 @@ const de = {
 	'legal.template': 'Vorlage: vom Inhaber / Fachperson prüfen lassen.',
 	'legal.terms': 'AGB',
 	'legal.privacy': 'Datenschutz',
+	'cookies.text': 'Wir verwenden nur technisch nötige Cookies, zum Beispiel damit du angemeldet bleibst. Kein Tracking, keine Werbung.',
+	'cookies.more': 'Mehr dazu',
+	'cookies.ok': 'OK',
 	'legal.imprint': 'Impressum',
 
 	'footer.shop': 'Shop',
@@ -378,6 +381,9 @@ const fr: Partial<Record<UiKey, string>> = {
 	'legal.template': 'Modèle : à faire vérifier par le propriétaire ou un spécialiste.',
 	'legal.terms': 'CGV',
 	'legal.privacy': 'Protection des données',
+	'cookies.text': 'Nous utilisons uniquement des cookies techniquement nécessaires, par exemple pour que tu restes connecté·e. Pas de suivi, pas de publicité.',
+	'cookies.more': 'En savoir plus',
+	'cookies.ok': 'OK',
 	'legal.imprint': 'Mentions légales',
 
 	'footer.sell': 'Vendre',
@@ -569,6 +575,9 @@ const it: Partial<Record<UiKey, string>> = {
 	'legal.template': 'Modello: da far verificare dal titolare o da uno specialista.',
 	'legal.terms': 'Condizioni generali',
 	'legal.privacy': 'Protezione dei dati',
+	'cookies.text': 'Usiamo solo cookie tecnicamente necessari, per esempio per mantenerti connesso/a. Nessun tracciamento, nessuna pubblicità.',
+	'cookies.more': 'Scopri di più',
+	'cookies.ok': 'OK',
 	'legal.imprint': 'Note legali',
 
 	'footer.shop': 'Shop',
@@ -758,6 +767,9 @@ const en: Partial<Record<UiKey, string>> = {
 	'legal.template': 'Template: have the owner or a specialist check it.',
 	'legal.terms': 'Terms',
 	'legal.privacy': 'Privacy',
+	'cookies.text': 'We only use strictly necessary cookies, for example to keep you logged in. No tracking, no ads.',
+	'cookies.more': 'Learn more',
+	'cookies.ok': 'OK',
 	'legal.imprint': 'Imprint',
 
 	'footer.sell': 'Sell',
