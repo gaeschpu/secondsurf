@@ -41,7 +41,7 @@ const SCHEMA = [
 	`CREATE INDEX IF NOT EXISTS attempts_key ON attempts (key, at)`,
 	/** Welcome discount (WELCOME in src/config.ts): one row per account once it has been used in a paid order. */
 	`CREATE TABLE IF NOT EXISTS welcome_used (user_id INTEGER PRIMARY KEY, session_id TEXT NOT NULL, used_at INTEGER NOT NULL)`,
-	/** Profile choices: models = 'women' | 'men' | '' (whose model photos the shop shows first). */
+	/** Profile choices: models = the customer's gender, 'women' | 'men' | 'other' ('' = not given). It decides whose model photos come first. */
 	`CREATE TABLE IF NOT EXISTS preferences (user_id INTEGER PRIMARY KEY, models TEXT NOT NULL DEFAULT '')`,
 	/** Drop reminders: deleted once the "drop is live" email has gone out. */
 	`CREATE TABLE IF NOT EXISTS drop_reminders (email TEXT NOT NULL, drop_no INTEGER NOT NULL, lang TEXT NOT NULL, token TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL, PRIMARY KEY (email, drop_no))`,
@@ -131,8 +131,8 @@ export const oldSessionCookieClear = `${COOKIE}=; Path=/api/account; Max-Age=0; 
 const sessionToken = (request: Request) =>
 	(request.headers.get('Cookie') ?? '').match(new RegExp(`(?:^|;\\s*)${COOKIE}=([A-Za-z0-9_-]{43})(?:;|$)`))?.[1];
 
-/** Whose model photos come first: 'women', 'men' or '' (no choice). */
-export const asModels = (value: unknown) => (value === 'women' || value === 'men' ? value : '');
+/** The customer's gender: 'women', 'men', 'other' or '' (not given). */
+export const asModels = (value: unknown) => (value === 'women' || value === 'men' || value === 'other' ? value : '');
 
 export async function setModels(db: D1Database, userId: number, models: string) {
 	await db

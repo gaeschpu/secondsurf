@@ -1,17 +1,26 @@
-// "Models first": a logged-in customer can choose women or men in their profile (src/pages/[...lang]/account.astro).
-// Product photos carry data-model="women" or "men" (the models field of a piece), and the photo strips put the
-// chosen ones first, then the other model photos, then the rest. Without a choice, nothing moves.
+// "Models first": a logged-in customer gives their gender in the profile (src/pages/[...lang]/account.astro).
+// Product photos carry data-model="women" or "men" (the models field of a piece), and the photo strips put that
+// gender's photos first, then the other model photos, then the rest. "other": women or men first, picked at random
+// once per browser session (so the order doesn't jump between pages). Not logged in or no gender given: nothing moves.
 
 import { seemsLoggedIn } from './account';
 
 const KEY = 'models';
-export type Models = 'women' | 'men' | '';
+export type Models = 'women' | 'men' | 'other' | '';
+const RANDOM = 'models-random';
 
 export function preferredModels(): Models {
 	if (!seemsLoggedIn()) return '';
 	try {
 		const value = localStorage.getItem(KEY);
-		return value === 'women' || value === 'men' ? value : '';
+		if (value === 'women' || value === 'men') return value;
+		if (value !== 'other') return '';
+		let pick = sessionStorage.getItem(RANDOM);
+		if (pick !== 'women' && pick !== 'men') {
+			pick = Math.random() < 0.5 ? 'women' : 'men';
+			sessionStorage.setItem(RANDOM, pick);
+		}
+		return pick as Models;
 	} catch {
 		return '';
 	}

@@ -51,8 +51,8 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 				<fieldset class="models">
 					<legend>{a.models}</legend>
 					<div class="choices">
-						{[['women', a.modelsWomen], ['men', a.modelsMen], ['', a.modelsAny]].map(([value, label]) => (
-							<label class="choice"><input type="radio" name="models" value={value} checked={value === ''} /><span>{label}</span></label>
+						{[['women', a.modelsWomen], ['men', a.modelsMen], ['other', a.modelsAny]].map(([value, label]) => (
+							<label class="choice"><input type="radio" name="models" value={value} required /><span>{label}</span></label>
 						))}
 					</div>
 					<p class="small muted">{a.modelsHint}</p>
@@ -145,8 +145,8 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 				<fieldset class="models" id="models-choice">
 					<legend>{a.models}</legend>
 					<div class="choices">
-						{[['women', a.modelsWomen], ['men', a.modelsMen], ['', a.modelsAny]].map(([value, label]) => (
-							<label class="choice"><input type="radio" name="models" value={value} checked={value === ''} /><span>{label}</span></label>
+						{[['women', a.modelsWomen], ['men', a.modelsMen], ['other', a.modelsAny]].map(([value, label]) => (
+							<label class="choice"><input type="radio" name="models" value={value} /><span>{label}</span></label>
 						))}
 					</div>
 					<p class="small muted">{a.modelsHint}</p>
@@ -762,7 +762,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 	.stay {
 		margin-top: 0.25rem;
 	}
-	/* "Show models first": women, men or no preference. */
+	/* Gender: woman, man or other (decides whose model photos come first, src/scripts/models.ts). */
 	.models {
 		margin: 0 0 1.5rem;
 		padding: 0;
