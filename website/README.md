@@ -205,6 +205,10 @@ the piece page asks `/api/auctions/view` and, while an auction runs or waits for
   winner is blocked and the second-highest bidder gets an optional offer at their own limit; then the piece is back on sale.
 - These steps run in `settle()` whenever an auction is viewed, bid on or listed, and every 10 minutes from
   `.github/workflows/auction-tick.yml` (`POST /api/auctions/tick`, safe to call any time).
+- Auction lots: pieces with `auctionOnly: true` (e.g. bundles, size `Mix`) are left out of `getProducts()` (shop, categories,
+  New Drop, home) but have their own piece page and are in `/products.json`; checkout and offers refuse them. The dashboard's
+  "Auction only" box publishes the lot and starts its auction in one request (`functions/api/admin/products/index.ts`).
+- `/auctions/` (`src/pages/[...lang]/auctions.astro`) lists every running auction from `/api/auctions/active` + `/products.json`.
 
 ## Forms (contact, stockist, sell once)
 

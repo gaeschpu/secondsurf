@@ -80,6 +80,12 @@ Nach dem Ende:
 
 Neue Konten ohne bisherigen Kauf können gleichzeitig nur bei einer Auktion vorne liegen.
 
+### Nur-Auktion: Einzelstücke und Bundles
+
+Willst du etwas versteigern, das nicht im Shop sein soll (zum Beispiel ein Bundle aus mehreren Pieces): Füge es unter **Pieces** wie gewohnt hinzu, setze aber den Haken bei **Auction only**. Gib Startpreis und Ende ein (oder tippe 3, 5 oder 7 days) und tippe auf **Publish**. Die Auktion startet sofort; nach 1 bis 2 Minuten steht das Stück auf der Seite **Auktionen** (Menü oben). Es erscheint nie im Shop und kann nie zum Festpreis gekauft werden. Für ein Bundle wählst du die Grösse **Mix** und schreibst in die Beschreibung, welche Pieces in welcher Grösse dabei sind.
+
+Alle laufenden Auktionen, auch normale Shop-Pieces in einer Auktion, stehen auf der Seite `/auctions/`.
+
 ## Ein Piece als verkauft markieren
 
 So verkaufst du im Moment: Kundinnen und Kunden tippen auf **Anfragen**, du bekommst eine E-Mail und schickst ihnen die Zahlungsangaben. Sie bezahlen sofort. Reserviert wird nichts: Wer zuerst bezahlt, bekommt das Piece.
