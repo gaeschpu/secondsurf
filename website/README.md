@@ -196,7 +196,8 @@ the piece page asks `/api/auctions/view` and, while an auction runs or waits for
   `functions/api/admin/auctions/`. Texts: `src/i18n/auction.ts`. Terms: section 9 of `src/pages/[...lang]/terms.astro`.
 - Bidding is by limit (proxy bidding): the price is one step (CHF 1) above the second-highest limit; equal limits → the earlier
   one leads. A bid is written with a conditional UPDATE on the auction's `version` in one D1 batch with its rows, so
-  simultaneous bids can't both win. A bid in the last 2 minutes moves the end to 2 minutes after it.
+  simultaneous bids can't both win. A bid in the last minute extends the end by 5 minutes.
+  `GET /api/auctions/calendar?id=…&lang=…` gives the end as a calendar file with an alarm 15 minutes before.
 - Bidders need a verified email, accepted terms (table `auction_terms`) and no block (`auction_blocks`, by email). Accounts
   without a paid order (table `purchases`, filled by the Stripe webhook) can lead one auction at a time and can't bid with an
   unpaid win.

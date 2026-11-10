@@ -66,7 +66,8 @@ So läuft es:
 
 - Mitbieten kann nur, wer ein Konto mit bestätigter E-Mail hat und vor dem ersten Gebot die Auktionsbedingungen (AGB Ziffer 9) akzeptiert.
 - Man bietet mit einem **Limit**: Die Website bietet automatisch in Schritten von CHF 1, bis zu diesem Limit. Wer überboten wird, bekommt eine E-Mail.
-- Kommt in den letzten 2 Minuten ein Gebot, verlängert sich die Auktion um 2 Minuten.
+- Kommt in der letzten Minute ein Gebot, verlängert sich die Auktion um 5 Minuten.
+- Auf der Seite des Pieces kann man sich das Ende in den Handy-Kalender eintragen; das Handy erinnert 15 Minuten vorher.
 - Während der Auktion kann niemand das Piece normal kaufen oder einen Preis vorschlagen.
 - Ohne Gebote kannst du die Auktion mit **Cancel auction** abbrechen. Sobald jemand geboten hat, geht das nicht mehr.
 

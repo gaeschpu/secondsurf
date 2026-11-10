@@ -19,8 +19,11 @@ type Lang = 'de' | 'fr' | 'it' | 'en';
 
 /** Smallest step between two bids. */
 export const STEP = 1;
-/** A bid in the last 2 minutes moves the end to 2 minutes after that bid. */
-export const EXTEND_SECONDS = 120;
+/** A bid in the last minute (EXTEND_WINDOW) extends the auction by 5 minutes (EXTEND_BY). */
+export const EXTEND_WINDOW = 60;
+export const EXTEND_BY = 300;
+/** Calendar reminders ring this long before the end. */
+export const REMIND_BEFORE_MINUTES = 15;
 export const PAY_HOURS = 48;
 export const REMIND_AFTER_HOURS = 24;
 
@@ -273,7 +276,7 @@ export async function placeBid(env: Env, user: User, productId: string, max: num
 			history.push([user.id, max, 0], [a.leader_id, price, 1]);
 		}
 
-		const endsAt = a.ends_at - t < EXTEND_SECONDS ? t + EXTEND_SECONDS : a.ends_at;
+		const endsAt = a.ends_at - t <= EXTEND_WINDOW ? a.ends_at + EXTEND_BY : a.ends_at;
 		// Raising one's own limit changes nothing anyone sees, so it doesn't count as a bid (nor extend the end).
 		const raise = a.leader_id === user.id;
 		const counted = raise ? 0 : 1;

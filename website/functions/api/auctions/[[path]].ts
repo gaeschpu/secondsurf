@@ -2,6 +2,7 @@
 //
 // GET  view?id=<piece>          the auction of a piece for its page: price, bids, end, history; plus "you" when logged in
 // POST bid { id, max, acceptTerms? }   bid with a limit (logged in, confirmed email). acceptTerms once, before the first bid
+// GET  calendar?id=<piece>&lang= the end as a calendar file (iPhone / Android / Outlook), alarm 15 min before
 // GET  active                   running auctions, for the "Auktion" badge on the shop cards
 // GET  mine?lang=               the logged-in customer's auctions, for "Meine Auktionen" in the profile
 // GET  pay?t=<token>&lang=      what the buyer sees on /auction/?t=<token>
@@ -20,6 +21,7 @@ import {
 	cannotBid,
 	latestAuction,
 	minimumFor,
+	REMIND_BEFORE_MINUTES,
 	nameIn,
 	now,
 	payLink,
@@ -113,6 +115,54 @@ export const onRequest: Handler = async ({ request, env, params, waitUntil }) =>
 		const result = await placeBid(env, user, id, max, origin, background);
 		if (!result.ok) return fail(result.error, result.error === 'busy' ? 503 : 409, result.minimum ? { minimum: result.minimum } : {});
 		return json({ ok: true, leading: result.leading, price: result.auction.price, endsAt: result.auction.ends_at * 1000 });
+	}
+
+	if (route === 'calendar' && method === 'GET') {
+		const id = url.searchParams.get('id') ?? '';
+		const lang = asLang(url.searchParams.get('lang'));
+		const a = PRODUCT_ID.test(id) ? await latestAuction(db, id) : null;
+		if (!a || a.status !== 'running') return new Response('No running auction.', { status: 404 });
+		const stamp = (seconds: number) => new Date(seconds * 1000).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+		// Calendar text: commas, semicolons and backslashes escaped, as the format wants.
+		const esc = (text: string) => text.replace(/[\\;,]/g, (c) => `\\${c}`).replace(/\n/g, '\\n');
+		const name = nameIn(a, lang);
+		const link = `${origin}${langPrefix(lang)}/item/${a.product_id}/`;
+		const title = { de: 'Auktion endet', fr: 'Fin de l’enchère', it: 'L’asta finisce', en: 'Auction ends' }[lang];
+		const note = {
+			de: 'Jetzt mitbieten. Kommt in der letzten Minute ein Gebot, verlängert sich die Auktion um 5 Minuten.',
+			fr: 'Enchéris maintenant. Une offre dans la dernière minute prolonge l’enchère de 5 minutes.',
+			it: 'Offri adesso. Un’offerta nell’ultimo minuto prolunga l’asta di 5 minuti.',
+			en: 'Bid now. A bid in the last minute extends the auction by 5 minutes.',
+		}[lang];
+		const ics = [
+			'BEGIN:VCALENDAR',
+			'VERSION:2.0',
+			'PRODID:-//secondsurf//Auctions//DE',
+			'CALSCALE:GREGORIAN',
+			'METHOD:PUBLISH',
+			'BEGIN:VEVENT',
+			`UID:auction-${a.id}@secondsurf.ch`,
+			`DTSTAMP:${stamp(now())}`,
+			`DTSTART:${stamp(a.ends_at - REMIND_BEFORE_MINUTES * 60)}`,
+			`DTEND:${stamp(a.ends_at)}`,
+			`SUMMARY:${esc(`secondsurf: ${title} – ${name}`)}`,
+			`DESCRIPTION:${esc(`${note}\n${link}`)}`,
+			`URL:${link}`,
+			'BEGIN:VALARM',
+			'ACTION:DISPLAY',
+			`DESCRIPTION:${esc(`${title}: ${name}`)}`,
+			'TRIGGER:PT0M',
+			'END:VALARM',
+			'END:VEVENT',
+			'END:VCALENDAR',
+		].join('\r\n');
+		return new Response(ics, {
+			headers: {
+				'Content-Type': 'text/calendar; charset=utf-8',
+				'Content-Disposition': `inline; filename="auktion-${a.product_id}.ics"`,
+				'Cache-Control': 'no-store',
+			},
+		});
 	}
 
 	if (route === 'active' && method === 'GET') {

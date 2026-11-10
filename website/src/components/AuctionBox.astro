@@ -69,6 +69,14 @@ const back = url(lang, `/item/${id}/`);
 	</div>
 	<p class="reason" data-reason hidden></p>
 
+	<details class="remind" data-remind hidden>
+		<summary>{a.remind}</summary>
+		<p class="small muted">{a.remindText}</p>
+		<div class="remind-links">
+			<a class="btn-line" data-ics href={`/api/auctions/calendar?id=${id}&lang=${lang}`}>{a.remindApple}</a>
+			<a class="btn-line" data-google target="_blank" rel="noopener">{a.remindGoogle}</a>
+		</div>
+	</details>
 	<p class="small muted extend" data-extend>{a.extendNote}</p>
 	<details class="history" data-history hidden>
 		<summary>{a.history}</summary>
@@ -154,6 +162,19 @@ const back = url(lang, `/item/${id}/`);
 			$('[data-price]').textContent = chf(a.bids ? a.price : a.startPrice);
 			$('[data-bids]').textContent = a.bids === 0 ? t.noBids : a.bids === 1 ? t.oneBid : fill(t.bids, { n: String(a.bids) });
 			$('[data-extend]').hidden = !running;
+			// Phone reminder: the calendar file is made by the server; Google gets the same times in its link.
+			$('[data-remind]').hidden = !running;
+			if (running) {
+				const z = (ms: number) => new Date(ms).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+				const name = (document.querySelector('h1')?.textContent ?? '').trim();
+				const google = new URLSearchParams({
+					action: 'TEMPLATE',
+					text: `secondsurf: ${fill(t.remindTitle, { item: name })}`,
+					dates: `${z(a.endsAt - 15 * 60_000)}/${z(a.endsAt)}`,
+					details: `${t.extendNote}\n${location.href}`,
+				});
+				$<HTMLAnchorElement>('[data-google]').href = `https://calendar.google.com/calendar/render?${google}`;
+			}
 
 			const youText = $('[data-you]');
 			youText.hidden = true;
@@ -388,6 +409,28 @@ const back = url(lang, `/item/${id}/`);
 	.reason {
 		padding: 0.5rem 0.75rem;
 		background: var(--sand-tint, #f5efe3);
+	}
+	.remind summary {
+		cursor: pointer;
+		font-weight: 600;
+	}
+	.remind p {
+		margin: 0.4rem 0 0;
+	}
+	.remind-links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 0.6rem;
+	}
+	.remind-links .btn-line {
+		padding: 0.55em 1.1em;
+		border: 1.5px solid var(--ink);
+		border-radius: 999px;
+		color: var(--ink);
+		font-size: var(--step--1);
+		font-weight: 700;
+		text-decoration: none;
 	}
 	.history summary {
 		cursor: pointer;
