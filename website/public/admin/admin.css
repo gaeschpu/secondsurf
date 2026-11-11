@@ -292,6 +292,22 @@ strong.editable {
 	margin: 0.4rem 0;
 	padding-left: 1.2rem;
 }
+.payout-head {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+.payout-head input {
+	width: 1.3rem;
+	height: 1.3rem;
+}
+#payout-account {
+	margin: 0.75rem 0;
+}
+#payout-account summary {
+	cursor: pointer;
+	font-weight: 600;
+}
 .sub-photos {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));

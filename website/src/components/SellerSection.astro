@@ -67,6 +67,7 @@ const st = sellerTexts[lang];
 		paidOutAt: number | null;
 		buyer: { name: string; line1: string; line2: string | null; postalCode: string; city: string; phone: string | null } | null;
 		tracking: string | null;
+		check: 'open' | 'ok' | 'problem' | null;
 	};
 	declare global {
 		interface Window {
@@ -166,6 +167,8 @@ const st = sellerTexts[lang];
 				li.append(form);
 			} else if (s.status === 'shipped' && s.shippedAt) {
 				li.append(el('p', 'small', fill(t.saleShipped, { date: day(s.shippedAt), due: day(s.shippedAt + 14 * 86400_000) })));
+				if (s.check === 'ok') li.append(el('p', 'small buyer-ok', t.buyerOk));
+				if (s.check === 'problem') li.append(el('p', 'small buyer-problem', t.buyerProblem));
 				if (s.tracking) {
 					const link = el('a', 'small', fill(t.trackingShown, { n: s.tracking })) as HTMLAnchorElement;
 					link.href = `https://www.post.ch/swisspost-tracking?formattedParcelCodes=${s.tracking}`;
@@ -338,6 +341,14 @@ const st = sellerTexts[lang];
 	}
 	.seller-list :global(.tracking-form button) {
 		justify-self: start;
+	}
+	.seller-list :global(.buyer-ok) {
+		color: #166534;
+		font-weight: 600;
+	}
+	.seller-list :global(.buyer-problem) {
+		color: #b42318;
+		font-weight: 600;
 	}
 	.iban-missing {
 		padding: 0.6rem 0.9rem;

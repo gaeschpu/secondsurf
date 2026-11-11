@@ -1,0 +1,242 @@
+---
+// /parcel/?t=<token>: the buyer confirms that a parcel arrived in good order, or reports a problem (link in the parcel
+// email, functions/_lib/orders.ts). Data from /api/parcel. For a seller's parcel, "ok" releases the seller's payout.
+import Base from '../../layouts/Base.astro';
+import { langPaths, url, type Lang } from '../../i18n';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = {
+	de: {
+		title: 'Dein Paket',
+		intro: 'Ist alles angekommen und so, wie es beschrieben war?',
+		number: 'Sendungsnummer',
+		ok: 'Ja, alles okay',
+		problem: 'Es gibt ein Problem',
+		problemLabel: 'Was stimmt nicht? (falsches Piece, beschädigt, nicht wie beschrieben …)',
+		send: 'Problem melden',
+		thanksOk: 'Danke für deine Bestätigung! Viel Freude mit deinen Pieces.',
+		thanksProblem: 'Danke, wir haben deine Meldung bekommen und melden uns innert 2 Werktagen per E-Mail.',
+		change: 'Antwort ändern',
+		locked: 'Diese Bestellung ist abgeschlossen. Bei Fragen schreib uns an info.secondsurf@gmail.com.',
+		missing: 'Dieser Link ist ungültig.',
+		error: 'Das hat nicht geklappt. Versuch es nochmals.',
+		returns: 'Mehr zur Rückgabe',
+	},
+	fr: {
+		title: 'Ton colis',
+		intro: 'Tout est-il bien arrivé et conforme à la description ?',
+		number: 'Numéro d’envoi',
+		ok: 'Oui, tout est en ordre',
+		problem: 'Il y a un problème',
+		problemLabel: 'Qu’est-ce qui ne va pas ? (mauvaise pièce, endommagée, non conforme …)',
+		send: 'Signaler le problème',
+		thanksOk: 'Merci pour ta confirmation ! Profite bien de tes pièces.',
+		thanksProblem: 'Merci, nous avons reçu ton signalement et te répondons par e-mail sous 2 jours ouvrables.',
+		change: 'Modifier la réponse',
+		locked: 'Cette commande est clôturée. Pour toute question, écris-nous à info.secondsurf@gmail.com.',
+		missing: 'Ce lien n’est pas valable.',
+		error: 'Ça n’a pas marché. Réessaie.',
+		returns: 'En savoir plus sur les retours',
+	},
+	it: {
+		title: 'Il tuo pacco',
+		intro: 'È arrivato tutto ed è come descritto?',
+		number: 'Numero d’invio',
+		ok: 'Sì, tutto in ordine',
+		problem: 'C’è un problema',
+		problemLabel: 'Che cosa non va? (pezzo sbagliato, danneggiato, non come descritto …)',
+		send: 'Segnala il problema',
+		thanksOk: 'Grazie per la conferma! Goditi i tuoi pezzi.',
+		thanksProblem: 'Grazie, abbiamo ricevuto la tua segnalazione e ti rispondiamo per e-mail entro 2 giorni lavorativi.',
+		change: 'Modifica la risposta',
+		locked: 'Questo ordine è concluso. Per domande scrivici a info.secondsurf@gmail.com.',
+		missing: 'Questo link non è valido.',
+		error: 'Non ha funzionato. Riprova.',
+		returns: 'Di più sui resi',
+	},
+	en: {
+		title: 'Your parcel',
+		intro: 'Did everything arrive, and is it as described?',
+		number: 'Tracking number',
+		ok: 'Yes, all good',
+		problem: 'There is a problem',
+		problemLabel: 'What is wrong? (wrong piece, damaged, not as described …)',
+		send: 'Report the problem',
+		thanksOk: 'Thanks for confirming! Enjoy your pieces.',
+		thanksProblem: 'Thanks, we received your report and will reply by email within 2 working days.',
+		change: 'Change answer',
+		locked: 'This order is closed. For questions write to info.secondsurf@gmail.com.',
+		missing: 'This link is not valid.',
+		error: 'That didn’t work. Please try again.',
+		returns: 'More about returns',
+	},
+}[lang];
+---
+
+<Base lang={lang} title={t.title} description={t.title} noindex>
+	<div class="container page-head parcel-page" data-texts={JSON.stringify(t)}>
+		<h1>{t.title}</h1>
+		<p data-loading>…</p>
+		<div data-found hidden>
+			<ul class="pieces" data-pieces></ul>
+			<p class="small muted" data-number></p>
+			<div data-ask>
+				<p class="question">{t.intro}</p>
+				<div class="choices">
+					<button type="button" class="btn big" data-ok>✓ {t.ok}</button>
+					<button type="button" class="btn-line" data-show-problem>{t.problem}</button>
+				</div>
+				<form class="problem" data-problem hidden>
+					<label>
+						<span>{t.problemLabel}</span>
+						<textarea name="note" rows="4" maxlength="1000" required></textarea>
+					</label>
+					<button type="submit" class="btn">{t.send}</button>
+				</form>
+			</div>
+			<div class="answer" data-answer hidden>
+				<p data-answer-text></p>
+				<button type="button" class="link" data-change>{t.change}</button>
+			</div>
+			<p class="status" role="status" data-status></p>
+			<p class="small"><a href={url(lang, '/returns/')}>{t.returns} →</a></p>
+		</div>
+		<p data-missing hidden>{t.missing}</p>
+	</div>
+</Base>
+
+<script>
+	const page = document.querySelector<HTMLElement>('.parcel-page')!;
+	const t = JSON.parse(page.dataset.texts!) as Record<string, string>;
+	const token = new URLSearchParams(location.search).get('t') ?? '';
+	const $ = <T extends HTMLElement = HTMLElement>(sel: string) => page.querySelector<T>(sel)!;
+
+	function showAnswer(status: string, locked: boolean) {
+		const answered = status === 'ok' || status === 'problem';
+		$('[data-ask]').hidden = answered || locked;
+		$('[data-answer]').hidden = !answered && !locked;
+		$('[data-answer-text]').textContent = locked ? t.locked : status === 'ok' ? t.thanksOk : t.thanksProblem;
+		$('[data-change]').hidden = locked;
+	}
+
+	async function send(action: 'ok' | 'problem', note = '') {
+		try {
+			const res = await fetch('/api/parcel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: token, action, note }) });
+			if (!res.ok) throw new Error();
+			$('[data-status]').textContent = '';
+			showAnswer(action, false);
+		} catch {
+			$('[data-status]').textContent = t.error;
+		}
+	}
+
+	fetch(`/api/parcel?t=${encodeURIComponent(token)}`, { cache: 'no-store' })
+		.then(async (res) => {
+			$('[data-loading]').hidden = true;
+			if (!res.ok) return ($('[data-missing]').hidden = false);
+			const data = (await res.json()) as { status: string; pieces: string[]; number: string | null; locked: boolean };
+			$('[data-found]').hidden = false;
+			$('[data-pieces]').replaceChildren(...data.pieces.map((p) => Object.assign(document.createElement('li'), { textContent: p })));
+			$('[data-number]').textContent = data.number ? `${t.number}: ${data.number}` : '';
+			showAnswer(data.status, data.locked);
+		})
+		.catch(() => ($('[data-loading]').textContent = t.error));
+
+	$('[data-ok]').addEventListener('click', () => send('ok'));
+	$('[data-show-problem]').addEventListener('click', () => {
+		$('[data-problem]').hidden = false;
+		$<HTMLTextAreaElement>('[data-problem] textarea').focus();
+	});
+	$<HTMLFormElement>('[data-problem]').addEventListener('submit', (event) => {
+		event.preventDefault();
+		const note = $<HTMLTextAreaElement>('[data-problem] textarea').value.trim();
+		if (note) send('problem', note);
+	});
+	$('[data-change]').addEventListener('click', () => {
+		$('[data-ask]').hidden = false;
+		$('[data-answer]').hidden = true;
+	});
+</script>
+
+<style>
+	.parcel-page {
+		max-width: 38rem;
+		min-height: 50vh;
+	}
+	[data-found][hidden],
+	[data-missing][hidden],
+	[data-ask][hidden],
+	[data-answer][hidden],
+	.problem[hidden],
+	[data-loading][hidden] {
+		display: none;
+	}
+	.pieces {
+		padding-left: 1.2rem;
+		font-weight: 700;
+	}
+	.question {
+		margin-top: 1.5rem;
+		font-size: var(--step-1, 1.2rem);
+		font-weight: 700;
+	}
+	.choices {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		align-items: center;
+	}
+	.btn-line {
+		padding: 0.7em 1.3em;
+		border: 1.5px solid var(--ink);
+		border-radius: 999px;
+		background: transparent;
+		color: var(--ink);
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
+	}
+	.problem {
+		display: grid;
+		gap: 0.75rem;
+		margin-top: 1rem;
+	}
+	.problem span {
+		display: block;
+		margin-bottom: 0.3rem;
+		font-weight: 600;
+	}
+	.problem textarea {
+		width: 100%;
+		padding: 0.6rem 0.75rem;
+		border: 1.5px solid var(--line);
+		background: var(--bg-raised);
+		font: inherit;
+	}
+	.problem .btn {
+		justify-self: start;
+	}
+	.answer {
+		margin-top: 1.5rem;
+		padding: 1rem;
+		background: var(--accent-tint);
+		border-left: 3px solid var(--accent);
+	}
+	.answer p {
+		margin: 0 0 0.5rem;
+		font-weight: 600;
+	}
+	.link {
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--ink-soft);
+		text-decoration: underline;
+		font: inherit;
+		cursor: pointer;
+	}
+	.status:empty {
+		display: none;
+	}
+</style>

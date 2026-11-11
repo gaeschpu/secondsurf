@@ -67,6 +67,19 @@ export async function ordersDb(env: Env): Promise<D1Database | null> {
 			db.prepare('CREATE INDEX IF NOT EXISTS orders_status ON orders (status, paid_at)'),
 			/** Tracking numbers per order and sender: 'shop', or 'u<account id>' for a seller who ships their own pieces. */
 			db.prepare('CREATE TABLE IF NOT EXISTS tracking (order_ref TEXT NOT NULL, shipper TEXT NOT NULL, number TEXT NOT NULL, created_at INTEGER NOT NULL, PRIMARY KEY (order_ref, shipper))'),
+			/**
+			 * The buyer's check of each parcel (link in the parcel email, /parcel/?t=<token>): 'open', 'ok' (received and fine) or
+			 * 'problem' (with a note). For a seller's parcel, 'ok' makes the payout due at once; 'problem' holds it (functions/_lib/sellers.ts).
+			 */
+			db.prepare(`CREATE TABLE IF NOT EXISTS parcel_checks (
+				token TEXT PRIMARY KEY,
+				order_ref TEXT NOT NULL,
+				shipper TEXT NOT NULL,
+				status TEXT NOT NULL DEFAULT 'open',
+				note TEXT NOT NULL DEFAULT '',
+				updated_at INTEGER NOT NULL,
+				UNIQUE (order_ref, shipper)
+			)`),
 		])
 		.catch((error) => {
 			ready = null;
@@ -153,6 +166,9 @@ Verfolgen: ${v.post}
 
 In die Post-App übernehmen (Strichcode zum Scannen): ${v.page}
 
+Ist alles angekommen und in Ordnung? Bestätige es hier, oder melde ein Problem:
+${v.check}
+
 Viel Freude damit!
 secondsurf`,
 	}),
@@ -167,6 +183,9 @@ Numéro d’envoi : ${v.number}
 Suivre : ${v.post}
 
 Ajouter à l’app de La Poste (code-barres à scanner) : ${v.page}
+
+Tout est bien arrivé et en ordre ? Confirme-le ici, ou signale un problème :
+${v.check}
 
 Bonne réception !
 secondsurf`,
@@ -183,6 +202,9 @@ Segui: ${v.post}
 
 Aggiungilo all’app della Posta (codice a barre da scansionare): ${v.page}
 
+È arrivato tutto ed è in ordine? Confermalo qui, oppure segnala un problema:
+${v.check}
+
 Buon divertimento!
 secondsurf`,
 	}),
@@ -198,6 +220,9 @@ Track it: ${v.post}
 
 Add it to the Swiss Post app (barcode to scan): ${v.page}
 
+Did everything arrive in good order? Confirm it here, or report a problem:
+${v.check}
+
 Enjoy!
 secondsurf`,
 	}),
@@ -212,7 +237,14 @@ export async function addTracking(env: Env, db: D1Database, ref: string, shipper
 		.prepare('INSERT OR IGNORE INTO tracking (order_ref, shipper, number, created_at) VALUES (?, ?, ?, ?)')
 		.bind(ref, shipper, number, now())
 		.run();
-	if (!saved.meta.changes || !env.RESEND_API_KEY) return;
+	if (!saved.meta.changes) return;
+	// The buyer's link to confirm this parcel or report a problem.
+	const token = newOrderRef() + newOrderRef();
+	await db
+		.prepare("INSERT OR IGNORE INTO parcel_checks (token, order_ref, shipper, status, updated_at) VALUES (?, ?, ?, 'open', ?)")
+		.bind(token, ref, shipper, now())
+		.run();
+	if (!env.RESEND_API_KEY) return;
 	const order = await orderByRef(db, ref);
 	if (!order?.email) return;
 	const lang = ['de', 'fr', 'it', 'en'].includes(order.lang) ? order.lang : 'de';
@@ -223,6 +255,7 @@ export async function addTracking(env: Env, db: D1Database, ref: string, shipper
 		number: formatTracking(number),
 		post: postTrackingLink(number),
 		page: `${origin}${prefix}/tracking/?n=${number}`,
+		check: `${origin}${prefix}/parcel/?t=${token}`,
 	});
 	await sendMail(env, { to: order.email, reply_to: SITE.email, ...mail }).catch((error) => console.error('Tracking email failed', error));
 }

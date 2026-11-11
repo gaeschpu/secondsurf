@@ -41,7 +41,12 @@ export const onRequest: Handler = async ({ request, env, params, waitUntil }) =>
 		]);
 		// The buyer's address, only for parcels still to send; the tracking numbers of sent ones.
 		const orders = await ordersDb(env);
-		const numbers = orders ? await trackingFor(orders, [...new Set(sales.results.map((s) => s.order_ref))]) : [];
+		const refs = [...new Set(sales.results.map((s) => s.order_ref))];
+		const numbers = orders ? await trackingFor(orders, refs) : [];
+		// The buyer's answer per parcel: 'ok' (payout due), 'problem' (held) or 'open'.
+		const checks = orders && refs.length
+			? (await orders.prepare(`SELECT order_ref, status FROM parcel_checks WHERE shipper = ? AND order_ref IN (${refs.map(() => '?').join(',')})`).bind(`u${user.id}`, ...refs).all<{ order_ref: string; status: string }>()).results
+			: [];
 		const withAddress = await Promise.all(
 			sales.results.map(async (sale) => {
 				if (sale.status !== 'to_ship' || !orders) return { ...sale, buyer: null };
@@ -71,6 +76,7 @@ export const onRequest: Handler = async ({ request, env, params, waitUntil }) =>
 				paidOutAt: s.paid_out_at ? s.paid_out_at * 1000 : null,
 				buyer: s.buyer,
 				tracking: numbers.find((n) => n.order_ref === s.order_ref && n.shipper === `u${user.id}`)?.number ?? null,
+				check: checks.find((c) => c.order_ref === s.order_ref)?.status ?? null,
 			})),
 		});
 	}

@@ -124,55 +124,13 @@ Jede Person mit Konto kann über secondsurf verkaufen: im Profil unter **Verkauf
 1. Du bekommst eine E-Mail. Im Dashboard unter **Sellers** siehst du die Fotos und alle Angaben. Ändere Texte oder Preis, wenn nötig, und tippe auf **Approve → shop** (das Piece kommt in den Shop) oder **Reject** (mit Grund). Die Person bekommt jeweils eine E-Mail.
 2. Wird ein solches Piece verkauft, bekommt die Verkäuferin die Adresse per E-Mail und im Profil, druckt Etikette und Lieferschein, **verschickt selbst** und muss dabei die Sendungsnummer eingeben oder scannen (die Käuferin bekommt sie per E-Mail). In deinen Orders ist es als «Seller ships» markiert und steht nicht auf deiner Etikette.
 3. Unter **Payouts** siehst du, was du wem schuldest: Verkaufspreis minus Kommission (5 % auf die ersten 3 Verkäufe einer Person, danach 10 %) plus CHF 9 Versand pro Paket. Fällig 14 Tage nach dem Versand. Überweise den Betrag auf die angezeigte IBAN und tippe auf **Paid**.
+4. Die Käuferin bekommt mit der Sendungsnummer einen Link «Ist alles angekommen?». Tippt sie auf **Ja, alles okay**, ist die Auszahlung sofort fällig; ohne Antwort 14 Tage nach dem Versand. Meldet sie ein **Problem**, bekommst du eine E-Mail und die Auszahlung ist angehalten, bis du sie mit **Problem solved – release payout** freigibst.
 
-Die Verkaufsbedingungen stehen unter /seller-terms/ (Entwurf: bitte rechtlich prüfen lassen).
+### Auszahlungen mit der Zahlungsdatei (einmal pro Woche reicht)
 
-## Ein Piece als verkauft markieren
+1. Dashboard → **Sellers** → **Payouts**. Beim ersten Mal unter «Your account for payouts» deinen Namen und deine IBAN eintragen (bleibt nur auf diesem Gerät gespeichert).
+2. Alle fälligen Auszahlungen sind schon angehakt. Tippe auf **Download payment file**. Du bekommst eine Datei wie `secondsurf-auszahlungen-2026-11-12.xml`.
+3. Im E-Banking deiner Bank die Datei hochladen. Der Menüpunkt heisst je nach Bank z. B. «Zahlungen → Datei hochladen», «Dateiübermittlung» oder «Zahlungsauftrag importieren» (Format: pain.001 / ISO 20022). Die Bank zeigt alle Zahlungen an: prüfen und freigeben, wie eine normale Zahlung.
+4. Zurück im Dashboard: **Mark … as paid**. Die Verkäuferinnen bekommen eine E-Mail.
 
-So verkaufst du im Moment: Kundinnen und Kunden tippen auf **Anfragen**, du bekommst eine E-Mail und schickst ihnen die Zahlungsangaben. Sie bezahlen sofort. Reserviert wird nichts: Wer zuerst bezahlt, bekommt das Piece.
-
-Sobald bezahlt ist:
-
-1. Öffne `/admin/`.
-2. Tippe beim Piece auf **Mark sold**.
-
-Falls du dich vertippt hast, stellst du es mit **Available again** wieder zurück.
-
-## Einen Preis ändern
-
-1. Öffne `/admin/`.
-2. Scrolle zum Piece unter **Your pieces**.
-3. Tippe den neuen Preis ins Feld **Price (CHF)** und tippe auf **Save price**.
-
-Nach 1 bis 2 Minuten steht der neue Preis im Shop.
-
-## Eine Rückgabe abwickeln
-
-Rückgaben kommen per E-Mail über das Rückgabeformular. Rückgaben gibt es nur, wenn etwas nicht stimmt (falsches Piece, Versandschaden, nicht wie beschrieben). Dann erstattest du den Kaufpreis samt Versandkosten zurück und zahlst den Rückversand. Möchte die Kundin oder der Kunde lieber einen Gutschein im gleichen Wert, schickst du ihn zum Beispiel per E-Mail mit einem Code. Notiere dir die Codes selbst: Die Website prüft oder verwaltet keine Gutscheine.
-
-## Den Ferien-Hinweis einschalten
-
-1. Öffne `https://app.pagescms.org` und wähle **secondsurf**.
-2. Tippe auf **Einstellungen**.
-3. Schalte bei **Ferien-Hinweis** die Option **Anzeigen** ein und schreib den Text, zum Beispiel: «Ferien bis 20. Juli, Versand danach.»
-4. Tippe auf **Save**.
-
-Nach den Ferien schaltest du **Anzeigen** wieder aus.
-
-## Texte ändern
-
-In Pages CMS unter **Texte Start und Über uns**. Deutsch ist Pflicht. Lässt du Französisch, Italienisch oder Englisch leer, erscheint dort der deutsche Text. Das gilt auch für **News**.
-
-## News schreiben
-
-In Pages CMS unter **News** auf **Add an entry** tippen, Datum, Titel und Text ausfüllen und speichern. Sobald es eine News gibt, erscheint der Link im Fussbereich der Website.
-
-## Versandpreise ändern
-
-In Pages CMS unter **Einstellungen**: **Versand pro Bestellung** (zurzeit CHF 9.–) und **Gratis Versand ab** (zurzeit CHF 100.–). Die AGB übernehmen die Werte automatisch. Deckt der Preis das Porto nicht mehr, erhöhe ihn hier.
-
-## Wenn etwas nicht klappt
-
-- **Änderung ist nicht sichtbar:** Warte 2 Minuten und lade die Seite neu.
-- **Passwort vergessen:** Es steht in Cloudflare unter den Einstellungen des Projekts und lässt sich dort ändern. Danach bist du auf allen Geräten abgemeldet.
-- **Fehlermeldung mit «GitHub» im Dashboard:** Wahrscheinlich ist der Zugangsschlüssel abgelaufen. Wie du ihn erneuerst, steht in `README.md`.
+Lehnt die Bank die Datei ab, schick mir die Fehlermeldung. Zum Ausprobieren ohne echte Zahlung: eine Datei hochladen und im E-Banking nur ansehen, nicht freigeben.

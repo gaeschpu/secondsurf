@@ -72,7 +72,20 @@
 				</section>
 				<section>
 					<h2>Payouts</h2>
-					<p class="hint">Sellers ship their pieces themselves. Transfer the payout to their IBAN once it is due (14 days after shipping), then tap Paid.</p>
+					<p class="hint">
+						Sellers ship their pieces themselves. A payout is due as soon as the buyer confirms the parcel, or 14 days after shipping;
+						a problem reported by the buyer holds it. Due payouts go into one payment file for your e-banking.
+					</p>
+					<details id="payout-account" class="card">
+						<summary>Your account for payouts (only saved on this device)</summary>
+						<label>Account holder <input id="debtor-name" autocomplete="off" placeholder="secondsurf Noé Gasparrini" /></label>
+						<label>IBAN <input id="debtor-iban" autocomplete="off" spellcheck="false" placeholder="CH93 0076 2011 6238 5295 7" /></label>
+					</details>
+					<div class="actions payout-actions">
+						<button type="button" id="payout-file" class="primary" hidden>Download payment file</button>
+						<button type="button" id="payout-paid" hidden>Mark selected as paid</button>
+					</div>
+					<p id="payouts-status" class="status" role="status" hidden></p>
 					<p id="payouts-error" class="error" role="alert" hidden></p>
 					<ul id="payouts" class="offers"></ul>
 				</section>

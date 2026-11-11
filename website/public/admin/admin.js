@@ -925,11 +925,12 @@ async function loadSubmissions() {
 	const [{ submissions }, { payouts }] = await Promise.all([api('sellers/submissions'), api('sellers/payouts')]);
 	show($('submissions-error'));
 	const pending = submissions.filter((s) => s.status === 'pending').length;
-	const due = payouts.filter((p) => p.status === 'shipped').length;
+	const due = payouts.filter((p) => p.due || p.due_reason === 'problem').length;
 	$('submissions-count').textContent = String(pending + due);
 	$('submissions-count').hidden = pending + due === 0;
 	$('submissions').replaceChildren(...(submissions.length ? submissions.map(renderSubmission) : [el('li', 'hint', 'No pieces from sellers yet.')]));
 	$('payouts').replaceChildren(...(payouts.length ? payouts.map(renderPayout) : [el('li', 'hint', 'No seller sales yet.')]));
+	updatePayoutButtons();
 }
 
 function field(label, input) {
@@ -1043,8 +1044,31 @@ async function submissionAction(button, path, body, done) {
 
 function renderPayout(p) {
 	const item = el('li', p.status === 'paid_out' ? 'offer closed' : 'offer');
-	const state = { to_ship: 'Seller still has to ship', shipped: p.due_at && p.due_at * 1000 <= Date.now() ? 'Due now' : 'Shipped – not due yet', paid_out: 'Paid out ✓' }[p.status];
-	item.append(el('span', `state ${p.status === 'paid_out' ? 'paid' : p.status === 'shipped' ? 'accepted' : 'pending'}`, state));
+	const state =
+		p.status === 'to_ship'
+			? 'Seller still has to ship'
+			: p.status === 'paid_out'
+				? 'Paid out ✓'
+				: p.due_reason === 'problem'
+					? 'On hold – the buyer reported a problem'
+					: p.due
+						? p.due_reason === 'confirmed'
+							? 'Due – the buyer confirmed the parcel'
+							: 'Due – 14 days after shipping'
+						: 'Shipped – waiting for the buyer or 14 days';
+	const head = el('div', 'payout-head');
+	if (p.status === 'shipped' && p.due) {
+		const box = el('input');
+		box.type = 'checkbox';
+		box.className = 'payout-pick';
+		box.value = String(p.id);
+		box.checked = true;
+		box.setAttribute('aria-label', `Include ${p.product_name}`);
+		box.addEventListener('change', updatePayoutButtons);
+		head.append(box);
+	}
+	head.append(el('span', `state ${p.status === 'paid_out' ? 'paid' : p.due ? 'accepted' : p.due_reason === 'problem' ? 'declined' : 'pending'}`, state));
+	item.append(head);
 	const title = el('strong');
 	const link = el('a', '', p.product_name);
 	link.href = `/item/${p.product_id}/`;
@@ -1053,25 +1077,26 @@ function renderPayout(p) {
 	item.append(title);
 	item.append(el('p', 'amounts', `Pay ${chf(p.payout)} = ${chf(p.price)} − ${Math.round(p.rate * 100)} % (${chf(p.commission)}) + shipping ${chf(p.shipping)}`));
 	item.append(el('p', 'who', `${p.account_holder || p.seller_name || ''} · ${p.iban || 'IBAN missing'} · ${p.seller_email ?? ''}`));
+	if (p.due_reason === 'problem' && p.check_note) item.append(el('blockquote', '', p.check_note));
 	item.append(
-		el('p', 'when', `Sold ${when(p.created_at)}${p.shipped_at ? ` · shipped ${when(p.shipped_at)} · due ${when(p.due_at)}` : ''}${p.paid_out_at ? ` · paid ${when(p.paid_out_at)}` : ''}`),
+		el('p', 'when', `Sold ${when(p.created_at)}${p.shipped_at ? ` · shipped ${when(p.shipped_at)} · due by ${when(p.due_at)}` : ''}${p.paid_out_at ? ` · paid ${when(p.paid_out_at)}` : ''}`),
 	);
-	if (p.status === 'shipped') {
+	if (p.due_reason === 'problem') {
 		const actions = el('div', 'actions');
-		const paid = el('button', 'primary', 'Paid');
-		paid.type = 'button';
-		paid.addEventListener('click', async () => {
-			if (!confirm(`Did you transfer ${chf(p.payout)} to ${p.iban || 'the seller'}?`)) return;
-			paid.disabled = true;
+		const release = el('button', '', 'Problem solved – release payout');
+		release.type = 'button';
+		release.addEventListener('click', async () => {
+			if (!confirm('Release this payout? Only if the problem with the buyer is solved.')) return;
+			release.disabled = true;
 			try {
-				await api(`sellers/payouts/${p.id}/paid`, { method: 'POST', body: {} });
+				await api(`sellers/payouts/${p.id}/release`, { method: 'POST', body: {} });
 				await loadSubmissions();
 			} catch (error) {
 				show($('payouts-error'), error.message);
-				paid.disabled = false;
+				release.disabled = false;
 			}
 		});
-		actions.append(paid);
+		actions.append(release);
 		item.append(actions);
 	}
 	return item;
@@ -1126,3 +1151,67 @@ const loadScanner = () =>
 				script.onerror = reject;
 				document.head.append(script);
 			});
+
+// ---------- Payment file for e-banking ----------
+
+const DEBTOR = 'payout-account';
+const pickedPayouts = () => [...document.querySelectorAll('.payout-pick:checked')].map((box) => Number(box.value));
+
+function updatePayoutButtons() {
+	const n = pickedPayouts().length;
+	$('payout-file').hidden = n === 0;
+	$('payout-paid').hidden = n === 0;
+	$('payout-file').textContent = `Download payment file (${n})`;
+	$('payout-paid').textContent = `Mark ${n} as paid`;
+}
+
+try {
+	const saved = JSON.parse(localStorage.getItem(DEBTOR) ?? '{}');
+	$('debtor-name').value = saved.name ?? '';
+	$('debtor-iban').value = saved.iban ?? '';
+} catch {}
+for (const id of ['debtor-name', 'debtor-iban']) {
+	$(id).addEventListener('input', () => {
+		try {
+			localStorage.setItem(DEBTOR, JSON.stringify({ name: $('debtor-name').value, iban: $('debtor-iban').value }));
+		} catch {}
+	});
+}
+
+$('payout-file').addEventListener('click', async () => {
+	show($('payouts-error'));
+	const name = $('debtor-name').value.trim();
+	const iban = $('debtor-iban').value.trim();
+	if (!name || !iban) {
+		$('payout-account').open = true;
+		return show($('payouts-error'), 'Enter your account holder and IBAN first (they stay on this device).');
+	}
+	const res = await fetch('/api/admin/sellers/payouts/pain001', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ ids: pickedPayouts(), debtor: { name, iban } }),
+	});
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		return show($('payouts-error'), data.error ?? `Something went wrong (${res.status}).`);
+	}
+	const blob = await res.blob();
+	const link = document.createElement('a');
+	link.href = URL.createObjectURL(blob);
+	link.download = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') ?? '')?.[1] ?? 'secondsurf-auszahlungen.xml';
+	link.click();
+	URL.revokeObjectURL(link.href);
+	show($('payouts-status'), 'Upload this file in your e-banking and approve the payments there. Then tap "Mark … as paid" here.');
+});
+
+$('payout-paid').addEventListener('click', async () => {
+	const ids = pickedPayouts();
+	if (!confirm(`Did your bank send these ${ids.length} payments? The sellers get an email.`)) return;
+	try {
+		const result = await api('sellers/payouts/paid', { method: 'POST', body: { ids } });
+		await loadSubmissions();
+		show($('payouts-status'), `${result.done} payouts marked as paid.`);
+	} catch (error) {
+		show($('payouts-error'), error.message);
+	}
+});

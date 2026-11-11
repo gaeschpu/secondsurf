@@ -5,15 +5,22 @@
 // POST submissions/<id>/approve { brand, title, category, size, condition, price, measurements, description }
 //                                          the (possibly edited) piece goes into the shop with the seller's photos
 // POST submissions/<id>/reject { reason }
-// GET  payouts                             seller sales: to ship, shipped (due date), paid out; with IBAN
+// GET  payouts                             seller sales: to ship, shipped (due or not, and why), paid out; with IBAN
+//                                          Due: the buyer confirmed the parcel, or PAYOUT_DAYS after shipping; held while the
+//                                          buyer reports a problem (table parcel_checks, functions/api/parcel.ts).
 // POST payouts/<id>/paid                   the money was transferred
+// POST payouts/paid { ids }                several at once (after uploading the payment file)
+// POST payouts/<id>/release                problem sorted out: the payout is due
+// POST payouts/pain001 { ids, debtor: { name, iban } }   payment file for e-banking (functions/_lib/pain001.ts)
 
 import { SITE } from '../../../../src/config.ts';
 import { database } from '../../../_lib/accounts.ts';
 import { json, type Handler } from '../../../_lib/auth.ts';
 import { commit, createBlob, listDir, PRODUCTS_DIR } from '../../../_lib/github.ts';
 import { folderName, nextNumber, parseNewProduct, toMarkdown } from '../../../_lib/product.ts';
-import { mailSeller, now, PAYOUT_DAYS, sellersDb, type Sale, type Submission } from '../../../_lib/sellers.ts';
+import { cleanIban, mailSeller, now, PAYOUT_DAYS, sellersDb, type Sale, type Submission } from '../../../_lib/sellers.ts';
+import { ordersDb } from '../../../_lib/orders.ts';
+import { pain001 } from '../../../_lib/pain001.ts';
 
 const chf = (n: number) => `CHF ${n.toFixed(2)}`;
 
@@ -87,17 +94,8 @@ export const onRequest: Handler = async ({ request, env, params }) => {
 	}
 
 	if (route === 'payouts' && method === 'GET') {
-		const { results } = await db
-			.prepare(
-				`SELECT s.*, u.email AS seller_email, u.name AS seller_name, sel.iban, sel.account_holder
-				 FROM seller_sales s LEFT JOIN users u ON u.id = s.user_id LEFT JOIN sellers sel ON sel.user_id = s.user_id
-				 ORDER BY CASE s.status WHEN 'shipped' THEN 0 WHEN 'to_ship' THEN 1 ELSE 2 END, s.created_at DESC LIMIT 300`,
-			)
-			.all<Sale & { seller_email: string | null; seller_name: string | null; iban: string | null; account_holder: string | null }>();
-		return json({
-			payouts: results.map((s) => ({ ...s, due_at: s.shipped_at ? s.shipped_at + PAYOUT_DAYS * 86400 : null })),
-			now: now(),
-		});
+		await ordersDb(env); // the parcel_checks table
+		return json({ payouts: await payoutList(db), now: now() });
 	}
 
 	const paid = route.match(/^payouts\/(\d+)\/paid$/);
@@ -110,5 +108,78 @@ export const onRequest: Handler = async ({ request, env, params }) => {
 		return json({ ok: true });
 	}
 
+	const release = route.match(/^payouts\/(\d+)\/release$/);
+	if (release && method === 'POST') {
+		const sale = await db.prepare('SELECT * FROM seller_sales WHERE id = ?').bind(Number(release[1])).first<Sale>();
+		if (!sale) return json({ error: 'Not found.' }, 404);
+		await ordersDb(env);
+		await db.prepare("UPDATE parcel_checks SET status = 'ok', updated_at = ? WHERE order_ref = ? AND shipper = ?").bind(now(), sale.order_ref, `u${sale.user_id}`).run();
+		return json({ ok: true });
+	}
+
+	if (route === 'payouts/paid' && method === 'POST') {
+		const ids: number[] = Array.isArray(body.ids) ? body.ids.map(Number).filter((n: number) => n > 0) : [];
+		let done = 0;
+		for (const id of ids) {
+			const sale = await db.prepare("SELECT * FROM seller_sales WHERE id = ? AND status = 'shipped'").bind(id).first<Sale>();
+			if (!sale) continue;
+			const seller = await db.prepare('SELECT iban FROM sellers WHERE user_id = ?').bind(sale.user_id).first<{ iban: string }>();
+			await db.prepare("UPDATE seller_sales SET status = 'paid_out', paid_out_at = ? WHERE id = ?").bind(now(), sale.id).run();
+			await mailSeller(env, db, sale.user_id, 'paid', { amount: chf(sale.payout), pieces: sale.product_name, iban: seller?.iban || '–' });
+			done++;
+		}
+		return json({ ok: true, done });
+	}
+
+	if (route === 'payouts/pain001' && method === 'POST') {
+		const debtorIban = cleanIban(body.debtor?.iban);
+		const debtorName = typeof body.debtor?.name === 'string' ? body.debtor.name.trim() : '';
+		if (!debtorIban || !debtorName) return json({ error: 'Enter your own account: name and IBAN (CH or LI).' }, 400);
+		const ids = new Set<number>(Array.isArray(body.ids) ? body.ids.map(Number) : []);
+		await ordersDb(env);
+		const list = (await payoutList(db)).filter((p) => ids.has(p.id) && p.due);
+		if (!list.length) return json({ error: 'None of these payouts is due.' }, 400);
+		const missing = list.filter((p) => !p.iban);
+		if (missing.length) return json({ error: `IBAN missing for: ${missing.map((p) => p.seller_email).join(', ')}` }, 400);
+		const file = pain001(
+			{ name: debtorName, iban: debtorIban },
+			list.map((p) => ({
+				id: `SS-${p.id}`,
+				name: p.account_holder || p.seller_name || 'Verkaeufer',
+				iban: p.iban!,
+				amount: p.payout,
+				message: `secondsurf Auszahlung ${p.product_name}`,
+			})),
+		);
+		return new Response(file, {
+			headers: {
+				'Content-Type': 'application/xml; charset=utf-8',
+				'Content-Disposition': `attachment; filename="secondsurf-auszahlungen-${new Date().toISOString().slice(0, 10)}.xml"`,
+				'X-Payout-Ids': list.map((p) => p.id).join(','),
+				'Cache-Control': 'no-store',
+			},
+		});
+	}
+
 	return json({ error: 'Not found.' }, 404);
 };
+
+/** All seller sales with the buyer's check and whether the payout is due now (and why). */
+async function payoutList(db: Awaited<ReturnType<typeof sellersDb>> & object) {
+	const { results } = await db
+		.prepare(
+			`SELECT s.*, u.email AS seller_email, u.name AS seller_name, sel.iban, sel.account_holder, c.status AS check_status, c.note AS check_note
+			 FROM seller_sales s LEFT JOIN users u ON u.id = s.user_id LEFT JOIN sellers sel ON sel.user_id = s.user_id
+			 LEFT JOIN parcel_checks c ON c.order_ref = s.order_ref AND c.shipper = 'u' || s.user_id
+			 ORDER BY CASE s.status WHEN 'shipped' THEN 0 WHEN 'to_ship' THEN 1 ELSE 2 END, s.created_at DESC LIMIT 300`,
+		)
+		.all<Sale & { seller_email: string | null; seller_name: string | null; iban: string | null; account_holder: string | null; check_status: string | null; check_note: string | null }>();
+	const t = now();
+	return results.map((s) => {
+		const dueAt = s.shipped_at ? s.shipped_at + PAYOUT_DAYS * 86400 : null;
+		const problem = s.check_status === 'problem';
+		const confirmed = s.check_status === 'ok';
+		const due = s.status === 'shipped' && !problem && (confirmed || (dueAt !== null && dueAt <= t));
+		return { ...s, due_at: dueAt, due, due_reason: due ? (confirmed ? 'confirmed' : 'time') : problem ? 'problem' : null };
+	});
+}
