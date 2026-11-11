@@ -7,7 +7,7 @@ import type { Lang } from './index';
 const de = {
 	title: 'Verkaufen',
 	intro: 'Verkaufe deine Surfkleidung über secondsurf: Du lädst Fotos und Angaben hoch, wir prüfen das Piece und stellen es in den Shop. Wird es verkauft, schickst du es direkt an die Käuferin oder den Käufer und bekommst dein Geld.',
-	fees: 'Unsere Kommission: 3 % auf deine ersten 3 Verkäufe, danach 10 %. Den Versand bezahlen wir dir mit CHF {shipping} pro Paket zurück.',
+	fees: 'Unsere Kommission: 5 % auf deine ersten 3 Verkäufe, danach 10 %. Den Versand bezahlen wir dir mit CHF {shipping} pro Paket zurück.',
 	terms: 'Ich akzeptiere die Verkaufsbedingungen.',
 	termsLink: 'Verkaufsbedingungen lesen',
 	join: 'Verkäufer:in werden',
@@ -85,7 +85,7 @@ export type SellerTexts = typeof de;
 const fr: SellerTexts = {
 	title: 'Vendre',
 	intro: 'Vends tes vêtements de surf via secondsurf : tu télécharges photos et infos, nous vérifions la pièce et la mettons en boutique. Si elle se vend, tu l’envoies directement à l’acheteuse ou l’acheteur et tu reçois ton argent.',
-	fees: 'Notre commission : 3 % sur tes 3 premières ventes, ensuite 10 %. Nous te remboursons l’envoi avec CHF {shipping} par colis.',
+	fees: 'Notre commission : 5 % sur tes 3 premières ventes, ensuite 10 %. Nous te remboursons l’envoi avec CHF {shipping} par colis.',
 	terms: 'J’accepte les conditions de vente.',
 	termsLink: 'Lire les conditions de vente',
 	join: 'Devenir vendeur·se',
@@ -160,7 +160,7 @@ const fr: SellerTexts = {
 const it: SellerTexts = {
 	title: 'Vendere',
 	intro: 'Vendi i tuoi vestiti da surf tramite secondsurf: carichi foto e dati, noi controlliamo il pezzo e lo mettiamo nel negozio. Quando viene venduto, lo spedisci direttamente a chi l’ha comprato e ricevi i tuoi soldi.',
-	fees: 'La nostra commissione: 3 % sulle tue prime 3 vendite, poi 10 %. Ti rimborsiamo la spedizione con CHF {shipping} per pacco.',
+	fees: 'La nostra commissione: 5 % sulle tue prime 3 vendite, poi 10 %. Ti rimborsiamo la spedizione con CHF {shipping} per pacco.',
 	terms: 'Accetto le condizioni di vendita.',
 	termsLink: 'Leggi le condizioni di vendita',
 	join: 'Diventa venditore/venditrice',
@@ -235,7 +235,7 @@ const it: SellerTexts = {
 const en: SellerTexts = {
 	title: 'Selling',
 	intro: 'Sell your surf clothing through secondsurf: you upload photos and details, we check the piece and put it in the shop. When it sells, you send it straight to the buyer and get your money.',
-	fees: 'Our commission: 3 % on your first 3 sales, then 10 %. We refund your shipping with CHF {shipping} per parcel.',
+	fees: 'Our commission: 5 % on your first 3 sales, then 10 %. We refund your shipping with CHF {shipping} per parcel.',
 	terms: 'I accept the seller terms.',
 	termsLink: 'Read the seller terms',
 	join: 'Become a seller',

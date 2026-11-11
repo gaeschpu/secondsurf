@@ -123,7 +123,7 @@ Jede Person mit Konto kann über secondsurf verkaufen: im Profil unter **Verkauf
 
 1. Du bekommst eine E-Mail. Im Dashboard unter **Sellers** siehst du die Fotos und alle Angaben. Ändere Texte oder Preis, wenn nötig, und tippe auf **Approve → shop** (das Piece kommt in den Shop) oder **Reject** (mit Grund). Die Person bekommt jeweils eine E-Mail.
 2. Wird ein solches Piece verkauft, bekommt die Verkäuferin die Adresse per E-Mail und im Profil, druckt Etikette und Lieferschein, **verschickt selbst** und muss dabei die Sendungsnummer eingeben oder scannen (die Käuferin bekommt sie per E-Mail). In deinen Orders ist es als «Seller ships» markiert und steht nicht auf deiner Etikette.
-3. Unter **Payouts** siehst du, was du wem schuldest: Verkaufspreis minus Kommission (3 % auf die ersten 3 Verkäufe einer Person, danach 10 %) plus CHF 9 Versand pro Paket. Fällig 14 Tage nach dem Versand. Überweise den Betrag auf die angezeigte IBAN und tippe auf **Paid**.
+3. Unter **Payouts** siehst du, was du wem schuldest: Verkaufspreis minus Kommission (5 % auf die ersten 3 Verkäufe einer Person, danach 10 %) plus CHF 9 Versand pro Paket. Fällig 14 Tage nach dem Versand. Überweise den Betrag auf die angezeigte IBAN und tippe auf **Paid**.
 
 Die Verkaufsbedingungen stehen unter /seller-terms/ (Entwurf: bitte rechtlich prüfen lassen).
 
