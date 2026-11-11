@@ -2,7 +2,7 @@
 // Each order has its pieces, the customer's name, shipping address, email and phone (functions/_lib/orders.ts).
 
 import { json, type Handler } from '../../../_lib/auth.ts';
-import { ordersDb, type Order } from '../../../_lib/orders.ts';
+import { ordersDb, trackingFor, type Order } from '../../../_lib/orders.ts';
 import { sellersDb } from '../../../_lib/sellers.ts';
 
 export const onRequestGet: Handler = async ({ request, env }) => {
@@ -27,7 +27,15 @@ export const onRequestGet: Handler = async ({ request, env }) => {
 			.all<{ order_ref: string; product_id: string }>();
 		for (const s of sales) bySeller.set(s.order_ref, [...(bySeller.get(s.order_ref) ?? []), s.product_id]);
 	}
+	// Tracking numbers: the shop's own ('shop') and the sellers' ('u<id>').
+	const numbers = await trackingFor(db, results.map((o) => o.ref));
 	return json({
-		orders: results.map((o) => ({ ...o, ids: JSON.parse(o.ids) as string[], names: JSON.parse(o.names) as string[], seller_ids: bySeller.get(o.ref) ?? [] })),
+		orders: results.map((o) => ({
+			...o,
+			ids: JSON.parse(o.ids) as string[],
+			names: JSON.parse(o.names) as string[],
+			seller_ids: bySeller.get(o.ref) ?? [],
+			tracking: numbers.filter((n) => n.order_ref === o.ref).map((n) => ({ shipper: n.shipper, number: n.number })),
+		})),
 	});
 };

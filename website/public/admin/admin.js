@@ -894,20 +894,26 @@ function renderOrder(o) {
 	const label = el('button', 'primary', 'Label (PDF)');
 	label.type = 'button';
 	label.addEventListener('click', () => openLabels([o.ref]));
-	const shipped = el('button', '', o.status === 'paid' ? 'Mark shipped' : 'Not shipped yet');
-	shipped.type = 'button';
-	shipped.addEventListener('click', async () => {
-		shipped.disabled = true;
-		try {
-			await api(`orders/${o.ref}`, { method: 'PATCH', body: { shipped: o.status === 'paid' } });
-			await loadOrders();
-		} catch (error) {
-			show($('orders-error'), error.message);
-			shipped.disabled = false;
-		}
-	});
-	actions.append(label, shipped);
+	actions.append(label);
 	item.append(actions);
+	for (const t of o.tracking ?? []) {
+		const line = el('p', 'when');
+		const link = el('a', '', t.number);
+		link.href = `https://www.post.ch/swisspost-tracking?formattedParcelCodes=${t.number}`;
+		link.target = '_blank';
+		line.append(t.shipper === 'shop' ? 'Your parcel: ' : 'Seller parcel: ', link);
+		item.append(line);
+	}
+	if (o.status === 'paid' && o.ids.some((id) => !o.seller_ids?.includes(id))) item.append(trackingForm(o));
+	else if (o.status === 'shipped') {
+		const undo = el('button', 'link', 'Not shipped yet');
+		undo.type = 'button';
+		undo.addEventListener('click', async () => {
+			await api(`orders/${o.ref}`, { method: 'PATCH', body: { shipped: false } }).catch((error) => show($('orders-error'), error.message));
+			await loadOrders();
+		});
+		item.append(undo);
+	}
 	return item;
 }
 
@@ -1070,3 +1076,53 @@ function renderPayout(p) {
 	}
 	return item;
 }
+
+/** "Mark shipped": the Swiss Post tracking number is required, typed or scanned with the camera (public/scanner.js). */
+function trackingForm(o) {
+	const form = el('form', 'tracking-row');
+	const label = el('label', '', 'Tracking number');
+	const input = el('input');
+	input.name = 'tracking';
+	input.inputMode = 'numeric';
+	input.autocomplete = 'off';
+	input.placeholder = '99.60.123456.12345678';
+	label.append(input);
+	const scan = el('button', '', '📷 Scan');
+	scan.type = 'button';
+	scan.addEventListener('click', async () => {
+		try {
+			await loadScanner();
+			const code = await window.secondsurfScan();
+			if (code) input.value = code.replace(/D/g, '').match(/99d{16}/)?.[0] ?? code;
+		} catch {
+			show($('orders-error'), "The camera couldn't start. Type the number instead.");
+		}
+	});
+	const send = el('button', 'primary', 'Mark shipped');
+	send.type = 'submit';
+	form.append(label, scan, send);
+	form.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		send.disabled = true;
+		show($('orders-error'));
+		try {
+			await api(`orders/${o.ref}`, { method: 'PATCH', body: { shipped: true, tracking: input.value } });
+			await loadOrders();
+		} catch (error) {
+			show($('orders-error'), error.message);
+			send.disabled = false;
+		}
+	});
+	return form;
+}
+
+const loadScanner = () =>
+	window.secondsurfScan
+		? Promise.resolve()
+		: new Promise((resolve, reject) => {
+				const script = document.createElement('script');
+				script.src = '/scanner.js';
+				script.onload = resolve;
+				script.onerror = reject;
+				document.head.append(script);
+			});

@@ -172,6 +172,13 @@ Test first with Stripe's test mode: use the test keys (`sk_test_…` and the tes
 A test purchase really marks the piece as sold on the site: set it back to available in the dashboard afterwards.
 Then swap in the live keys and redeploy. A piece with its own `buyUrl:` (e.g. a Stripe Payment Link) uses that link instead.
 
+## Tracking numbers
+
+Shipping an order (the shop in /admin, a seller in the profile) requires the Swiss Post tracking number, typed or scanned with
+the camera: `public/scanner.js` (ZXing, built from `scripts/scanner-src.js` with `npm run build:scanner`, loaded only on tap).
+`addTracking` in `functions/_lib/orders.ts` stores it (table `tracking`, per order and sender) and emails the buyer the Swiss Post
+link plus `/tracking/?n=…`, a page with the number as a Code 128 barcode to scan into the Post-App.
+
 ## Cart (Warenkorb)
 
 The piece page adds to a cart kept in the browser (`src/scripts/cart.ts`, localStorage `cart`); the header shows the count and

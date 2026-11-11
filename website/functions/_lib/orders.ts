@@ -4,6 +4,8 @@
 // paid orders, prints address labels and packing slips (public/admin/label.html) and marks them as shipped.
 
 import type { D1Database, Env } from './auth.ts';
+import { sendMail } from './mail.ts';
+import { SITE } from '../../src/config.ts';
 
 export type OrderStatus = 'pending' | 'paid' | 'shipped';
 
@@ -63,6 +65,8 @@ export async function ordersDb(env: Env): Promise<D1Database | null> {
 				shipped_at INTEGER
 			)`),
 			db.prepare('CREATE INDEX IF NOT EXISTS orders_status ON orders (status, paid_at)'),
+			/** Tracking numbers per order and sender: 'shop', or 'u<account id>' for a seller who ships their own pieces. */
+			db.prepare('CREATE TABLE IF NOT EXISTS tracking (order_ref TEXT NOT NULL, shipper TEXT NOT NULL, number TEXT NOT NULL, created_at INTEGER NOT NULL, PRIMARY KEY (order_ref, shipper))'),
 		])
 		.catch((error) => {
 			ready = null;
@@ -116,3 +120,118 @@ export async function markPaid(
 		)
 		.run();
 }
+
+// ---------------------------------------------------------------- tracking numbers
+
+/**
+ * A Swiss Post tracking number as typed or scanned: 18 digits for Switzerland (99.60.123456.12345678), or the
+ * international form (two letters, nine digits, two letters: RR123456789CH). Scans of 2D codes may carry more text;
+ * the 18-digit number starting with 99 is taken out of it. Returns the bare number, or null.
+ */
+export function cleanTracking(value: unknown) {
+	if (typeof value !== 'string') return null;
+	const bare = value.toUpperCase().replace(/[\s.\-/]/g, '');
+	if (/^\d{18}$/.test(bare) || /^[A-Z]{2}\d{9}[A-Z]{2}$/.test(bare)) return bare;
+	const inside = value.replace(/\D/g, ' ').match(/\b99\d{16}\b/)?.[0] ?? bare.match(/99\d{16}/)?.[0];
+	return inside ?? null;
+}
+
+/** 996012345612345678 → 99.60.123456.12345678 (as printed on Swiss Post labels). */
+export const formatTracking = (n: string) => (/^\d{18}$/.test(n) ? `${n.slice(0, 2)}.${n.slice(2, 4)}.${n.slice(4, 10)}.${n.slice(10)}` : n);
+export const postTrackingLink = (n: string) => `https://www.post.ch/swisspost-tracking?formattedParcelCodes=${encodeURIComponent(n)}`;
+
+const PARCEL_MAIL: Record<string, (v: Record<string, string>) => { subject: string; text: string }> = {
+	de: (v) => ({
+		subject: 'Dein Paket ist unterwegs',
+		text: `Hallo${v.name ? ` ${v.name}` : ''}
+
+Dein Paket von secondsurf ist unterwegs:
+${v.pieces}
+
+Sendungsnummer: ${v.number}
+Verfolgen: ${v.post}
+
+In die Post-App übernehmen (Strichcode zum Scannen): ${v.page}
+
+Viel Freude damit!
+secondsurf`,
+	}),
+	fr: (v) => ({
+		subject: 'Ton colis est en route',
+		text: `Bonjour${v.name ? ` ${v.name}` : ''}
+
+Ton colis secondsurf est en route :
+${v.pieces}
+
+Numéro d’envoi : ${v.number}
+Suivre : ${v.post}
+
+Ajouter à l’app de La Poste (code-barres à scanner) : ${v.page}
+
+Bonne réception !
+secondsurf`,
+	}),
+	it: (v) => ({
+		subject: 'Il tuo pacco è in viaggio',
+		text: `Ciao${v.name ? ` ${v.name}` : ''}
+
+Il tuo pacco secondsurf è in viaggio:
+${v.pieces}
+
+Numero d’invio: ${v.number}
+Segui: ${v.post}
+
+Aggiungilo all’app della Posta (codice a barre da scansionare): ${v.page}
+
+Buon divertimento!
+secondsurf`,
+	}),
+	en: (v) => ({
+		subject: 'Your parcel is on its way',
+		text: `Hello${v.name ? ` ${v.name}` : ''}
+
+Your secondsurf parcel is on its way:
+${v.pieces}
+
+Tracking number: ${v.number}
+Track it: ${v.post}
+
+Add it to the Swiss Post app (barcode to scan): ${v.page}
+
+Enjoy!
+secondsurf`,
+	}),
+};
+
+/**
+ * Saves the tracking number of a parcel and emails the buyer once: the pieces in it, the number, the Swiss Post tracking
+ * link and /tracking/?n=… (big barcode to scan into the Post-App). `pieces` are the names of what is in this parcel.
+ */
+export async function addTracking(env: Env, db: D1Database, ref: string, shipper: string, number: string, pieces: string[], origin: string) {
+	const saved = await db
+		.prepare('INSERT OR IGNORE INTO tracking (order_ref, shipper, number, created_at) VALUES (?, ?, ?, ?)')
+		.bind(ref, shipper, number, now())
+		.run();
+	if (!saved.meta.changes || !env.RESEND_API_KEY) return;
+	const order = await orderByRef(db, ref);
+	if (!order?.email) return;
+	const lang = ['de', 'fr', 'it', 'en'].includes(order.lang) ? order.lang : 'de';
+	const prefix = lang === 'de' ? '' : `/${lang}`;
+	const mail = PARCEL_MAIL[lang]({
+		name: (order.name ?? '').split(' ')[0],
+		pieces: pieces.map((p) => `- ${p}`).join('\n'),
+		number: formatTracking(number),
+		post: postTrackingLink(number),
+		page: `${origin}${prefix}/tracking/?n=${number}`,
+	});
+	await sendMail(env, { to: order.email, reply_to: SITE.email, ...mail }).catch((error) => console.error('Tracking email failed', error));
+}
+
+export const trackingFor = (db: D1Database, refs: string[]) =>
+	refs.length
+		? db
+				.prepare(`SELECT order_ref, shipper, number FROM tracking WHERE order_ref IN (${refs.map(() => '?').join(',')})`)
+				.bind(...refs)
+				.all<{ order_ref: string; shipper: string; number: string }>()
+				.then((r) => r.results)
+		: Promise.resolve([]);

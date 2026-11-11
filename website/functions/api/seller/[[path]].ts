@@ -6,13 +6,14 @@
 // POST   photos { base64 }        one photo (JPEG) for a submission → { id }
 // POST   submissions { brand, title, category, size, condition, price, measurements?, description?, photos: [ids] }
 // DELETE submissions/<id>         withdraw a submission that hasn't been checked yet
-// POST   sales/<id>/shipped       the seller sent the parcel
+// POST   sales/<id>/shipped { tracking }   the seller sent the parcel; the tracking number (typed or scanned) is required
+//                                  and goes to the buyer by email
 // GET    label?order=<ref>        the order's address and the seller's pieces, for /admin/label.html?seller=1
 
 import { CATEGORIES, CONDITIONS, SIZES } from '../../../src/config.ts';
 import { currentUser, database, tooMany } from '../../_lib/accounts.ts';
 import { json, type Handler } from '../../_lib/auth.ts';
-import { orderByRef, ordersDb } from '../../_lib/orders.ts';
+import { addTracking, cleanTracking, orderByRef, ordersDb, trackingFor } from '../../_lib/orders.ts';
 import { cleanIban, FIRST_SALES, mailOwnerSubmission, MAX_PHOTOS, nextRate, now, sellerOf, sellersDb, type Sale, type Submission } from '../../_lib/sellers.ts';
 
 const fail = (error: string, status = 400) => json({ error }, status);
@@ -38,8 +39,9 @@ export const onRequest: Handler = async ({ request, env, params, waitUntil }) =>
 			db.prepare('SELECT * FROM seller_sales WHERE user_id = ? ORDER BY created_at DESC LIMIT 100').bind(user.id).all<Sale>(),
 			db.prepare('SELECT COUNT(*) AS n FROM seller_sales WHERE user_id = ?').bind(user.id).first<{ n: number }>(),
 		]);
-		// The buyer's address, only for parcels still to send.
+		// The buyer's address, only for parcels still to send; the tracking numbers of sent ones.
 		const orders = await ordersDb(env);
+		const numbers = orders ? await trackingFor(orders, [...new Set(sales.results.map((s) => s.order_ref))]) : [];
 		const withAddress = await Promise.all(
 			sales.results.map(async (sale) => {
 				if (sale.status !== 'to_ship' || !orders) return { ...sale, buyer: null };
@@ -68,6 +70,7 @@ export const onRequest: Handler = async ({ request, env, params, waitUntil }) =>
 				shippedAt: s.shipped_at ? s.shipped_at * 1000 : null,
 				paidOutAt: s.paid_out_at ? s.paid_out_at * 1000 : null,
 				buyer: s.buyer,
+				tracking: numbers.find((n) => n.order_ref === s.order_ref && n.shipper === `u${user.id}`)?.number ?? null,
 			})),
 		});
 	}
@@ -153,12 +156,24 @@ export const onRequest: Handler = async ({ request, env, params, waitUntil }) =>
 
 	const shipped = route.match(/^sales\/(\d+)\/shipped$/);
 	if (shipped && method === 'POST') {
-		const result = await db
-			.prepare("UPDATE seller_sales SET status = 'shipped', shipped_at = ? WHERE id = ? AND user_id = ? AND status = 'to_ship'")
-			.bind(now(), Number(shipped[1]), user.id)
-			.run();
-		if (!result.meta.changes) return fail('notFound', 404);
-		return json({ ok: true });
+		// The tracking number is required: the buyer gets it by email (functions/_lib/orders.ts, addTracking).
+		const number = cleanTracking(body.tracking);
+		if (!number) return fail('tracking');
+		const sale = await db.prepare("SELECT * FROM seller_sales WHERE id = ? AND user_id = ? AND status = 'to_ship'").bind(Number(shipped[1]), user.id).first<Sale>();
+		if (!sale) return fail('notFound', 404);
+		// Everything this seller sells in the same order goes in the same parcel.
+		const { results: parcel } = await db
+			.prepare("SELECT product_name FROM seller_sales WHERE order_ref = ? AND user_id = ? AND status = 'to_ship'")
+			.bind(sale.order_ref, user.id)
+			.all<{ product_name: string }>();
+		await db.prepare("UPDATE seller_sales SET status = 'shipped', shipped_at = ? WHERE order_ref = ? AND user_id = ? AND status = 'to_ship'").bind(now(), sale.order_ref, user.id).run();
+		const orders = await ordersDb(env);
+		if (orders) {
+			const mail = addTracking(env, orders, sale.order_ref, `u${user.id}`, number, parcel.map((p) => p.product_name), url.origin);
+			if (waitUntil) waitUntil(mail);
+			else await mail;
+		}
+		return json({ ok: true, tracking: number });
 	}
 
 	if (route === 'label' && method === 'GET') {

@@ -66,7 +66,13 @@ const st = sellerTexts[lang];
 		shippedAt: number | null;
 		paidOutAt: number | null;
 		buyer: { name: string; line1: string; line2: string | null; postalCode: string; city: string; phone: string | null } | null;
+		tracking: string | null;
 	};
+	declare global {
+		interface Window {
+			secondsurfScan?: () => Promise<string | null>;
+		}
+	}
 	type Sub = { id: number; status: 'pending' | 'approved' | 'rejected' | 'withdrawn'; brand: string; title: string; price: number; reason: string; productId: string | null };
 	type Me = { seller: { iban: string; accountHolder: string } | null; nextRate: number; submissions: Sub[]; sales: Sale[] };
 
@@ -98,6 +104,17 @@ const st = sellerTexts[lang];
 			return data;
 		};
 
+		/** The camera scanner (public/scanner.js, about 0.5 MB) loads only when someone taps "Scannen". */
+		const loadScanner = () =>
+			window.secondsurfScan
+				? Promise.resolve()
+				: new Promise<void>((resolve, reject) => {
+						const script = Object.assign(document.createElement('script'), { src: '/scanner.js' });
+						script.onload = () => resolve();
+						script.onerror = () => reject(new Error('scanner'));
+						document.head.append(script);
+					});
+
 		function renderSale(s: Sale) {
 			const li = el('li', `sale ${s.status}`);
 			li.append(el('strong', '', s.name));
@@ -112,22 +129,49 @@ const st = sellerTexts[lang];
 				const label = el('a', 'btn-line', t.label) as HTMLAnchorElement;
 				label.href = `/admin/label.html?seller=1&order=${s.orderRef}`;
 				label.target = '_blank';
-				const sent = el('button', 'btn', t.markShipped) as HTMLButtonElement;
-				sent.type = 'button';
-				sent.addEventListener('click', async () => {
-					sent.disabled = true;
+				actions.append(label);
+				li.append(actions);
+				// Sent: the tracking number is required (typed or scanned with the camera); the buyer gets it by email.
+				const form = el('form', 'tracking-form') as HTMLFormElement;
+				const field = el('label');
+				field.append(el('span', '', t.tracking));
+				const input = Object.assign(document.createElement('input'), { name: 'tracking', inputMode: 'numeric', autocomplete: 'off', placeholder: '99.60.123456.12345678', required: true });
+				field.append(input);
+				const scan = el('button', 'btn-line', `📷 ${t.scan}`) as HTMLButtonElement;
+				scan.type = 'button';
+				scan.addEventListener('click', async () => {
 					try {
-						await call(`sales/${s.id}/shipped`, 'POST', {});
-						await load();
-					} catch (error) {
-						sent.disabled = false;
-						alert(message((error as Error).message));
+						await loadScanner();
+						const code = await window.secondsurfScan!();
+						if (code) input.value = code.replace(/D/g, '').match(/99d{16}/)?.[0] ?? code;
+					} catch {
+						status.textContent = t.noCamera;
 					}
 				});
-				actions.append(label, sent);
-				li.append(actions);
+				const send = el('button', 'btn', t.sendShipped) as HTMLButtonElement;
+				send.type = 'submit';
+				const status = el('p', 'small status');
+				form.append(field, el('p', 'small muted', t.trackingHint), scan, send, status);
+				form.addEventListener('submit', async (event) => {
+					event.preventDefault();
+					send.disabled = true;
+					try {
+						await call(`sales/${s.id}/shipped`, 'POST', { tracking: input.value });
+						await load();
+					} catch (error) {
+						status.textContent = message((error as Error).message);
+						send.disabled = false;
+					}
+				});
+				li.append(form);
 			} else if (s.status === 'shipped' && s.shippedAt) {
 				li.append(el('p', 'small', fill(t.saleShipped, { date: day(s.shippedAt), due: day(s.shippedAt + 14 * 86400_000) })));
+				if (s.tracking) {
+					const link = el('a', 'small', fill(t.trackingShown, { n: s.tracking })) as HTMLAnchorElement;
+					link.href = `https://www.post.ch/swisspost-tracking?formattedParcelCodes=${s.tracking}`;
+					link.target = '_blank';
+					li.append(link);
+				}
 			} else if (s.paidOutAt) li.append(el('p', 'small', fill(t.salePaid, { date: day(s.paidOutAt) })));
 			li.append(
 				el(
@@ -270,6 +314,30 @@ const st = sellerTexts[lang];
 	.seller-list :global(.tag.rejected) {
 		background: #fee2e2;
 		color: #7f1d1d;
+	}
+	.seller-list :global(.tracking-form) {
+		display: grid;
+		gap: 0.5rem;
+		margin-top: 0.75rem;
+		padding-top: 0.75rem;
+		border-top: 1px solid var(--line);
+	}
+	.seller-list :global(.tracking-form label span) {
+		display: block;
+		font-weight: 600;
+		font-size: var(--step--1);
+		margin-bottom: 0.3rem;
+	}
+	.seller-list :global(.tracking-form input) {
+		width: 100%;
+		padding: 0.6rem 0.75rem;
+		border: 1.5px solid var(--line);
+		background: var(--bg);
+		font: inherit;
+		font-variant-numeric: tabular-nums;
+	}
+	.seller-list :global(.tracking-form button) {
+		justify-self: start;
 	}
 	.iban-missing {
 		padding: 0.6rem 0.9rem;

@@ -32,6 +32,12 @@ const de = {
 	salePaid: 'Ausbezahlt am {date}.',
 	label: 'Etikette und Lieferschein (PDF)',
 	markShipped: 'Als verschickt markieren',
+	tracking: 'Sendungsnummer',
+	trackingHint: 'Steht unter dem Strichcode auf der Post-Etikette, z. B. 99.60.123456.12345678.',
+	scan: 'Scannen',
+	sendShipped: 'Verschickt – Nummer senden',
+	trackingShown: 'Sendungsnummer: {n}',
+	noCamera: 'Die Kamera konnte nicht starten. Gib die Nummer von Hand ein.',
 	payoutLine: 'Preis {price} − Kommission {rate} % ({commission}) + Versand {shipping} = {payout}',
 	// The submission page
 	newTitle: 'Piece einreichen',
@@ -70,6 +76,7 @@ const de = {
 		login: 'Bitte melde dich zuerst an.',
 		notSeller: 'Werde zuerst Verkäufer:in in deinem Profil.',
 		generic: 'Das hat nicht geklappt. Versuch es nochmals.',
+		tracking: 'Diese Sendungsnummer stimmt nicht. Sie hat 18 Ziffern (z. B. 99.60.123456.12345678) oder die Form RR123456789CH.',
 	},
 };
 
@@ -103,6 +110,12 @@ const fr: SellerTexts = {
 	salePaid: 'Versé le {date}.',
 	label: 'Étiquette et bon de livraison (PDF)',
 	markShipped: 'Marquer comme envoyé',
+	tracking: 'Numéro d’envoi',
+	trackingHint: 'Il figure sous le code-barres de l’étiquette de La Poste, p. ex. 99.60.123456.12345678.',
+	scan: 'Scanner',
+	sendShipped: 'Envoyé – transmettre le numéro',
+	trackingShown: 'Numéro d’envoi : {n}',
+	noCamera: 'La caméra n’a pas pu démarrer. Saisis le numéro à la main.',
 	payoutLine: 'Prix {price} − commission {rate} % ({commission}) + envoi {shipping} = {payout}',
 	newTitle: 'Proposer une pièce',
 	newIntro: 'De bonnes photos claires vendent mieux : devant, dos, étiquette avec la taille et les éventuels défauts. Nous vérifions chaque pièce, en général sous 2 jours.',
@@ -140,6 +153,7 @@ const fr: SellerTexts = {
 		login: 'Connecte-toi d’abord.',
 		notSeller: 'Deviens d’abord vendeur·se dans ton profil.',
 		generic: 'Ça n’a pas marché. Réessaie.',
+		tracking: 'Ce numéro d’envoi n’est pas correct. Il a 18 chiffres (p. ex. 99.60.123456.12345678) ou la forme RR123456789CH.',
 	},
 };
 
@@ -171,6 +185,12 @@ const it: SellerTexts = {
 	salePaid: 'Pagato il {date}.',
 	label: 'Etichetta e bolla di consegna (PDF)',
 	markShipped: 'Segna come spedito',
+	tracking: 'Numero d’invio',
+	trackingHint: 'Si trova sotto il codice a barre dell’etichetta della Posta, p. es. 99.60.123456.12345678.',
+	scan: 'Scansiona',
+	sendShipped: 'Spedito – invia il numero',
+	trackingShown: 'Numero d’invio: {n}',
+	noCamera: 'La fotocamera non si è avviata. Inserisci il numero a mano.',
 	payoutLine: 'Prezzo {price} − commissione {rate} % ({commission}) + spedizione {shipping} = {payout}',
 	newTitle: 'Proponi un pezzo',
 	newIntro: 'Foto buone e luminose vendono meglio: davanti, dietro, etichetta con la taglia ed eventuali difetti. Controlliamo ogni pezzo, di solito entro 2 giorni.',
@@ -208,6 +228,7 @@ const it: SellerTexts = {
 		login: 'Accedi prima.',
 		notSeller: 'Diventa prima venditore/venditrice nel tuo profilo.',
 		generic: 'Non ha funzionato. Riprova.',
+		tracking: 'Questo numero d’invio non è corretto. Ha 18 cifre (p. es. 99.60.123456.12345678) o la forma RR123456789CH.',
 	},
 };
 
@@ -239,6 +260,12 @@ const en: SellerTexts = {
 	salePaid: 'Paid out on {date}.',
 	label: 'Label and packing slip (PDF)',
 	markShipped: 'Mark as sent',
+	tracking: 'Tracking number',
+	trackingHint: 'It is under the barcode on the Swiss Post label, e.g. 99.60.123456.12345678.',
+	scan: 'Scan',
+	sendShipped: 'Sent – send the number',
+	trackingShown: 'Tracking number: {n}',
+	noCamera: 'The camera couldn’t start. Please type the number.',
 	payoutLine: 'Price {price} − commission {rate} % ({commission}) + shipping {shipping} = {payout}',
 	newTitle: 'Submit a piece',
 	newIntro: 'Good, bright photos sell better: front, back, the label with the size and any flaws. We check every piece, usually within 2 days.',
@@ -276,6 +303,7 @@ const en: SellerTexts = {
 		login: 'Please log in first.',
 		notSeller: 'Become a seller in your profile first.',
 		generic: 'That didn’t work. Please try again.',
+		tracking: 'This tracking number isn’t right. It has 18 digits (e.g. 99.60.123456.12345678) or the form RR123456789CH.',
 	},
 };
 

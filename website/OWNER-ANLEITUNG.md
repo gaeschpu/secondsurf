@@ -113,7 +113,7 @@ Im Dashboard unter **Orders** stehen alle online bezahlten Bestellungen, die off
 3. **Drucken / als PDF sichern.** Auf dem iPhone: Drucken → mit zwei Fingern auf die Vorschau zoomen → Teilen → in Dateien sichern.
 4. Etikette ausschneiden und auf die grösste Seite des Pakets kleben, unten rechts, flach und ganz sichtbar. Den Lieferschein legst du ins Paket.
 5. **Porto und Strichcode** kommen von der Post: in der Post-App (mit **Adresse kopieren** fügst du die Adresse dort ein), online oder am Schalter.
-6. Tippe auf **Mark shipped**.
+6. Gib die **Sendungsnummer** ein (steht unter dem Strichcode der Post-Etikette) oder tippe auf **📷 Scan** und halte die Kamera auf den Strichcode. Dann **Mark shipped**. Die Kundin oder der Kunde bekommt automatisch eine E-Mail mit der Nummer, dem Link zur Sendungsverfolgung und einer Seite mit dem Strichcode für die Post-App.
 
 Sind mehrere Bestellungen offen, druckst du mit **Print all open labels** alle auf einmal.
 
@@ -122,7 +122,7 @@ Sind mehrere Bestellungen offen, druckst du mit **Print all open labels** alle a
 Jede Person mit Konto kann über secondsurf verkaufen: im Profil unter **Verkaufen** die Verkaufsbedingungen akzeptieren, IBAN eintragen und unter **Neues Piece einreichen** Fotos und Angaben hochladen.
 
 1. Du bekommst eine E-Mail. Im Dashboard unter **Sellers** siehst du die Fotos und alle Angaben. Ändere Texte oder Preis, wenn nötig, und tippe auf **Approve → shop** (das Piece kommt in den Shop) oder **Reject** (mit Grund). Die Person bekommt jeweils eine E-Mail.
-2. Wird ein solches Piece verkauft, bekommt die Verkäuferin die Adresse per E-Mail und im Profil, druckt Etikette und Lieferschein und **verschickt selbst**. In deinen Orders ist es als «Seller ships» markiert und steht nicht auf deiner Etikette.
+2. Wird ein solches Piece verkauft, bekommt die Verkäuferin die Adresse per E-Mail und im Profil, druckt Etikette und Lieferschein, **verschickt selbst** und muss dabei die Sendungsnummer eingeben oder scannen (die Käuferin bekommt sie per E-Mail). In deinen Orders ist es als «Seller ships» markiert und steht nicht auf deiner Etikette.
 3. Unter **Payouts** siehst du, was du wem schuldest: Verkaufspreis minus Kommission (3 % auf die ersten 3 Verkäufe einer Person, danach 10 %) plus CHF 9 Versand pro Paket. Fällig 14 Tage nach dem Versand. Überweise den Betrag auf die angezeigte IBAN und tippe auf **Paid**.
 
 Die Verkaufsbedingungen stehen unter /seller-terms/ (Entwurf: bitte rechtlich prüfen lassen).
