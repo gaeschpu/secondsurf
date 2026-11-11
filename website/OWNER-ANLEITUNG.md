@@ -104,6 +104,19 @@ Im Dashboard unter **Pieces** tippst du auf das Foto, den Namen oder **Edit**. D
 
 Kundinnen und Kunden legen Pieces mit **In den Warenkorb** in ihren Warenkorb (Taschen-Symbol oben, mit Zahl). Dort sehen sie Zwischensumme, Versand und Total, geben den Rabattcode ein (WELCOME10) und tippen auf **Zur Kasse**. Alle Pieces werden zusammen mit Stripe bezahlt; Versand gibt es einmal pro Bestellung (gratis ab dem Betrag in den Einstellungen). Nach der Zahlung werden alle Pieces automatisch als verkauft markiert, und du bekommst eine E-Mail mit allen Pieces und der Adresse. Reserviert ist ein Piece erst an der Kasse: Wer zuerst bezahlt, bekommt es. Höchstens 8 Pieces pro Bestellung.
 
+## Bestellungen verschicken (Etikette und Lieferschein)
+
+Im Dashboard unter **Orders** stehen alle online bezahlten Bestellungen, die offenen zuerst: Pieces, Name, Adresse, E-Mail, Telefon und Betrag.
+
+1. Tippe auf **Label (PDF)**. Es öffnet sich eine A4-Seite mit der Adressetikette (oben, zum Ausschneiden) und dem Lieferschein (unten).
+2. Beim ersten Mal trägst du oben deine **Absender-Adresse** ein. Sie wird nur auf diesem Gerät gespeichert, nie auf der Website.
+3. **Drucken / als PDF sichern.** Auf dem iPhone: Drucken → mit zwei Fingern auf die Vorschau zoomen → Teilen → in Dateien sichern.
+4. Etikette ausschneiden und auf die grösste Seite des Pakets kleben, unten rechts, flach und ganz sichtbar. Den Lieferschein legst du ins Paket.
+5. **Porto und Strichcode** kommen von der Post: in der Post-App (mit **Adresse kopieren** fügst du die Adresse dort ein), online oder am Schalter.
+6. Tippe auf **Mark shipped**.
+
+Sind mehrere Bestellungen offen, druckst du mit **Print all open labels** alle auf einmal.
+
 ## Ein Piece als verkauft markieren
 
 So verkaufst du im Moment: Kundinnen und Kunden tippen auf **Anfragen**, du bekommst eine E-Mail und schickst ihnen die Zahlungsangaben. Sie bezahlen sofort. Reserviert wird nichts: Wer zuerst bezahlt, bekommt das Piece.

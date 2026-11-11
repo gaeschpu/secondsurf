@@ -10,6 +10,7 @@
 import { database, markWelcomeUsed } from '../_lib/accounts.ts';
 import { auctionsDb, now as nowSeconds, recordPurchase } from '../_lib/auctions.ts';
 import { json, type Handler } from '../_lib/auth.ts';
+import { markPaid, orderByRef, ordersDb } from '../_lib/orders.ts';
 import { commit, PRODUCTS_DIR, readText } from '../_lib/github.ts';
 import { sendMail } from '../_lib/mail.ts';
 import { now, offersDb } from '../_lib/offers.ts';
@@ -24,7 +25,7 @@ type Session = {
 	payment_status: string;
 	payment_intent?: string | null;
 	amount_total?: number | null;
-	metadata?: { product_id?: string; product_ids?: string; offer_id?: string; auction_id?: string; auction_buyer?: string; welcome_user?: string; discount?: string; lang?: string; product_name?: string };
+	metadata?: { product_id?: string; product_ids?: string; order_ref?: string; offer_id?: string; auction_id?: string; auction_buyer?: string; welcome_user?: string; discount?: string; lang?: string; product_name?: string };
 	customer_details?: { name?: string | null; email?: string | null; phone?: string | null } | null;
 	collected_information?: { shipping_details?: { name?: string; address?: Address } | null } | null;
 	shipping_details?: { name?: string; address?: Address } | null;
@@ -33,12 +34,19 @@ type Session = {
 
 const chf = (cents?: number | null) => `CHF ${((cents ?? 0) / 100).toFixed(2)}`;
 
-/** The pieces of an order: product_ids ("a,b,c") from the cart, or the single product_id (offers, auctions, old sessions). */
-const pieceIds = (session: Session) =>
-	[...new Set((session.metadata?.product_ids ?? session.metadata?.product_id ?? '').split(','))].filter((id) => PRODUCT_ID.test(id));
+/**
+ * The pieces of an order: from the saved order (order_ref, any number of pieces), otherwise product_ids ("a,b,c") or the
+ * single product_id (sessions from before orders were saved).
+ */
+async function pieceIds(env: Parameters<Handler>[0]['env'], session: Session) {
+	const ref = session.metadata?.order_ref ?? '';
+	const db = ref ? await ordersDb(env).catch(() => null) : null;
+	const order = db ? await orderByRef(db, ref).catch(() => null) : null;
+	const list: string[] = order ? JSON.parse(order.ids) : (session.metadata?.product_ids ?? session.metadata?.product_id ?? '').split(',');
+	return [...new Set(list)].filter((id) => PRODUCT_ID.test(id));
+}
 
-async function sell(env: Parameters<Handler>[0]['env'], session: Session) {
-	const ids = pieceIds(session);
+async function sell(env: Parameters<Handler>[0]['env'], session: Session, ids: string[]) {
 	if (!ids.length) return { alreadySold: false };
 	const files = [];
 	const doubles: string[] = [];
@@ -207,7 +215,7 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 
 	const event = JSON.parse(body) as { type: string; data: { object: Session } };
 	const session = event.data.object;
-	const ids = pieceIds(session);
+	const ids = await pieceIds(env, session);
 	const db = await holds(env).catch(() => null);
 
 	const paid =
@@ -217,7 +225,7 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 		if (!(await firstTime(db, session.id))) return json({ ok: true, duplicate: true });
 		let alreadySold = false;
 		try {
-			({ alreadySold } = await sell(env, session));
+			({ alreadySold } = await sell(env, session, ids));
 		} catch (error) {
 			// Let Stripe retry later (it does for up to 3 days).
 			console.error('Marking as sold failed', error);
@@ -225,6 +233,21 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 			return json({ error: 'Try again.' }, 500);
 		}
 		if (db) for (const id of ids) await holdSold(db, id).catch(() => {});
+		// The order with the shipping address, for the dashboard (labels, shipped).
+		const ref = session.metadata?.order_ref;
+		const orders = ref ? await ordersDb(env).catch(() => null) : null;
+		if (orders && ref) {
+			const ship = session.collected_information?.shipping_details ?? session.shipping_details;
+			await markPaid(orders, ref, {
+				sessionId: session.id,
+				amount: session.amount_total != null ? session.amount_total / 100 : null,
+				discount: session.metadata?.discount,
+				name: ship?.name ?? session.customer_details?.name,
+				address: ship?.address,
+				email: session.customer_details?.email,
+				phone: session.customer_details?.phone,
+			}).catch((error) => console.error('Saving the order failed', error));
+		}
 		// A double sale gets no confirmation: the owner refunds that customer (see the owner's email).
 		if (!alreadySold) await confirm(env, session).catch((error) => console.error('Order confirmation failed', error));
 		// Paid through an accepted price offer: close the offer.

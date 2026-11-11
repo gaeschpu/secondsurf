@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="de">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex" />
+		<title>Versandetikette · secondsurf</title>
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<!--
+			Address labels and packing slips for orders, one A4 page per order: /admin/label.html?refs=<ref>,<ref>
+			Print, or "Save as PDF" in the print dialog. The recipient block follows Swiss Post's rules for parcels
+			(post.ch → Pakete richtig adressieren): 3 to 6 lines without blank lines, name, street and number, postcode and town,
+			no country name for Switzerland (and Liechtenstein). Postage and the barcode still come from Swiss Post (Post-App,
+			online label or at the counter); this label carries the address and the sender.
+			The sender address is typed here and stored only in this browser, never on the website.
+		-->
+		<link rel="stylesheet" href="/admin/label.css" />
+	</head>
+	<body>
+		<section class="controls">
+			<h1>Versandetiketten</h1>
+			<label>
+				Absender (deine Adresse für die Rücksendung, nur auf diesem Gerät gespeichert)
+				<textarea id="sender" rows="4" placeholder="secondsurf&#10;Vorname Nachname&#10;Strasse Nr.&#10;PLZ Ort"></textarea>
+			</label>
+			<p class="hint">
+				Die Etikette (oben) ausschneiden und auf die grösste Seite des Pakets kleben, unten rechts, flach und ganz sichtbar.
+				Porto und Strichcode bekommst du von der Post: in der Post-App, online oder am Schalter. Den Lieferschein legst du ins Paket.
+			</p>
+			<div class="buttons">
+				<button type="button" id="print">Drucken / als PDF sichern</button>
+				<button type="button" class="secondary" id="copy">Adresse kopieren (für die Post-App)</button>
+			</div>
+			<p id="status" class="hint" hidden></p>
+			<p id="error" class="error" hidden></p>
+		</section>
+		<main id="pages"></main>
+		<script src="/admin/label.js" defer></script>
+	</body>
+</html>

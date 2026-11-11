@@ -3,6 +3,7 @@
 
 import { database, tooMany } from './accounts.ts';
 import type { Env } from './auth.ts';
+import { createOrder, ordersDb } from './orders.ts';
 import { dropNewHold, HOLD_SECONDS, holds, setHoldSession, stripe, takeHold } from './stripe.ts';
 import { CHECKOUT, SHIPPING } from '../../src/config.ts';
 import { ui } from '../../src/i18n/ui.ts';
@@ -45,8 +46,8 @@ export const checkoutReady = (env: Env) => CHECKOUT.enabled && Boolean(env.STRIP
 /** One piece in a checkout and the price it is sold for. */
 export type CheckoutItem = { piece: Listed; price: number };
 
-/** At most this many pieces per order (Stripe metadata has room for about ten piece ids). */
-export const MAX_CART = 8;
+/** No real limit for customers: Stripe takes at most 100 lines per checkout. The piece ids are kept in the order (D1). */
+export const MAX_CART = 100;
 
 /**
  * Holds every piece and redirects to Stripe. `backUrl` is where errors and "reserved" send the customer back to
@@ -97,9 +98,15 @@ export async function startCheckout(opts: {
 			: { amount: SHIPPING.price, name: text(lang, 'checkout.shippingPost') };
 	// lang and product_name are for the customer's order confirmation; product_ids for the webhook (functions/api/stripe-webhook.ts).
 	const names = items.map(({ piece }) => `${piece.brand} ${titleIn(piece, lang)}`);
+	// The order keeps all piece ids (any number); Stripe's metadata (500 characters per value) gets the reference,
+	// plus the ids themselves when they fit, for the webhook to fall back on.
+	const orders = await ordersDb(env).catch(() => null);
+	const orderRef = orders ? await createOrder(orders, ids, names, lang).catch((error) => (console.error('Saving the order failed', error), null)) : null;
+	const idList = ids.join(',');
 	const metadata = {
 		product_id: ids[0],
-		product_ids: ids.join(','),
+		...(idList.length <= 490 ? { product_ids: idList } : {}),
+		...(orderRef ? { order_ref: orderRef } : {}),
 		lang,
 		product_name: names.join(' + ').slice(0, 450),
 		...opts.metadata,

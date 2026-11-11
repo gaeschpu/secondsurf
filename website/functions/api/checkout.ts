@@ -4,7 +4,7 @@
 // functions/api/stripe-webhook.ts marks every piece as sold. The work is in _lib/checkout.ts.
 //
 // The welcome code (WELCOME in src/config.ts) only works for a logged-in customer who hasn't used it in a paid order yet;
-// it takes the percentage off every piece. Problems send the customer back to the cart with #code-invalid, #code-login,
+// it takes the percentage off every piece. Any number of pieces (up to Stripe's 100 lines). Problems send the customer back to the cart with #code-invalid, #code-login,
 // #code-used or #unavailable (a piece was sold, is an auction lot or is being auctioned meanwhile).
 
 import { WELCOME } from '../../src/config.ts';

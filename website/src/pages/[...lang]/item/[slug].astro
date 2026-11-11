@@ -162,7 +162,7 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 							<p class="in-cart small" data-in-cart hidden>
 								✓ {t('cart.added')} · <a href={url(lang, '/cart/')}>{t('cart.view')} →</a>
 							</p>
-							<p class="small muted" data-cart-full hidden>{t('cart.full').replace('{n}', '8')}</p>
+							<p class="small muted" data-cart-full hidden>{t('cart.full').replace('{n}', '100')}</p>
 							<p class="small muted">{t('checkout.note')}</p>
 						</>
 					) : p.buyUrl ? (

@@ -438,6 +438,7 @@ async function loadDashboard() {
 	showPage();
 	loadOffers().catch((error) => show($('offers-error'), error.message));
 	loadAuctions().catch((error) => show($('auctions-error'), error.message));
+	loadOrders().catch((error) => show($('orders-error'), error.message));
 }
 
 loadDashboard().catch((error) => {
@@ -448,10 +449,12 @@ loadDashboard().catch((error) => {
 // ---------- Pages ----------
 
 function showPage() {
-	const page = location.hash === '#offers' ? 'offers' : location.hash === '#auctions' ? 'auctions' : 'pieces';
+	const page = { '#offers': 'offers', '#auctions': 'auctions', '#orders': 'orders' }[location.hash] ?? 'pieces';
 	$('pieces-page').hidden = page !== 'pieces';
 	$('offers-page').hidden = page !== 'offers';
 	$('auctions-page').hidden = page !== 'auctions';
+	$('orders-page').hidden = page !== 'orders';
+	if (page === 'orders' && !$('dashboard').hidden) loadOrders().catch((error) => show($('orders-error'), error.message));
 	if (page === 'auctions' && !$('dashboard').hidden) loadAuctions().catch((error) => show($('auctions-error'), error.message));
 	for (const tab of document.querySelectorAll('.tabs a')) {
 		if (tab.dataset.page === page) tab.setAttribute('aria-current', 'page');
@@ -838,3 +841,68 @@ editForm.addEventListener('submit', async (event) => {
 		button.disabled = false;
 	}
 });
+
+// ---------- Orders (labels, shipped) ----------
+
+let orderList = [];
+const openLabels = (refs) => window.open(`/admin/label.html?refs=${refs.join(',')}`, '_blank');
+
+$('orders-print-open').addEventListener('click', () => openLabels(orderList.filter((o) => o.status === 'paid').map((o) => o.ref)));
+
+async function loadOrders() {
+	const { orders } = await api('orders');
+	orderList = orders;
+	show($('orders-error'));
+	const open = orders.filter((o) => o.status === 'paid');
+	$('orders-count').textContent = String(open.length);
+	$('orders-count').hidden = open.length === 0;
+	$('orders-print-open').hidden = open.length < 2;
+	$('orders').replaceChildren(...(orders.length ? orders.map(renderOrder) : [el('li', 'hint', 'No online orders yet.')]));
+}
+
+function renderOrder(o) {
+	const item = el('li', o.status === 'paid' ? 'offer' : 'offer closed');
+	item.append(el('span', `state ${o.status === 'paid' ? 'pending' : 'paid'}`, o.status === 'paid' ? 'To ship' : `Shipped ✓ ${o.shipped_at ? when(o.shipped_at) : ''}`));
+	item.append(el('strong', '', `${o.name ?? '–'} · ${o.postal_code ?? ''} ${o.city ?? ''}`));
+	const pieces = el('ul', 'order-pieces');
+	o.ids.forEach((id, i) => {
+		const li = el('li');
+		const link = el('a', '', o.names[i] ?? id);
+		link.href = `/item/${id}/`;
+		link.target = '_blank';
+		li.append(link);
+		pieces.append(li);
+	});
+	item.append(pieces);
+	item.append(el('p', 'amounts', `${o.amount != null ? chf(o.amount) : '–'} incl. shipping${o.discount ? ` · code ${o.discount}` : ''}`));
+	const who = el('p', 'who');
+	who.append(`${[o.line1, o.line2, `${o.postal_code ?? ''} ${o.city ?? ''}`.trim()].filter(Boolean).join(', ')}`);
+	if (o.email) {
+		const mail = el('a', '', o.email);
+		mail.href = `mailto:${o.email}`;
+		who.append(' · ', mail);
+	}
+	if (o.phone) who.append(` · ${o.phone}`);
+	item.append(who);
+	item.append(el('p', 'when', `Paid ${o.paid_at ? when(o.paid_at) : '–'} · order ${o.ref.slice(0, 8).toUpperCase()}`));
+
+	const actions = el('div', 'actions');
+	const label = el('button', 'primary', 'Label (PDF)');
+	label.type = 'button';
+	label.addEventListener('click', () => openLabels([o.ref]));
+	const shipped = el('button', '', o.status === 'paid' ? 'Mark shipped' : 'Not shipped yet');
+	shipped.type = 'button';
+	shipped.addEventListener('click', async () => {
+		shipped.disabled = true;
+		try {
+			await api(`orders/${o.ref}`, { method: 'PATCH', body: { shipped: o.status === 'paid' } });
+			await loadOrders();
+		} catch (error) {
+			show($('orders-error'), error.message);
+			shipped.disabled = false;
+		}
+	});
+	actions.append(label, shipped);
+	item.append(actions);
+	return item;
+}

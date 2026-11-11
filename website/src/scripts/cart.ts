@@ -3,8 +3,8 @@
 // the cart icon in the header and the cart page.
 
 const KEY = 'cart';
-/** Same limit as MAX_CART in functions/_lib/checkout.ts. */
-export const MAX_CART = 8;
+/** Same as MAX_CART in functions/_lib/checkout.ts: no real limit for customers (Stripe takes at most 100 lines). */
+export const MAX_CART = 100;
 
 export function cartIds(): string[] {
 	try {

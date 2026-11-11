@@ -34,6 +34,7 @@
 				<strong>secondsurf</strong>
 				<nav class="tabs" aria-label="Dashboard pages">
 					<a href="#pieces" data-page="pieces" aria-current="page">Pieces</a>
+					<a href="#orders" data-page="orders">Orders <span id="orders-count" class="count" hidden></span></a>
 					<a href="#offers" data-page="offers">Offers <span id="offers-count" class="count" hidden></span></a>
 					<a href="#auctions" data-page="auctions">Auctions <span id="auctions-count" class="count" hidden></span></a>
 				</nav>
@@ -54,6 +55,21 @@
 					<p id="offers-error" class="error" role="alert" hidden></p>
 					<p id="offers-status" class="status" role="status" hidden></p>
 					<ul id="offers" class="offers"></ul>
+				</section>
+			</main>
+
+			<main id="orders-page" hidden>
+				<section>
+					<h1>Orders</h1>
+					<p class="hint">
+						Online orders paid with Stripe. Print the address label and packing slip (or save them as a PDF), stick the label on the parcel,
+						then mark the order as shipped. Postage and the barcode come from Swiss Post (Post-App, online or at the counter).
+					</p>
+					<div class="actions">
+						<button type="button" id="orders-print-open" class="primary" hidden>Print all open labels</button>
+					</div>
+					<p id="orders-error" class="error" role="alert" hidden></p>
+					<ul id="orders" class="offers"></ul>
 				</section>
 			</main>
 
