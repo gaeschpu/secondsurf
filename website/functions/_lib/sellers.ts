@@ -3,7 +3,7 @@
 // `seller: <account id>`) or rejects it with a reason. When such a piece is paid, the seller gets the buyer's address and
 // ships it directly; secondsurf pays the seller out by bank transfer after the return period.
 //
-// Commission: COMMISSION_FIRST (5 %) on a seller's first FIRST_SALES (3) sales, then COMMISSION (10 %), on the price the
+// Commission: COMMISSION_FIRST (5 %) on a seller's first FIRST_SALES (3) sales, then COMMISSION (7 %), on the price the
 // buyer paid for the piece. Each order a seller ships adds SHIPPING.price as a shipping refund to the payout.
 // Payout is due PAYOUT_DAYS after the seller marked the parcel as shipped.
 //
@@ -13,7 +13,7 @@ import type { D1Database, Env } from './auth.ts';
 import { sendMail } from './mail.ts';
 import { SHIPPING, SITE } from '../../src/config.ts';
 
-export const COMMISSION = 0.1;
+export const COMMISSION = 0.07;
 export const COMMISSION_FIRST = 0.05;
 export const FIRST_SALES = 3;
 export const PAYOUT_DAYS = 14;
@@ -138,7 +138,7 @@ export async function sellersDb(env: Env): Promise<D1Database | null> {
 
 export const sellerOf = (db: D1Database, userId: number) => db.prepare('SELECT * FROM sellers WHERE user_id = ?').bind(userId).first<Seller>();
 
-/** The commission rate for this seller's next sale: 5 % for the first three sales, then 10 %. */
+/** The commission rate for this seller's next sale: 5 % for the first three sales, then 7 %. */
 export async function nextRate(db: D1Database, userId: number) {
 	const row = await db.prepare('SELECT COUNT(*) AS n FROM seller_sales WHERE user_id = ?').bind(userId).first<{ n: number }>();
 	return (row?.n ?? 0) < FIRST_SALES ? COMMISSION_FIRST : COMMISSION;
