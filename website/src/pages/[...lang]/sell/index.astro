@@ -1,0 +1,160 @@
+---
+// /sell/: the only sell page. Short "how it works" and one button to /sell/new/ (which asks to log in or become a seller first).
+import Base from '../../../layouts/Base.astro';
+import Icon from '../../../components/Icon.astro';
+import { langPaths, url, useT, type Lang } from '../../../i18n';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+
+const text = {
+	de: {
+		title: 'Verkauf deine Surfkleidung',
+		intro: 'Hoodies, Boardshorts, Neoprenanzüge – was du nicht mehr trägst, findet bei uns jemanden, der es liebt. Jede:r kann verkaufen.',
+		how: 'So funktioniert’s',
+		steps: [
+			['Profil erstellen', 'Melde dich an, werde in deinem Profil Verkäufer:in und trag deine IBAN für die Auszahlung ein.'],
+			['Piece hochladen', 'Mach ein paar gute Fotos, beschreib das Piece und setz deinen Preis.'],
+			['Wir prüfen', 'Wir schauen uns jedes Piece an und schalten es im Shop frei.'],
+			['Verkauft? Verschicken', 'Du bekommst die Adresse per E-Mail, schickst das Paket mit der Post und gibst die Sendungsnummer ein.'],
+			['Geld bekommen', 'Sobald die Käuferin das Paket bestätigt (spätestens 14 Tage nach dem Versand), überweisen wir dir dein Geld.'],
+		],
+		dealTitle: 'Was es kostet',
+		deal: 'Hochladen ist gratis. Wir behalten nur 5 % auf deine ersten 3 Verkäufe, danach 10 %. Den Versand (CHF 9) bekommst du zurück.',
+		cta: 'Jetzt verkaufen',
+		terms: 'Bedingungen für Verkäufer:innen',
+	},
+	fr: {
+		title: 'Vends tes vêtements de surf',
+		intro: 'Hoodies, boardshorts, combinaisons – ce que tu ne portes plus trouve chez nous quelqu’un qui l’adore. Tout le monde peut vendre.',
+		how: 'Comment ça marche',
+		steps: [
+			['Créer un profil', 'Connecte-toi, deviens vendeur·se dans ton profil et indique ton IBAN pour le paiement.'],
+			['Publier une pièce', 'Prends quelques bonnes photos, décris la pièce et fixe ton prix.'],
+			['Nous vérifions', 'Nous regardons chaque pièce et la mettons en ligne dans le shop.'],
+			['Vendu ? Envoyer', 'Tu reçois l’adresse par e-mail, envoies le colis par la Poste et saisis le numéro de suivi.'],
+			['Être payé', 'Dès que l’acheteur·se confirme le colis (au plus tard 14 jours après l’envoi), nous te virons ton argent.'],
+		],
+		dealTitle: 'Ce que ça coûte',
+		deal: 'Publier est gratuit. Nous gardons seulement 5 % sur tes 3 premières ventes, puis 10 %. Les frais d’envoi (CHF 9) te sont remboursés.',
+		cta: 'Commencer à vendre',
+		terms: 'Conditions pour les vendeur·ses',
+	},
+	it: {
+		title: 'Vendi il tuo abbigliamento da surf',
+		intro: 'Felpe, boardshort, mute – quello che non porti più trova da noi qualcuno che lo ama. Tutti possono vendere.',
+		how: 'Come funziona',
+		steps: [
+			['Crea un profilo', 'Accedi, diventa venditore/venditrice nel tuo profilo e inserisci il tuo IBAN per il pagamento.'],
+			['Carica un pezzo', 'Scatta qualche buona foto, descrivi il pezzo e fissa il tuo prezzo.'],
+			['Controlliamo', 'Guardiamo ogni pezzo e lo pubblichiamo nello shop.'],
+			['Venduto? Spedisci', 'Ricevi l’indirizzo per e-mail, spedisci il pacco con la Posta e inserisci il numero di invio.'],
+			['Ricevi i soldi', 'Appena l’acquirente conferma il pacco (al più tardi 14 giorni dopo la spedizione), ti bonifichiamo i soldi.'],
+		],
+		dealTitle: 'Quanto costa',
+		deal: 'Caricare è gratis. Tratteniamo solo il 5 % sulle tue prime 3 vendite, poi il 10 %. La spedizione (CHF 9) ti viene rimborsata.',
+		cta: 'Inizia a vendere',
+		terms: 'Condizioni per chi vende',
+	},
+	en: {
+		title: 'Sell your surf clothing',
+		intro: 'Hoodies, boardshorts, wetsuits – what you no longer wear finds someone here who loves it. Anyone can sell.',
+		how: 'How it works',
+		steps: [
+			['Create a profile', 'Log in, become a seller in your profile and add your IBAN for payouts.'],
+			['Upload a piece', 'Take a few good photos, describe the piece and set your price.'],
+			['We check it', 'We look at every piece and put it live in the shop.'],
+			['Sold? Ship it', 'You get the address by email, send the parcel with Swiss Post and enter the tracking number.'],
+			['Get paid', 'As soon as the buyer confirms the parcel (at the latest 14 days after shipping), we transfer your money.'],
+		],
+		dealTitle: 'What it costs',
+		deal: 'Uploading is free. We only keep 5 % on your first 3 sales, then 10 %. You get the shipping (CHF 9) back.',
+		cta: 'Start selling now',
+		terms: 'Terms for sellers',
+	},
+}[lang];
+---
+
+<Base lang={lang} title={text.title} description={text.intro}>
+	<div class="container">
+		<header class="page-head">
+			<p class="eyebrow">{t('nav.sell')}</p>
+			<h1>{text.title}</h1>
+			<p>{text.intro}</p>
+			<p class="cta"><a class="btn" href={url(lang, '/sell/new/')}>{text.cta} <Icon name="arrow" /></a></p>
+		</header>
+
+		<section>
+			<h2>{text.how}</h2>
+			<ol class="steps">
+				{text.steps.map(([title, body], i) => (
+					<li class="card">
+						<span class="num">{i + 1}</span>
+						<div>
+							<strong>{title}</strong>
+							<p>{body}</p>
+						</div>
+					</li>
+				))}
+			</ol>
+		</section>
+
+		<section>
+			<h2>{text.dealTitle}</h2>
+			<p class="card deal">{text.deal}</p>
+		</section>
+
+		<p class="cta end">
+			<a class="btn" href={url(lang, '/sell/new/')}>{text.cta} <Icon name="arrow" /></a>
+			<a class="link small" href={url(lang, '/seller-terms/')}>{text.terms}</a>
+		</p>
+	</div>
+</Base>
+
+<style>
+	section {
+		margin-top: clamp(2.5rem, 6vw, 4rem);
+	}
+	h2 {
+		margin-bottom: 1rem;
+	}
+	.steps {
+		list-style: none;
+		padding: 0;
+		display: grid;
+		gap: 0.75rem;
+	}
+	.steps li {
+		display: grid;
+		grid-template-columns: 2.5rem 1fr;
+		gap: 1rem;
+		align-items: start;
+	}
+	.steps p {
+		margin: 0.25rem 0 0;
+	}
+	.num {
+		display: grid;
+		place-items: center;
+		width: 2.5rem;
+		height: 2.5rem;
+		border-radius: 50%;
+		background: var(--accent);
+		color: var(--on-accent);
+		font-weight: 700;
+	}
+	.deal {
+		padding: 1rem 1.25rem;
+	}
+	.cta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 1rem;
+		margin-top: 1.5rem;
+	}
+	.cta.end {
+		margin-top: clamp(2.5rem, 6vw, 4rem);
+	}
+</style>

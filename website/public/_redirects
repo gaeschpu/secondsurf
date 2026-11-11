@@ -6,3 +6,9 @@
 /it/ /it/new/ 302
 /en /en/new/ 302
 /en/ /en/new/ 302
+
+# Old sell pages → the one sell page.
+/sell/once/ /sell/ 301
+/sell/stockist/ /sell/ 301
+/:lang/sell/once/ /:lang/sell/ 301
+/:lang/sell/stockist/ /:lang/sell/ 301
