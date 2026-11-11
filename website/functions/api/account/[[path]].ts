@@ -41,6 +41,11 @@ import {
 	startSession,
 	tooMany,
 	useLink,
+	clearFailures,
+	dropExpiredSessions,
+	isPwned,
+	loginLocked,
+	recordFailure,
 	type User,
 } from '../../_lib/accounts.ts';
 import { EMAIL, isHuman } from '../../_lib/mail.ts';
@@ -130,9 +135,10 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 			const phone = asPhone(body.phone);
 			if (!phone) return fail('phone');
 			if (!isValidPassword(body.password)) return fail('weak-password');
-			if (await tooMany(db, `register:${ip}`, 5, 60)) return fail('too-many', 429);
-			if (await needsHuman(env, request, body)) return fail('captcha');
+			if ((await tooMany(db, `register:${ip}`, 5, 60)) || (await tooMany(db, `register-email:${email}`, 3, 60))) return fail('too-many', 429);
+			if (await needsHuman(env, request, body)) return fail('captcha', 403);
 			if (await db.prepare('SELECT 1 FROM users WHERE email = ?').bind(email).first()) return fail('email-taken', 409);
+			if (await isPwned(env, body.password)) return fail('pwned-password');
 
 			const lang = asLang(body.lang);
 			const { meta } = await db
@@ -150,12 +156,20 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 			const email = emailOf(body.email);
 			const password = typeof body.password === 'string' ? body.password.slice(0, 200) : '';
 			if (!email || !password) return fail('invalid');
-			if ((await tooMany(db, `login:${email}`, 10, 15)) || (await tooMany(db, `login-ip:${ip}`, 30, 15))) return fail('too-many', 429);
+			if (await loginLocked(db, email, ip)) return fail('too-many', 429);
+			if (await needsHuman(env, request, body)) return fail('captcha', 403);
 			const user = await db.prepare('SELECT * FROM users WHERE email = ?').bind(email).first<User>();
-			// Hash even for unknown emails, so the answer takes as long either way.
+			// Hash even for unknown emails, so the answer takes as long either way. Same error for both cases.
 			const check = await checkPassword(password, user?.password ?? 'pbkdf2$50000$AAAAAAAAAAAAAAAAAAAAAA==$');
-			if (!user || !check.ok) return fail('wrong-login', 401);
+			if (!user || !check.ok) {
+				await recordFailure(db, `login:${email}`, `login-ip:${ip}`);
+				console.warn(JSON.stringify({ event: 'login-failed', ip, known: Boolean(user) }));
+				return fail('wrong-login', 401);
+			}
+			await clearFailures(db, `login:${email}`);
 			if (check.outdated) await db.prepare('UPDATE users SET password = ? WHERE id = ?').bind(await hashPassword(password), user.id).run();
+			await dropExpiredSessions(db);
+			// A new random session id at every login (never reused from before the login).
 			return json(await profile(db, env, user), 200, { 'Set-Cookie': await startSession(db, user.id, body.remember !== false) });
 		}
 
@@ -177,16 +191,19 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 			if (!EMAIL.test(email)) return fail('invalid');
 			if (!canEmail(env)) return fail('unavailable', 503);
 			if ((await tooMany(db, `forgot:${email}`, 3, 60)) || (await tooMany(db, `forgot-ip:${ip}`, 10, 60))) return fail('too-many', 429);
-			if (await needsHuman(env, request, body)) return fail('captcha');
+			if (await needsHuman(env, request, body)) return fail('captcha', 403);
 			const user = await db.prepare('SELECT id, email, lang FROM users WHERE email = ?').bind(email).first<User>();
-			// Same answer whether or not the email has an account.
+			// Same answer, and about the same time, whether or not the email has an account: the email goes out after the answer.
 			if (user) {
-				try {
-					await sendAccountMail(env, 'reset', user.email, asLang(body.lang ?? user.lang), await createLink(db, user.id, 'reset'), origin);
-				} catch (error) {
-					console.error(error);
-					return fail('mail', 502);
-				}
+				const send = (async () => {
+					try {
+						await sendAccountMail(env, 'reset', user.email, asLang(body.lang ?? user.lang), await createLink(db, user.id, 'reset'), origin);
+					} catch (error) {
+						console.error(error);
+					}
+				})();
+				if (waitUntil) waitUntil(send);
+				else await send;
 			}
 			return json({ ok: true });
 		}
@@ -194,6 +211,8 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 		if (route === 'reset' && method === 'POST') {
 			if (!isValidPassword(body.password)) return fail('weak-password');
 			if (await tooMany(db, `reset-ip:${ip}`, 10, 60)) return fail('too-many', 429);
+			if (await needsHuman(env, request, body)) return fail('captcha', 403);
+			if (await isPwned(env, body.password)) return fail('pwned-password');
 			const userId = await useLink(db, text(body.token, 100), 'reset');
 			if (!userId) return fail('link-expired', 410);
 			// The link came by email, so the address is confirmed too. Every device is logged out.
@@ -227,8 +246,11 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 
 		if (route === 'me' && method === 'DELETE') {
 			const password = typeof body.password === 'string' ? body.password.slice(0, 200) : '';
-			if (await tooMany(db, `login:${user.email}`, 10, 15)) return fail('too-many', 429);
-			if (!(await checkPassword(password, user.password)).ok) return fail('wrong-password', 401);
+			if (await loginLocked(db, user.email, ip)) return fail('too-many', 429);
+			if (!(await checkPassword(password, user.password)).ok) {
+				await recordFailure(db, `login:${user.email}`, `login-ip:${ip}`);
+				return fail('wrong-password', 401);
+			}
 			await db.batch(
 				['wishlist', 'addresses', 'preferences', 'phones', 'sessions', 'tokens'].map((table) => db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).bind(user.id)).concat(
 					db.prepare('DELETE FROM users WHERE id = ?').bind(user.id),
@@ -242,8 +264,12 @@ const handle: Handler = async ({ request, env, params, waitUntil }) => {
 		if (route === 'password' && method === 'POST') {
 			const current = typeof body.current === 'string' ? body.current.slice(0, 200) : '';
 			if (!isValidPassword(body.password)) return fail('weak-password');
-			if (await tooMany(db, `login:${user.email}`, 10, 15)) return fail('too-many', 429);
-			if (!(await checkPassword(current, user.password)).ok) return fail('wrong-password', 401);
+			if (await loginLocked(db, user.email, ip)) return fail('too-many', 429);
+			if (!(await checkPassword(current, user.password)).ok) {
+				await recordFailure(db, `login:${user.email}`, `login-ip:${ip}`);
+				return fail('wrong-password', 401);
+			}
+			if (await isPwned(env, body.password)) return fail('pwned-password');
 			// Log out every other device.
 			await db.batch([
 				db.prepare('UPDATE users SET password = ? WHERE id = ?').bind(await hashPassword(body.password), user.id),

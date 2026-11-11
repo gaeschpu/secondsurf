@@ -1,0 +1,16 @@
+# Dependabot: weekly pull requests for outdated or vulnerable packages (website) and GitHub Actions.
+# Security alerts: GitHub → Settings → Code security → Dependabot alerts and security updates (switch both on).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /website
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      astro:
+        patterns: ['astro', '@astrojs/*']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

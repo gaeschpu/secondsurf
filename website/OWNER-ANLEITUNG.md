@@ -134,3 +134,14 @@ Jede Person mit Konto kann über secondsurf verkaufen: im Profil unter **Verkauf
 4. Zurück im Dashboard: **Mark … as paid**. Die Verkäuferinnen bekommen eine E-Mail.
 
 Lehnt die Bank die Datei ab, schick mir die Fehlermeldung. Zum Ausprobieren ohne echte Zahlung: eine Datei hochladen und im E-Banking nur ansehen, nicht freigeben.
+
+## Sicherheit
+
+- **Zwei-Faktor fürs Dashboard (empfohlen):** Am Computer im Ordner `website` `node scripts/admin-2fa-setup.mjs` ausführen. Den angezeigten Schlüssel in der Authenticator-App eintragen (Google Authenticator, 1Password …) und genau gleich in Cloudflare als Secret `ADMIN_TOTP_SECRET` speichern (Workers & Pages → secondsurf → Settings → Variables and Secrets), danach neu deployen. Ab dann fragt das Login nach dem 6-stelligen Code. Den Schlüssel nirgends sonst speichern.
+- **Login:** Das Dashboard bleibt 7 Tage angemeldet. **Log out** meldet alle Geräte ab. Nach 5 falschen Versuchen von einem Gerät ist das Login 15 Minuten gesperrt.
+- **Auszahlungen:** Zahlungsdatei und «als bezahlt markieren» verlangen das Passwort (und den Code), wenn das letzte Login länger als 10 Minuten her ist.
+- **Kundenkonten:** 5 falsche Passwörter sperren ein Konto für 15 Minuten. Passwörter aus bekannten Datenlecks werden abgelehnt.
+- **Zusätzlicher Schutz für /admin (optional, gratis):** Cloudflare → Zero Trust → Access → Applications → «Self-hosted», Domain `secondsurf.ch`, Pfade `/admin` und `/api/admin`, Regel «Emails: deine E-Mail». Dann kommt nur noch durch, wer sich zuerst mit einem Code per E-Mail bei Cloudflare anmeldet.
+- **Updates:** GitHub → Settings → Code security → «Dependabot alerts» und «Dependabot security updates» einschalten. Dependabot schlägt dann jede Woche Updates vor.
+- **Protokoll:** Fehl-Logins und abgelehnte Anfragen stehen in Cloudflare → Workers & Pages → secondsurf → Logs (Ereignisse `login-failed`, `admin-login-failed`, `api-refused`).
+- **Sicherheitslücke gemeldet?** Meldungen kommen über `secondsurf.ch/.well-known/security.txt` an info.secondsurf@gmail.com.

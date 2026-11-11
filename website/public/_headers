@@ -1,5 +1,19 @@
+# Security headers for the static pages (Cloudflare Pages). /api/* responses get theirs from functions/api/_middleware.ts.
+# Script and style rules come from the <meta> CSP Astro writes into every page (astro.config.mjs, security.csp), with
+# hashes of the inline scripts. The header CSP below only adds what a <meta> can't (frame-ancestors) and is enforced
+# together with it. X-Content-Type-Options and Referrer-Policy are added by Cloudflare (zone setting), so not repeated here.
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=(self), usb=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; object-src 'none'
+
 /admin/*
   X-Robots-Tag: noindex
-  X-Frame-Options: DENY
   Referrer-Policy: no-referrer
-  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+
+/.well-known/security.txt
+  Content-Type: text/plain; charset=utf-8

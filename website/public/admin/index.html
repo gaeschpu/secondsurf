@@ -24,10 +24,34 @@
 					Password
 					<input id="password" type="password" name="password" autocomplete="current-password" required />
 				</label>
+				<label id="code-row" hidden>
+					Code from your authenticator app
+					<input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
+				</label>
 				<p id="login-error" class="error" role="alert" hidden></p>
 				<button class="primary" type="submit">Log in</button>
 			</form>
 		</section>
+
+		<dialog id="reauth" class="card">
+			<form id="reauth-form" method="dialog">
+				<h2>Confirm it's you</h2>
+				<p class="hint">Payouts need your password again (at most every 10 minutes).</p>
+				<label>
+					Password
+					<input id="reauth-password" type="password" autocomplete="current-password" required />
+				</label>
+				<label id="reauth-code-row" hidden>
+					Code from your authenticator app
+					<input id="reauth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
+				</label>
+				<p id="reauth-error" class="error" role="alert" hidden></p>
+				<div class="actions">
+					<button class="primary" type="submit" value="ok">Confirm</button>
+					<button type="button" id="reauth-cancel">Cancel</button>
+				</div>
+			</form>
+		</dialog>
 
 		<div id="dashboard" hidden>
 			<header class="bar">

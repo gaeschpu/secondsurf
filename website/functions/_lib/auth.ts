@@ -1,9 +1,12 @@
-// Password login for /admin: a signed, expiring cookie. No database needed.
-// Changing ADMIN_PASSWORD or SESSION_SECRET logs out every device.
+// Login for /admin: password, plus a 6-digit code from an authenticator app once ADMIN_TOTP_SECRET is set (two-factor).
+// The session is a signed, expiring cookie: issued.expires.signature. Logging out invalidates every cookie issued before
+// (stored in D1), changing ADMIN_PASSWORD or SESSION_SECRET too. Payouts need a login from the last 10 minutes (re-auth).
 
 export interface Env {
 	ADMIN_PASSWORD?: string;
 	SESSION_SECRET?: string;
+	/** Base32 secret of the authenticator app (two-factor login for /admin). Without it, the password alone logs in. */
+	ADMIN_TOTP_SECRET?: string;
 	GITHUB_TOKEN?: string;
 	/** Defaults to gaeschpu/secondsurf and main. */
 	GITHUB_REPO?: string;
@@ -52,7 +55,10 @@ export type Handler = (context: {
 }) => Response | Promise<Response>;
 
 const COOKIE = 'secondsurf_admin';
-const MAX_AGE = 60 * 60 * 24 * 30; // stay logged in on the phone for 30 days
+/** Shorter than a customer login (60 days): 7 days on the phone, then password (and code) again. */
+const MAX_AGE = 60 * 60 * 24 * 7;
+/** Payouts and the payment file need a login (or re-confirmation) from the last 10 minutes. */
+export const FRESH_SECONDS = 10 * 60;
 
 const encode = (text: string) => new TextEncoder().encode(text);
 const toHex = (bytes: ArrayBuffer) => [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, '0')).join('');
@@ -82,18 +88,87 @@ export async function checkPassword(env: Env, password: string) {
 }
 
 export async function sessionCookie(env: Env) {
-	const expires = String(Math.floor(Date.now() / 1000) + MAX_AGE);
-	const signature = toHex(await crypto.subtle.sign('HMAC', await hmacKey(env), encode(expires)));
-	return `${COOKIE}=${expires}.${signature}; Path=/api/admin; Max-Age=${MAX_AGE}; HttpOnly; Secure; SameSite=Strict`;
+	const issued = Math.floor(Date.now() / 1000);
+	const value = `${issued}.${issued + MAX_AGE}`;
+	const signature = toHex(await crypto.subtle.sign('HMAC', await hmacKey(env), encode(value)));
+	return `${COOKIE}=${value}.${signature}; Path=/api/admin; Max-Age=${MAX_AGE}; HttpOnly; Secure; SameSite=Strict`;
 }
 
 export const clearedCookie = `${COOKIE}=; Path=/api/admin; Max-Age=0; HttpOnly; Secure; SameSite=Strict`;
 
-export async function isLoggedIn(env: Env, request: Request) {
+/** When the current admin session was issued (seconds), or null if there is no valid session. */
+export async function adminSession(env: Env, request: Request) {
 	const cookies = request.headers.get('Cookie') ?? '';
-	const match = cookies.match(new RegExp(`(?:^|;\\s*)${COOKIE}=(\\d+)\\.([0-9a-f]{64})(?:;|$)`));
-	if (!match) return false;
-	const [, expires, signature] = match;
-	if (Number(expires) < Date.now() / 1000) return false;
-	return crypto.subtle.verify('HMAC', await hmacKey(env), fromHex(signature), encode(expires));
+	const match = cookies.match(new RegExp(`(?:^|;\\s*)${COOKIE}=(\\d+)\\.(\\d+)\\.([0-9a-f]{64})(?:;|$)`));
+	if (!match) return null;
+	const [, issued, expires, signature] = match;
+	if (Number(expires) < Date.now() / 1000) return null;
+	if (!(await crypto.subtle.verify('HMAC', await hmacKey(env), fromHex(signature), encode(`${issued}.${expires}`)))) return null;
+	if (Number(issued) < (await loggedOutAt(env))) return null;
+	return Number(issued);
+}
+
+export const isLoggedIn = async (env: Env, request: Request) => (await adminSession(env, request)) !== null;
+
+/** Whether the admin logged in (or confirmed the password again) within the last FRESH_SECONDS. */
+export async function isFreshLogin(env: Env, request: Request) {
+	const issued = await adminSession(env, request);
+	return issued !== null && Date.now() / 1000 - issued <= FRESH_SECONDS;
+}
+
+/** The answer when an action needs a fresh login: the dashboard then asks for the password (and code) again. */
+export const reauthNeeded = () => json({ error: 'Please confirm with your password again.', reauth: true }, 401);
+
+// ---------------------------------------------------------------- logout everywhere (D1)
+
+const adminDb = async (env: Env) => {
+	if (!env.DB) return null;
+	await env.DB.prepare('CREATE TABLE IF NOT EXISTS admin_state (key TEXT PRIMARY KEY, value INTEGER NOT NULL)').run();
+	return env.DB;
+};
+
+async function loggedOutAt(env: Env) {
+	const db = await adminDb(env);
+	const row = await db?.prepare("SELECT value FROM admin_state WHERE key = 'logged_out_at'").first<{ value: number }>();
+	return row?.value ?? 0;
+}
+
+/** Every admin cookie issued up to now stops working (all devices). */
+export async function logoutEverywhere(env: Env) {
+	const db = await adminDb(env);
+	await db
+		?.prepare("INSERT INTO admin_state (key, value) VALUES ('logged_out_at', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value")
+		.bind(Math.floor(Date.now() / 1000))
+		.run();
+}
+
+// ---------------------------------------------------------------- two-factor (TOTP, RFC 6238)
+
+const BASE32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function base32(text: string) {
+	const clean = text.toUpperCase().replace(/[^A-Z2-7]/g, '');
+	let bits = '';
+	for (const char of clean) bits += BASE32.indexOf(char).toString(2).padStart(5, '0');
+	return Uint8Array.from(bits.match(/.{8}/g) ?? [], (byte) => parseInt(byte, 2));
+}
+
+async function totpAt(secret: Uint8Array<ArrayBuffer>, step: number) {
+	const counter = new Uint8Array(8);
+	new DataView(counter.buffer).setBigUint64(0, BigInt(step));
+	const key = await crypto.subtle.importKey('raw', secret, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+	const mac = new Uint8Array(await crypto.subtle.sign('HMAC', key, counter));
+	const offset = mac[mac.length - 1] & 0x0f;
+	const number = ((mac[offset] & 0x7f) << 24) | (mac[offset + 1] << 16) | (mac[offset + 2] << 8) | mac[offset + 3];
+	return String(number % 1_000_000).padStart(6, '0');
+}
+
+export const totpEnabled = (env: Env) => (env.ADMIN_TOTP_SECRET?.replace(/[^A-Za-z2-7]/g, '').length ?? 0) >= 16;
+
+/** The step (30-second window) the code belongs to, allowing one step of clock drift either way; null if wrong. */
+export async function checkTotp(env: Env, code: string) {
+	if (!/^\d{6}$/.test(code)) return null;
+	const secret = base32(env.ADMIN_TOTP_SECRET!);
+	const now = Math.floor(Date.now() / 1000 / 30);
+	for (const step of [now, now - 1, now + 1]) if ((await totpAt(secret, step)) === code) return step;
+	return null;
 }

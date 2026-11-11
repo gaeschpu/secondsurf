@@ -115,13 +115,16 @@ const texts = {
 				li.className = 'item';
 				const href = `${page.dataset.prefix}/item/${p.id}/`;
 				li.innerHTML = `
-					<a class="photo" href="${href}">${p.photo ? `<img src="${p.photo}" alt="" />` : ''}</a>
+					<a class="photo"></a>
 					<div class="info">
-						<a class="name" href="${href}"><strong></strong> <span></span></a>
+						<a class="name"><strong></strong> <span></span></a>
 						<p class="small muted size"></p>
 						<button type="button" class="link remove"></button>
 					</div>
 					<p class="price"></p>`;
+				// Values go in through the DOM (never as HTML).
+				li.querySelectorAll<HTMLAnchorElement>('a').forEach((a) => (a.href = href));
+				if (p.photo) li.querySelector('.photo')!.append(Object.assign(document.createElement('img'), { src: p.photo, alt: '' }));
 				li.querySelector('.name strong')!.textContent = p.brand;
 				li.querySelector('.name span')!.textContent = titleOf(p);
 				li.querySelector('.size')!.textContent = p.size;

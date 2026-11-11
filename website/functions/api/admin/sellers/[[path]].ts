@@ -15,7 +15,7 @@
 
 import { SITE } from '../../../../src/config.ts';
 import { database } from '../../../_lib/accounts.ts';
-import { json, type Handler } from '../../../_lib/auth.ts';
+import { isFreshLogin, json, reauthNeeded, type Handler } from '../../../_lib/auth.ts';
 import { commit, createBlob, listDir, PRODUCTS_DIR } from '../../../_lib/github.ts';
 import { folderName, nextNumber, parseNewProduct, toMarkdown } from '../../../_lib/product.ts';
 import { cleanIban, mailSeller, now, PAYOUT_DAYS, sellersDb, type Sale, type Submission } from '../../../_lib/sellers.ts';
@@ -97,6 +97,9 @@ export const onRequest: Handler = async ({ request, env, params }) => {
 		await ordersDb(env); // the parcel_checks table
 		return json({ payouts: await payoutList(db), now: now() });
 	}
+
+	// Money: the payment file and "paid" need a login (or password confirmation) from the last 10 minutes.
+	if (method === 'POST' && /^payouts\/(pain001|paid|\d+\/paid)$/.test(route) && !(await isFreshLogin(env, request))) return reauthNeeded();
 
 	const paid = route.match(/^payouts\/(\d+)\/paid$/);
 	if (paid && method === 'POST') {

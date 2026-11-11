@@ -3,6 +3,7 @@
 import { json, type Handler } from '../../_lib/auth.ts';
 import { createBlob, PRODUCTS_DIR, readRaw } from '../../_lib/github.ts';
 import { PRODUCT_ID } from '../../_lib/product.ts';
+import { cleanJpeg } from '../../_lib/images.ts';
 
 const MAX_BASE64 = 8 * 1024 * 1024; // the browser sends photos of well under 1 MB
 const PHOTO_FILE = /^[a-z0-9_-]+\.(jpe?g|png|webp)$/i;
@@ -11,9 +12,9 @@ const PHOTO_FILE = /^[a-z0-9_-]+\.(jpe?g|png|webp)$/i;
 export const onRequestPost: Handler = async ({ request, env }) => {
 	if (Number(request.headers.get('Content-Length') ?? 0) > MAX_BASE64) return json({ error: 'Photo is too big.' }, 413);
 	const body = (await request.json().catch(() => null)) as { base64?: unknown } | null;
-	const base64 = body?.base64;
-	// "/9j/" is how every JPEG starts once base64-encoded.
-	if (typeof base64 !== 'string' || !base64.startsWith('/9j/') || base64.length > MAX_BASE64) return json({ error: 'Not a JPEG photo.' }, 400);
+	// Only a well-formed JPEG, without EXIF/GPS and other metadata (functions/_lib/images.ts).
+	const base64 = cleanJpeg(body?.base64, MAX_BASE64);
+	if (!base64) return json({ error: 'Not a JPEG photo.' }, 400);
 	return json({ sha: await createBlob(env, base64) });
 };
 

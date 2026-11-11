@@ -14,6 +14,7 @@ import { CATEGORIES, CONDITIONS, SIZES } from '../../../src/config.ts';
 import { currentUser, database, tooMany } from '../../_lib/accounts.ts';
 import { json, type Handler } from '../../_lib/auth.ts';
 import { addTracking, cleanTracking, orderByRef, ordersDb, trackingFor } from '../../_lib/orders.ts';
+import { cleanJpeg } from '../../_lib/images.ts';
 import { cleanIban, FIRST_SALES, mailOwnerSubmission, MAX_PHOTOS, nextRate, now, sellerOf, sellersDb, type Sale, type Submission } from '../../_lib/sellers.ts';
 
 const fail = (error: string, status = 400) => json({ error }, status);
@@ -104,8 +105,9 @@ export const onRequest: Handler = async ({ request, env, params, waitUntil }) =>
 	}
 
 	if (route === 'photos' && method === 'POST') {
-		const base64 = body.base64;
-		if (typeof base64 !== 'string' || !base64.startsWith('/9j/') || base64.length > MAX_BASE64) return fail('photo');
+		// Only a well-formed JPEG, without EXIF/GPS and other metadata (functions/_lib/images.ts).
+		const base64 = cleanJpeg(body.base64, MAX_BASE64);
+		if (!base64) return fail('photo');
 		if (await tooMany(accounts, `seller-photo:${user.id}`, 60, 60)) return fail('tooMany', 429);
 		// Photos never used in a submission go away after a day.
 		await db.prepare('DELETE FROM submission_photos WHERE submission_id IS NULL AND created_at < ?').bind(now() - 86400).run();

@@ -80,14 +80,22 @@ const a = auctionTexts[lang];
 					const li = document.createElement('li');
 					li.className = 'lot';
 					li.innerHTML = `
-						<a class="lot-link" href="${href}">
-							<div class="media">${p.real ?? p.photo ? `<img src="${p.real ?? p.photo}" alt="" loading="lazy" />` : ''}<span class="badge">${t.badge}</span></div>
+						<a class="lot-link">
+							<div class="media"><span class="badge"></span></div>
 							<p class="title"><strong></strong> <span></span></p>
 							<p class="meta"><span class="size"></span><span class="bids"></span></p>
 							<p class="price"><span class="label"></span> <strong></strong></p>
-							<p class="clock"><span>${t.endsIn}</span> <strong data-ends="${x.endsAt}"></strong></p>
-							<span class="btn">${t.toBid}</span>
+							<p class="clock"><span></span> <strong data-ends></strong></p>
+							<span class="btn"></span>
 						</a>`;
+					// Values go in through the DOM (never as HTML), even though they come from our own server.
+					li.querySelector('a')!.href = href;
+					const photo = p.real ?? p.photo;
+					if (photo) li.querySelector('.media')!.prepend(Object.assign(document.createElement('img'), { src: photo, alt: '', loading: 'lazy' }));
+					li.querySelector('.badge')!.textContent = t.badge;
+					li.querySelector('.clock span')!.textContent = t.endsIn;
+					li.querySelector<HTMLElement>('[data-ends]')!.dataset.ends = String(x.endsAt);
+					li.querySelector('.btn')!.textContent = t.toBid;
 					li.querySelector('.title strong')!.textContent = p.brand;
 					li.querySelector('.title span')!.textContent = titleOf(p);
 					li.querySelector('.size')!.textContent = p.size;

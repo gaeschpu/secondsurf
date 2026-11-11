@@ -22,14 +22,21 @@ let pieceList = [];
 /** Categories, sizes and conditions, for the edit form. */
 let formOptions = null;
 
+/** fetch for /api/admin: when the server asks to confirm the password again (payouts), asks and then tries once more. */
+async function adminFetch(input, init) {
+	let res = await fetch(input, init);
+	if (res.status === 401 && (await res.clone().json().catch(() => ({}))).reauth && (await confirmPassword())) res = await fetch(input, init);
+	return res;
+}
+
 async function api(path, options = {}) {
-	const res = await fetch(`/api/admin/${path}`, {
+	const res = await adminFetch(`/api/admin/${path}`, {
 		method: options.method ?? 'GET',
 		headers: options.body ? { 'Content-Type': 'application/json' } : {},
 		body: options.body ? JSON.stringify(options.body) : undefined,
 	});
 	const data = await res.json().catch(() => ({}));
-	if (res.status === 401 && path !== 'login') showLogin();
+	if (res.status === 401 && path !== 'login' && !data.reauth) showLogin();
 	if (!res.ok) throw new Error(data.error ?? `Something went wrong (${res.status}).`);
 	return data;
 }
@@ -39,9 +46,49 @@ function show(el, message) {
 	el.hidden = !message;
 }
 
+/** Whether the login asks for a code (two-factor is on once ADMIN_TOTP_SECRET is set). */
+let needsCode = false;
+const codeCheck = fetch('/api/admin/login')
+	.then((res) => res.json())
+	.then((data) => {
+		needsCode = Boolean(data.code);
+		$('code-row').hidden = !needsCode;
+		$('reauth-code-row').hidden = !needsCode;
+	})
+	.catch(() => {});
+
 function showLogin() {
 	$('dashboard').hidden = true;
 	$('login').hidden = false;
+}
+
+/** The re-confirmation dialog. Resolves true once the password (and code) were right, false if cancelled. */
+function confirmPassword() {
+	const dialog = $('reauth');
+	show($('reauth-error'));
+	$('reauth-password').value = '';
+	$('reauth-code').value = '';
+	dialog.showModal();
+	return new Promise((resolve) => {
+		const done = (ok) => {
+			$('reauth-form').removeEventListener('submit', submit);
+			$('reauth-cancel').removeEventListener('click', cancel);
+			dialog.close();
+			resolve(ok);
+		};
+		const cancel = () => done(false);
+		const submit = async (event) => {
+			event.preventDefault();
+			try {
+				await api('login', { method: 'POST', body: { password: $('reauth-password').value, code: $('reauth-code').value } });
+				done(true);
+			} catch (error) {
+				show($('reauth-error'), error.message);
+			}
+		};
+		$('reauth-form').addEventListener('submit', submit);
+		$('reauth-cancel').addEventListener('click', cancel);
+	});
 }
 
 // ---------- Login ----------
@@ -52,8 +99,10 @@ $('login-form').addEventListener('submit', async (event) => {
 	button.disabled = true;
 	show($('login-error'));
 	try {
-		await api('login', { method: 'POST', body: { password: $('password').value } });
+		await codeCheck;
+		await api('login', { method: 'POST', body: { password: $('password').value, code: $('code').value } });
 		$('password').value = '';
+		$('code').value = '';
 		await loadDashboard();
 	} catch (error) {
 		show($('login-error'), error.message);
@@ -1186,7 +1235,7 @@ $('payout-file').addEventListener('click', async () => {
 		$('payout-account').open = true;
 		return show($('payouts-error'), 'Enter your account holder and IBAN first (they stay on this device).');
 	}
-	const res = await fetch('/api/admin/sellers/payouts/pain001', {
+	const res = await adminFetch('/api/admin/sellers/payouts/pain001', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ ids: pickedPayouts(), debtor: { name, iban } }),

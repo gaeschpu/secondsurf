@@ -38,6 +38,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 				<label><span>{a.email}</span><input name="email" type="email" autocomplete="email" required maxlength="200" /></label>
 				<label><span>{a.password}</span><input name="password" type="password" autocomplete="current-password" required maxlength="200" /></label>
 				<label class="check stay"><input type="checkbox" name="remember" checked /><span>{a.stayLoggedIn}</span></label>
+				<div class="captcha"></div>
 				<div class="foot">
 					<button class="btn" type="submit">{a.login}</button>
 					<button type="button" class="link" data-show="forgot">{a.forgot}</button>
@@ -89,6 +90,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 					<span>{a.newPassword} <small class="muted">({a.passwordHint})</small></span>
 					<input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="200" />
 				</label>
+				<div class="captcha"></div>
 				<div class="foot"><button class="btn" type="submit">{a.resetSave}</button></div>
 				<p class="status" role="status" aria-live="polite"></p>
 			</form>
@@ -353,7 +355,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 		for (const [name, form] of Object.entries(forms)) form.hidden = name !== which;
 		root.querySelectorAll<HTMLButtonElement>('.tab').forEach((tab) => tab.setAttribute('aria-pressed', String(tab.dataset.tab === which)));
 		$('.tabs').hidden = which === 'forgot';
-		if (which !== 'login') showCaptcha(forms[which]);
+		showCaptcha(forms[which]);
 	}
 	root.querySelectorAll<HTMLButtonElement>('[data-tab], [data-show]').forEach((button) =>
 		button.addEventListener('click', () => showGuest((button.dataset.tab ?? button.dataset.show) as keyof typeof forms)),
@@ -377,7 +379,13 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
 	// "Stay logged in" unticked: the login ends when the browser closes.
 	const remember = (data: Record<string, string>) => data.remember === 'on';
-	handle(forms.login, async (data) => loggedIn(await api<Profile>('login', 'POST', { ...data, remember: remember(data) }), remember(data)));
+	handle(forms.login, async (data) => {
+		try {
+			await loggedIn(await api<Profile>('login', 'POST', { ...data, remember: remember(data), ...captchaToken(forms.login) }), remember(data));
+		} finally {
+			resetCaptcha(forms.login);
+		}
+	});
 	handle(forms.register, async (data) => {
 		try {
 			await loggedIn(await api<Profile>('register', 'POST', { ...data, remember: remember(data), lang, ...captchaToken(forms.register) }), remember(data));
@@ -393,7 +401,14 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 			resetCaptcha(forms.forgot);
 		}
 	});
-	handle($<HTMLFormElement>('#reset-form'), async (data) => loggedIn(await api<Profile>('reset', 'POST', { token: params.get('reset'), password: data.password })));
+	const resetForm = $<HTMLFormElement>('#reset-form');
+	handle(resetForm, async (data) => {
+		try {
+			await loggedIn(await api<Profile>('reset', 'POST', { token: params.get('reset'), password: data.password, ...captchaToken(resetForm) }));
+		} finally {
+			resetCaptcha(resetForm);
+		}
+	});
 
 	// ------------------------------------------------ logged in
 
@@ -587,6 +602,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 	if (params.get('verified')) notice(params.get('verified') === '1' ? a.verifiedOk : a.verifiedFail);
 	if (params.has('reset')) {
 		$('#reset').hidden = false;
+		showCaptcha(resetForm);
 	} else if (seemsLoggedIn()) {
 		api<Profile>('me')
 			.then(showProfile)

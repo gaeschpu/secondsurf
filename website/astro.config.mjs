@@ -6,6 +6,28 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
 	site: 'https://secondsurf.ch',
 	prefetch: true,
+	// Content Security Policy as a <meta> tag on every page, with hashes of every inline script and style Astro renders,
+	// so script-src needs no 'unsafe-inline'. frame-ancestors can't go in a <meta>: public/_headers sends it (and the rest).
+	// Turnstile (bot check) loads from challenges.cloudflare.com; checkout forms post to /api and redirect to Stripe.
+	security: {
+		csp: {
+			algorithm: 'SHA-256',
+			directives: [
+				"default-src 'self'",
+				"img-src 'self' data: blob:",
+				"font-src 'self'",
+				"connect-src 'self'",
+				"frame-src https://challenges.cloudflare.com",
+				"object-src 'none'",
+				"base-uri 'self'",
+				"form-action 'self' https://checkout.stripe.com",
+				"manifest-src 'self'",
+			],
+			scriptDirective: { resources: ["'self'", 'https://challenges.cloudflare.com'] },
+			// style="" attributes set by scripts and by the Turnstile widget.
+			styleDirective: { resources: ["'self'", { resource: "'unsafe-inline'", kind: 'attribute' }] },
+		},
+	},
 	// Small site: inline CSS so the first paint doesn't wait for a stylesheet request.
 	build: { inlineStylesheets: 'always' },
 	integrations: [

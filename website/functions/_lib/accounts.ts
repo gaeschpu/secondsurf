@@ -215,6 +215,64 @@ export async function tooMany(db: D1Database, key: string, max: number, minutes:
 	return false;
 }
 
+/** Only counts: whether there were already `max` attempts for `key` within `minutes` (nothing is recorded). */
+export async function isLocked(db: D1Database, key: string, max: number, minutes: number) {
+	const row = await db.prepare('SELECT COUNT(*) AS n FROM attempts WHERE key = ? AND at > ?').bind(key, now() - minutes * 60).first<{ n: number }>();
+	return (row?.n ?? 0) >= max;
+}
+
+/** Records one failed attempt for each key (e.g. a wrong password for this account and from this IP). */
+export async function recordFailure(db: D1Database, ...keys: string[]) {
+	await db.batch([
+		...keys.map((key) => db.prepare('INSERT INTO attempts (key, at) VALUES (?, ?)').bind(key, now())),
+		db.prepare('DELETE FROM attempts WHERE at < ?').bind(now() - 86400),
+	]);
+}
+
+export const clearFailures = (db: D1Database, key: string) => db.prepare('DELETE FROM attempts WHERE key = ?').bind(key).run();
+
+/**
+ * Login lockout with backoff, per account and per IP. Counts only failed attempts:
+ * 5 wrong passwords for one account within 15 minutes lock it for the rest of that window, 15 within a day lock it until the
+ * oldest falls out of the 24 hours. One IP gets 20 failures per 15 minutes (shared Wi-Fi), across all accounts.
+ * A successful login clears the account's count, so the real owner is never locked out for long.
+ */
+export async function loginLocked(db: D1Database, email: string, ip: string) {
+	return (
+		(await isLocked(db, `login:${email}`, 5, 15)) || (await isLocked(db, `login:${email}`, 15, 24 * 60)) || (await isLocked(db, `login-ip:${ip}`, 20, 15))
+	);
+}
+
+/** Old sessions are useless: removed now and then (on login). */
+export const dropExpiredSessions = (db: D1Database) => db.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(now()).run();
+
+/**
+ * Whether the password appears in known data breaches (Have I Been Pwned, k-anonymity: only the first 5 characters of the
+ * SHA-1 hash leave the server, never the password). If the service doesn't answer within 2 seconds, the password is accepted.
+ */
+export async function isPwned(env: Env, password: string) {
+	// Local tests run without the internet check.
+	if (env.FORMS_TEST_API) return false;
+	try {
+		const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-1', encoder.encode(password)))]
+			.map((b) => b.toString(16).padStart(2, '0'))
+			.join('')
+			.toUpperCase();
+		const res = await fetch(`https://api.pwnedpasswords.com/range/${hash.slice(0, 5)}`, {
+			headers: { 'Add-Padding': 'true', 'User-Agent': 'secondsurf.ch' },
+			signal: AbortSignal.timeout(2000),
+		});
+		if (!res.ok) return false;
+		const suffix = hash.slice(5);
+		return (await res.text()).split('\n').some((line) => {
+			const [rest, count] = line.trim().split(':');
+			return rest === suffix && Number(count) > 0;
+		});
+	} catch {
+		return false;
+	}
+}
+
 // ---------------------------------------------------------------- addresses
 
 export const MAX_ADDRESSES = 5;
