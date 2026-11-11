@@ -172,6 +172,14 @@ Test first with Stripe's test mode: use the test keys (`sk_test_…` and the tes
 A test purchase really marks the piece as sold on the site: set it back to available in the dashboard afterwards.
 Then swap in the live keys and redeploy. A piece with its own `buyUrl:` (e.g. a Stripe Payment Link) uses that link instead.
 
+## Cart (Warenkorb)
+
+The piece page adds to a cart kept in the browser (`src/scripts/cart.ts`, localStorage `cart`); the header shows the count and
+`/cart/` (`src/pages/[...lang]/cart.astro`) lists the pieces, drops sold or auctioned ones, and posts all ids plus the discount code to
+`/api/checkout`. That holds every piece (all or nothing) and opens one Stripe Checkout with one line per piece and shipping per
+order; metadata `product_ids` lets the webhook mark all of them sold in one commit. At most 8 pieces (`MAX_CART`). The thanks page
+(`?order=1`) empties the cart.
+
 ## Price offers ("Preis vorschlagen")
 
 Every available piece has a **Preis vorschlagen** button. Only logged-in customers can use it: logged out, it shows a

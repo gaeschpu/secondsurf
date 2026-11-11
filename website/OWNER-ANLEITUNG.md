@@ -100,6 +100,10 @@ Alle laufenden Auktionen, auch normale Shop-Pieces in einer Auktion, stehen auf 
 
 Im Dashboard unter **Pieces** tippst du auf das Foto, den Namen oder **Edit**. Dann kannst du alles ändern: Marke, Titel, Kategorie, Grösse, Preis, Zustand, Masse, Beschreibung, Staff Pick und «Auction only». Die Übersetzungen (Französisch, Italienisch, Englisch) stehen unter **Translations**; leere Felder zeigen den deutschen Text. Tippe auf **Save changes**. Nach 1 bis 2 Minuten ist die Änderung im Shop. Senkst du dabei den Preis, bekommen Kundinnen und Kunden mit Preisalarm eine E-Mail. Fotos änderst du hier nicht.
 
+## Warenkorb
+
+Kundinnen und Kunden legen Pieces mit **In den Warenkorb** in ihren Warenkorb (Taschen-Symbol oben, mit Zahl). Dort sehen sie Zwischensumme, Versand und Total, geben den Rabattcode ein (WELCOME10) und tippen auf **Zur Kasse**. Alle Pieces werden zusammen mit Stripe bezahlt; Versand gibt es einmal pro Bestellung (gratis ab dem Betrag in den Einstellungen). Nach der Zahlung werden alle Pieces automatisch als verkauft markiert, und du bekommst eine E-Mail mit allen Pieces und der Adresse. Reserviert ist ein Piece erst an der Kasse: Wer zuerst bezahlt, bekommt es. Höchstens 8 Pieces pro Bestellung.
+
 ## Ein Piece als verkauft markieren
 
 So verkaufst du im Moment: Kundinnen und Kunden tippen auf **Anfragen**, du bekommst eine E-Mail und schickst ihnen die Zahlungsangaben. Sie bezahlen sofort. Reserviert wird nichts: Wer zuerst bezahlt, bekommt das Piece.

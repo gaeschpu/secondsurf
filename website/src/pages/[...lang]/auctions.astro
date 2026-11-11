@@ -14,14 +14,17 @@ const a = auctionTexts[lang];
 
 <Base lang={lang} title={a.pageTitle} description={a.pageIntro}>
 	<div class="container-wide auctions-page" data-texts={JSON.stringify(a)} data-lang={lang} data-prefix={url(lang, '/').replace(/\/$/, '')}>
-		<header class="page-head">
+		<header class="page-head centered">
 			<h1>{a.pageTitle}</h1>
-			<p>{a.pageIntro}</p>
-			<p class="how small"><strong>{a.pageHow}:</strong> {a.pageSteps} · <a href={url(lang, '/terms/')}>{a.termsLink}</a></p>
 		</header>
 		<p class="state" data-state>{a.payLoading}</p>
 		<ul class="lots" data-lots></ul>
-		<p class="small"><a href={url(lang, '/shop/')}>{t('nav.shopAll')} →</a></p>
+		<!-- How auctions work, below the lots. -->
+		<section class="about">
+			<p>{a.pageIntro}</p>
+			<p class="how small"><strong>{a.pageHow}:</strong> {a.pageSteps} · <a href={url(lang, '/terms/')}>{a.termsLink}</a></p>
+			<p class="small"><a href={url(lang, '/shop/')}>{t('nav.shopAll')} →</a></p>
+		</section>
 	</div>
 </Base>
 
@@ -108,6 +111,14 @@ const a = auctionTexts[lang];
 </script>
 
 <style>
+	.centered {
+		text-align: center;
+	}
+	.about {
+		max-width: 40rem;
+		margin: 0 auto 3rem;
+		text-align: center;
+	}
 	.how {
 		color: var(--ink-soft);
 	}
@@ -116,6 +127,7 @@ const a = auctionTexts[lang];
 		display: none;
 	}
 	.state {
+		text-align: center;
 		padding: 2rem 0;
 		font-size: var(--step-1, 1.2rem);
 	}

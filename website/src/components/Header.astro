@@ -115,6 +115,10 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 					</details>
 				)
 			}
+			<a class="icon-btn cart-btn" href={url(lang, '/cart/')} aria-label={t('cart.title')} title={t('cart.title')} aria-current={current === '/cart/' ? 'page' : undefined}>
+				<Icon name="bag" size={20} />
+				<span class="cart-count" data-cart-count hidden></span>
+			</a>
 			<a class="icon-btn" href={url(lang, '/account/')} aria-label={accountTexts[lang].title} title={accountTexts[lang].title} aria-current={current === '/account/' ? 'page' : undefined}>
 				<Icon name="user" size={18} />
 			</a>
@@ -131,6 +135,20 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 </header>
 
 <script>
+	import { cartIds } from '../scripts/cart';
+
+	// Cart icon: the number of pieces in the cart (src/scripts/cart.ts), updated when it changes.
+	const cartCount = document.querySelector<HTMLElement>('[data-cart-count]');
+	const showCart = () => {
+		if (!cartCount) return;
+		const n = cartIds().length;
+		cartCount.textContent = String(n);
+		cartCount.hidden = n === 0;
+	};
+	window.addEventListener('cart-change', showCart);
+	window.addEventListener('storage', showCart);
+	showCart();
+
 	const root = document.documentElement;
 	const isDark = () => root.dataset.theme === 'dark';
 
@@ -341,6 +359,27 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 		display: flex;
 		align-items: center;
 		gap: 0.25rem;
+	}
+	.cart-btn {
+		position: relative;
+	}
+	.cart-count {
+		position: absolute;
+		top: 0.1rem;
+		right: 0.05rem;
+		min-width: 1.1rem;
+		height: 1.1rem;
+		padding: 0 0.25rem;
+		border-radius: 999px;
+		background: #b42318;
+		color: #fff;
+		font-size: 0.68rem;
+		font-weight: 700;
+		line-height: 1.1rem;
+		text-align: center;
+	}
+	.cart-count[hidden] {
+		display: none;
 	}
 	.icon-btn {
 		display: inline-flex;

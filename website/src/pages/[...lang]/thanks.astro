@@ -19,6 +19,13 @@ const t = useT(lang);
 	</div>
 </Base>
 
+<script>
+	import { clearCart } from '../../scripts/cart';
+
+	// Coming back from a paid order (?order=1, set in functions/_lib/checkout.ts): the cart is done.
+	if (new URLSearchParams(location.search).has('order')) clearCart();
+</script>
+
 <style>
 	.thanks {
 		min-height: 50vh;

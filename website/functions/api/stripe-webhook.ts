@@ -1,5 +1,6 @@
 // POST /api/stripe-webhook: Stripe tells us when a checkout is paid or has expired.
-// Paid: the piece is marked as sold (a commit, so the site rebuilds), the owner gets an email with the shipping address,
+// Paid: every piece of the order (metadata product_ids, or product_id for one) is marked as sold in one commit, so the
+// site rebuilds; the owner gets an email with the pieces and the shipping address,
 // and the customer an order confirmation in their language (AGB 2.3).
 // Paid through an auction (metadata auction_id): the auction is marked as paid. Every paid order is recorded (purchases),
 // because accounts without one may only hold one auction at a time (functions/_lib/auctions.ts).
@@ -23,7 +24,7 @@ type Session = {
 	payment_status: string;
 	payment_intent?: string | null;
 	amount_total?: number | null;
-	metadata?: { product_id?: string; offer_id?: string; auction_id?: string; auction_buyer?: string; welcome_user?: string; discount?: string; lang?: string; product_name?: string };
+	metadata?: { product_id?: string; product_ids?: string; offer_id?: string; auction_id?: string; auction_buyer?: string; welcome_user?: string; discount?: string; lang?: string; product_name?: string };
 	customer_details?: { name?: string | null; email?: string | null; phone?: string | null } | null;
 	collected_information?: { shipping_details?: { name?: string; address?: Address } | null } | null;
 	shipping_details?: { name?: string; address?: Address } | null;
@@ -32,13 +33,24 @@ type Session = {
 
 const chf = (cents?: number | null) => `CHF ${((cents ?? 0) / 100).toFixed(2)}`;
 
+/** The pieces of an order: product_ids ("a,b,c") from the cart, or the single product_id (offers, auctions, old sessions). */
+const pieceIds = (session: Session) =>
+	[...new Set((session.metadata?.product_ids ?? session.metadata?.product_id ?? '').split(','))].filter((id) => PRODUCT_ID.test(id));
+
 async function sell(env: Parameters<Handler>[0]['env'], session: Session) {
-	const id = session.metadata?.product_id ?? '';
-	if (!PRODUCT_ID.test(id)) return { alreadySold: false };
-	const path = `${PRODUCTS_DIR}/${id}/index.md`;
-	const markdown = await readText(env, path);
-	const alreadySold = /^sold:\s*true\b/m.test(markdown);
-	if (!alreadySold) await commit(env, `Sold online: ${id}`, [{ path, mode: '100644', type: 'blob', content: setSold(markdown, true) }]);
+	const ids = pieceIds(session);
+	if (!ids.length) return { alreadySold: false };
+	const files = [];
+	const doubles: string[] = [];
+	for (const id of ids) {
+		const path = `${PRODUCTS_DIR}/${id}/index.md`;
+		const markdown = await readText(env, path);
+		if (/^sold:\s*true\b/m.test(markdown)) doubles.push(id);
+		else files.push({ path, mode: '100644' as const, type: 'blob' as const, content: setSold(markdown, true) });
+	}
+	if (files.length) await commit(env, `Sold online: ${ids.join(', ')}`, files);
+	const alreadySold = doubles.length > 0;
+	const id = ids.join(', ');
 
 	const ship = session.collected_information?.shipping_details ?? session.shipping_details;
 	const a = ship?.address;
@@ -50,8 +62,11 @@ async function sell(env: Parameters<Handler>[0]['env'], session: Session) {
 		subject: `${alreadySold ? '⚠️ SCHON VERKAUFT, bitte rückerstatten: ' : 'Verkauft: '}${id} (${chf(session.amount_total)})`,
 		text: [
 			alreadySold
-				? `Achtung: ${id} war schon als verkauft markiert. Bitte die Zahlung in Stripe rückerstatten und der Kundin / dem Kunden schreiben.\n`
-				: `${id} wurde online bezahlt und ist jetzt als verkauft markiert. Bitte innert 48 Stunden verschicken.\n`,
+				? `Achtung: ${doubles.join(', ')} war schon als verkauft markiert. Bitte diesen Betrag in Stripe rückerstatten und der Kundin / dem Kunden schreiben.\n`
+				: `Online bezahlt und jetzt als verkauft markiert. Bitte innert 48 Stunden verschicken.\n`,
+			`Pieces (${ids.length}):`,
+			...ids.map((piece) => `- ${piece}`),
+			'',
 			`Betrag (inkl. Versand): ${chf(session.amount_total)}${session.metadata?.discount ? ` (mit Rabattcode ${session.metadata.discount})` : ''}`,
 			'',
 			'Versand an:',
@@ -76,7 +91,7 @@ const CONFIRMATION: Record<Lang, { subject: string; lines: (v: Record<string, st
 		lines: (v) => [
 			`Hallo ${v.name}`,
 			'',
-			'Danke für deine Bestellung! Deine Zahlung ist bei uns angekommen, das Piece gehört jetzt dir.',
+			'Danke für deine Bestellung! Deine Zahlung ist bei uns angekommen, alles gehört jetzt dir.',
 			'',
 			`${v.piece}`,
 			`Bezahlt: ${v.amount} (inkl. Versand)`,
@@ -97,7 +112,7 @@ const CONFIRMATION: Record<Lang, { subject: string; lines: (v: Record<string, st
 		lines: (v) => [
 			`Bonjour ${v.name}`,
 			'',
-			'Merci pour ta commande ! Ton paiement nous est bien parvenu, la pièce est maintenant à toi.',
+			'Merci pour ta commande ! Ton paiement nous est bien parvenu, tout est maintenant à toi.',
 			'',
 			`${v.piece}`,
 			`Payé : ${v.amount} (envoi compris)`,
@@ -118,7 +133,7 @@ const CONFIRMATION: Record<Lang, { subject: string; lines: (v: Record<string, st
 		lines: (v) => [
 			`Ciao ${v.name}`,
 			'',
-			'Grazie per il tuo ordine! Abbiamo ricevuto il pagamento, il pezzo ora è tuo.',
+			'Grazie per il tuo ordine! Abbiamo ricevuto il pagamento, ora è tutto tuo.',
 			'',
 			`${v.piece}`,
 			`Pagato: ${v.amount} (spedizione inclusa)`,
@@ -139,7 +154,7 @@ const CONFIRMATION: Record<Lang, { subject: string; lines: (v: Record<string, st
 		lines: (v) => [
 			`Hello ${v.name}`,
 			'',
-			'Thanks for your order! Your payment has arrived, so the piece is yours now.',
+			'Thanks for your order! Your payment has arrived, so it is all yours now.',
 			'',
 			`${v.piece}`,
 			`Paid: ${v.amount} (shipping included)`,
@@ -192,7 +207,7 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 
 	const event = JSON.parse(body) as { type: string; data: { object: Session } };
 	const session = event.data.object;
-	const id = session.metadata?.product_id ?? '';
+	const ids = pieceIds(session);
 	const db = await holds(env).catch(() => null);
 
 	const paid =
@@ -209,7 +224,7 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 			await forgetDone(db, session.id).catch(() => {});
 			return json({ error: 'Try again.' }, 500);
 		}
-		if (db && PRODUCT_ID.test(id)) await holdSold(db, id).catch(() => {});
+		if (db) for (const id of ids) await holdSold(db, id).catch(() => {});
 		// A double sale gets no confirmation: the owner refunds that customer (see the owner's email).
 		if (!alreadySold) await confirm(env, session).catch((error) => console.error('Order confirmation failed', error));
 		// Paid through an accepted price offer: close the offer.
@@ -242,7 +257,7 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 	}
 
 	if (event.type === 'checkout.session.expired' || event.type === 'checkout.session.async_payment_failed') {
-		if (db && PRODUCT_ID.test(id)) await releaseHold(db, id, session.id).catch(() => {});
+		if (db) for (const id of ids) await releaseHold(db, id, session.id).catch(() => {});
 	}
 	return json({ ok: true });
 };

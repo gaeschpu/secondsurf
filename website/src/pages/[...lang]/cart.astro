@@ -1,0 +1,307 @@
+---
+// /cart/: the cart (Warenkorb). The pieces come from this browser (src/scripts/cart.ts), names, photos and prices from
+// /products.json; pieces that were sold or went into an auction meanwhile are taken out. Here the customer enters the
+// discount code; "Zur Kasse" posts everything to /api/checkout, which sends them to Stripe with all pieces in one payment.
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import { langPaths, url, useT, type Lang } from '../../i18n';
+import { SHIPPING } from '../../config';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+const texts = {
+	remove: t('cart.remove'),
+	unavailable: t('cart.unavailable'),
+	free: t('cart.free'),
+	freeFrom: t('cart.freeFrom'),
+	count: t('cart.count'),
+	one: t('cart.one'),
+};
+---
+
+<Base lang={lang} title={t('cart.title')} description={t('cart.title')} noindex>
+	<div
+		class="container cart-page"
+		data-texts={JSON.stringify(texts)}
+		data-lang={lang}
+		data-prefix={url(lang, '/').replace(/\/$/, '')}
+		data-shipping={SHIPPING.price}
+		data-free-from={SHIPPING.freeFrom}
+	>
+		<header class="page-head">
+			<h1>{t('cart.title')}</h1>
+		</header>
+
+		<p id="reserved" class="checkout-msg small" role="status">{t('checkout.reserved')}</p>
+		<p id="checkout-error" class="checkout-msg small" role="status">{t('checkout.error')}</p>
+		<p id="unavailable" class="checkout-msg small" role="status">{t('cart.unavailableMsg')}</p>
+		<p id="code-invalid" class="checkout-msg small" role="status">{t('checkout.codeInvalid')}</p>
+		<p id="code-login" class="checkout-msg small" role="status">
+			{t('checkout.codeLogin')} <a href={`${url(lang, '/account/')}?back=${encodeURIComponent(url(lang, '/cart/'))}`}>{t('offer.loginButton')}</a>
+		</p>
+		<p id="code-used" class="checkout-msg small" role="status">{t('checkout.codeUsed')}</p>
+		<p class="removed small" data-removed hidden>{t('cart.unavailableMsg')}</p>
+
+		<div class="empty" data-empty hidden>
+			<p>{t('cart.empty')}</p>
+			<a class="btn" href={url(lang, '/shop/')}>{t('cart.toShop')} <Icon name="arrow" /></a>
+		</div>
+
+		<div class="layout" data-filled hidden>
+			<ul class="items" data-items></ul>
+
+			<form class="summary" method="post" action="/api/checkout" data-form>
+				<input type="hidden" name="lang" value={lang} />
+				<div data-ids></div>
+				<dl>
+					<dt data-count></dt>
+					<dd data-subtotal></dd>
+					<dt>{t('cart.shipping')}</dt>
+					<dd data-shipping-cost></dd>
+				</dl>
+				<p class="small muted" data-free-note></p>
+				<label class="code">
+					<span>{t('checkout.code')}</span>
+					<input name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40" placeholder="WELCOME10" />
+				</label>
+				<p class="small muted">{t('cart.codeNote')}</p>
+				<dl class="total">
+					<dt>{t('cart.total')}</dt>
+					<dd data-total></dd>
+				</dl>
+				<button class="btn big" type="submit">{t('cart.checkout')} <Icon name="arrow" /></button>
+				<p class="small muted">{t('checkout.note')}</p>
+				<p class="small muted">{t('cart.unique')}</p>
+			</form>
+		</div>
+	</div>
+</Base>
+
+<script>
+	import { cartIds, removeFromCart } from '../../scripts/cart';
+
+	type Piece = { id: string; brand: string; title: string | Record<string, string>; size: string; price: number; sold: boolean; auctionOnly?: boolean; photo: string | null };
+
+	const page = document.querySelector<HTMLElement>('.cart-page')!;
+	const t = JSON.parse(page.dataset.texts!) as Record<string, string>;
+	const lang = page.dataset.lang!;
+	const shippingPrice = Number(page.dataset.shipping);
+	const freeFrom = Number(page.dataset.freeFrom);
+	const $ = <T extends HTMLElement = HTMLElement>(sel: string) => page.querySelector<T>(sel)!;
+	const chf = (n: number) => (Number.isInteger(n) ? `CHF ${n}.–` : `CHF ${n.toFixed(2)}`);
+	const titleOf = (p: Piece) => (typeof p.title === 'string' ? p.title : p.title[lang] || p.title.de || '');
+	let pieces: Piece[] = [];
+	let blocked = new Set<string>();
+
+	function render() {
+		const byId = new Map(pieces.map((p) => [p.id, p] as const));
+		// Pieces that can't be bought any more leave the cart, with a note.
+		const gone = cartIds().filter((id) => {
+			const p = byId.get(id);
+			return !p || p.sold || p.auctionOnly || blocked.has(id);
+		});
+		if (gone.length && pieces.length) {
+			gone.forEach(removeFromCart);
+			$('[data-removed]').hidden = false;
+		}
+		const items = cartIds().map((id) => byId.get(id)).filter((p): p is Piece => Boolean(p));
+		$('[data-empty]').hidden = items.length > 0;
+		$('[data-filled]').hidden = items.length === 0;
+
+		$('[data-items]').replaceChildren(
+			...items.map((p) => {
+				const li = document.createElement('li');
+				li.className = 'item';
+				const href = `${page.dataset.prefix}/item/${p.id}/`;
+				li.innerHTML = `
+					<a class="photo" href="${href}">${p.photo ? `<img src="${p.photo}" alt="" />` : ''}</a>
+					<div class="info">
+						<a class="name" href="${href}"><strong></strong> <span></span></a>
+						<p class="small muted size"></p>
+						<button type="button" class="link remove"></button>
+					</div>
+					<p class="price"></p>`;
+				li.querySelector('.name strong')!.textContent = p.brand;
+				li.querySelector('.name span')!.textContent = titleOf(p);
+				li.querySelector('.size')!.textContent = p.size;
+				li.querySelector('.price')!.textContent = chf(p.price);
+				const remove = li.querySelector<HTMLButtonElement>('.remove')!;
+				remove.textContent = t.remove;
+				remove.addEventListener('click', () => removeFromCart(p.id));
+				return li;
+			}),
+		);
+
+		$('[data-ids]').replaceChildren(
+			...items.map((p) => Object.assign(document.createElement('input'), { type: 'hidden', name: 'id', value: p.id })),
+		);
+		const subtotal = items.reduce((sum, p) => sum + p.price, 0);
+		const shipping = subtotal >= freeFrom ? 0 : shippingPrice;
+		$('[data-count]').textContent = items.length === 1 ? t.one : t.count.replace('{n}', String(items.length));
+		$('[data-subtotal]').textContent = chf(subtotal);
+		$('[data-shipping-cost]').textContent = shipping ? chf(shipping) : t.free;
+		$('[data-free-note]').textContent = shipping ? t.freeFrom.replace('{amount}', chf(freeFrom)) : '';
+		$('[data-total]').textContent = chf(subtotal + shipping);
+	}
+
+	async function load() {
+		try {
+			const [list, active] = await Promise.all([
+				fetch('/products.json').then((r) => (r.ok ? (r.json() as Promise<Piece[]>) : [])),
+				fetch('/api/auctions/active', { cache: 'no-store' }).then((r) => (r.ok ? (r.json() as Promise<{ id: string }[]>) : [])).catch(() => []),
+			]);
+			pieces = list;
+			blocked = new Set(active.map((a) => a.id));
+		} catch {
+			// Without the list the cart can't show anything; keep it as it is.
+		}
+		render();
+	}
+
+	// Messages from /api/checkout come as #reserved, #code-login …; CSS :target is not reliable after a form redirect.
+	const showMessage = () => page.querySelectorAll<HTMLElement>('.checkout-msg').forEach((m) => m.classList.toggle('show', location.hash === `#${m.id}`));
+	window.addEventListener('hashchange', showMessage);
+	showMessage();
+
+	window.addEventListener('cart-change', render);
+	load();
+</script>
+
+<style>
+	.cart-page {
+		min-height: 50vh;
+	}
+	.layout {
+		display: grid;
+		grid-template-columns: 1fr minmax(16rem, 22rem);
+		gap: 2rem;
+		align-items: start;
+		margin-bottom: 3rem;
+	}
+	@media (max-width: 48rem) {
+		.layout {
+			grid-template-columns: 1fr;
+		}
+	}
+	.layout[hidden],
+	.empty[hidden],
+	.removed[hidden] {
+		display: none;
+	}
+	.items {
+		display: grid;
+		gap: 1rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.items :global(.item) {
+		display: grid;
+		grid-template-columns: 5.5rem 1fr auto;
+		gap: 1rem;
+		align-items: start;
+		padding-bottom: 1rem;
+		border-bottom: 1px solid var(--line);
+	}
+	.items :global(.photo) {
+		display: block;
+		aspect-ratio: 4 / 5;
+		overflow: hidden;
+		border-radius: var(--radius-sm);
+		background: var(--bg-sunken);
+	}
+	.items :global(.photo img) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	.items :global(.name) {
+		color: var(--ink);
+		text-decoration: none;
+		text-transform: uppercase;
+		font-size: var(--step--1);
+		letter-spacing: 0.03em;
+	}
+	.items :global(.info p) {
+		margin: 0.25rem 0;
+	}
+	.items :global(.remove) {
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--ink-soft);
+		text-decoration: underline;
+		font: inherit;
+		font-size: var(--step--1);
+		cursor: pointer;
+	}
+	.items :global(.price) {
+		margin: 0;
+		font-weight: 700;
+	}
+	.summary {
+		display: grid;
+		gap: 0.75rem;
+		padding: 1.25rem;
+		border: 1.5px solid var(--ink);
+		background: var(--bg-raised);
+	}
+	.summary dl {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 0.4rem 1rem;
+		margin: 0;
+	}
+	.summary dd {
+		margin: 0;
+		text-align: right;
+		font-weight: 600;
+	}
+	.summary p {
+		margin: 0;
+	}
+	.total {
+		padding-top: 0.75rem;
+		border-top: 1px solid var(--line);
+		font-size: var(--step-1, 1.2rem);
+	}
+	.total dd {
+		font-weight: 800 !important;
+	}
+	.code span {
+		display: block;
+		margin-bottom: 0.3rem;
+		font-weight: 600;
+		font-size: var(--step--1);
+	}
+	.code input {
+		width: 100%;
+		padding: 0.6rem 0.75rem;
+		border: 1.5px solid var(--line);
+		background: var(--bg);
+		font: inherit;
+		text-transform: uppercase;
+	}
+	.summary .btn {
+		justify-content: center;
+	}
+	.empty {
+		padding: 2rem 0 4rem;
+	}
+	.removed {
+		padding: 0.75rem 1rem;
+		border-left: 3px solid var(--accent);
+		background: var(--accent-tint);
+	}
+	.checkout-msg {
+		display: none;
+		padding: 0.75rem 1rem;
+		border-left: 3px solid #b42318;
+		background: #fee2e2;
+	}
+	.checkout-msg:target,
+	.checkout-msg.show {
+		display: block;
+	}
+</style>

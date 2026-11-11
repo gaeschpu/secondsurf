@@ -153,24 +153,16 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 						<p class="sold-note">{t('shop.sold')}</p>
 					) : checkout ? (
 						<>
-							<p id="reserved" class="checkout-msg small" role="status">{t('checkout.reserved')}</p>
-							<p id="checkout-error" class="checkout-msg small" role="status">{t('checkout.error')}</p>
-							<p id="code-invalid" class="checkout-msg small" role="status">{t('checkout.codeInvalid')}</p>
-							<p id="code-login" class="checkout-msg small" role="status">
-								{t('checkout.codeLogin')} <a href={`${url(lang, '/account/')}?back=${encodeURIComponent(url(lang, `/item/${product.id}/`))}`}>{t('offer.loginButton')}</a>
-							</p>
-							<p id="code-used" class="checkout-msg small" role="status">{t('checkout.codeUsed')}</p>
-							<form class="actions" method="post" action="/api/checkout">
-								<input type="hidden" name="id" value={product.id} />
-								<input type="hidden" name="lang" value={lang} />
-								<label class="code-field">
-									<span>{t('checkout.code')}</span>
-									<input name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40" placeholder="WELCOME10" />
-								</label>
-								<button class="btn big" type="submit">
-									{t('shop.buy')} <Icon name="arrow" />
+							{/* The cart (src/scripts/cart.ts) collects pieces; the discount code and the checkout are on the cart page. */}
+							<p class="actions">
+								<button class="btn big" type="button" data-add-cart={product.id}>
+									<Icon name="bag" /> {t('cart.add')}
 								</button>
-							</form>
+							</p>
+							<p class="in-cart small" data-in-cart hidden>
+								✓ {t('cart.added')} · <a href={url(lang, '/cart/')}>{t('cart.view')} →</a>
+							</p>
+							<p class="small muted" data-cart-full hidden>{t('cart.full').replace('{n}', '8')}</p>
 							<p class="small muted">{t('checkout.note')}</p>
 						</>
 					) : p.buyUrl ? (
@@ -201,6 +193,24 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 
 <script>
 	import { applyOrder, modelOrder } from '../../../scripts/models';
+	import { addToCart, inCart } from '../../../scripts/cart';
+
+	// "In den Warenkorb": once added, the button says so and links to the cart.
+	for (const button of document.querySelectorAll<HTMLButtonElement>('[data-add-cart]')) {
+		const id = button.dataset.addCart!;
+		const note = document.querySelector<HTMLElement>('[data-in-cart]');
+		const show = () => {
+			const added = inCart(id);
+			if (note) note.hidden = !added;
+			button.closest<HTMLElement>('.actions')!.hidden = added;
+		};
+		button.addEventListener('click', () => {
+			if (!addToCart(id)) document.querySelector<HTMLElement>('[data-cart-full]')!.hidden = false;
+			show();
+		});
+		window.addEventListener('cart-change', show);
+		show();
+	}
 
 	// Product page gallery: arrows, thumbnails and the counter all follow the scroll position, so swiping works too.
 	for (const gallery of document.querySelectorAll<HTMLElement>('[data-gallery]')) {
@@ -261,6 +271,20 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 		background: var(--accent-tint);
 	}
 	.lot-note[hidden] {
+		display: none;
+	}
+	.in-cart {
+		margin: 1rem 0;
+		padding: 0.75rem 1rem;
+		background: #dcfce7;
+		color: #14532d;
+		font-weight: 600;
+	}
+	.in-cart a {
+		color: inherit;
+	}
+	.in-cart[hidden],
+	.actions[hidden] {
 		display: none;
 	}
 	.crumbs {
