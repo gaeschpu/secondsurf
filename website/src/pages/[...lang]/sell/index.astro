@@ -22,6 +22,13 @@ const text = {
 		],
 		dealTitle: 'Was es kostet',
 		deal: 'Hochladen ist gratis. Wir behalten nur 5 % auf deine ersten 3 Verkäufe, danach 10 %. Den Versand (CHF 9) bekommst du zurück.',
+		compareTitle: 'Weniger als anderswo',
+		compare: [
+			['secondsurf', '5 % (erste 3 Verkäufe), danach 10 % – Zahlungsgebühren inklusive'],
+			['Depop', '10 % + PayPal-Gebühren (ca. 3 %)'],
+			['Ricardo', '8–12 % Erfolgsprovision, je nach Kategorie'],
+		],
+		compareNote: 'Gebühren für Verkäufer:innen in der Schweiz, Stand November 2026, laut den Hilfeseiten der Anbieter. Ohne Gewähr.',
 		cta: 'Jetzt verkaufen',
 		terms: 'Bedingungen für Verkäufer:innen',
 	},
@@ -38,6 +45,13 @@ const text = {
 		],
 		dealTitle: 'Ce que ça coûte',
 		deal: 'Publier est gratuit. Nous gardons seulement 5 % sur tes 3 premières ventes, puis 10 %. Les frais d’envoi (CHF 9) te sont remboursés.',
+		compareTitle: 'Moins cher qu’ailleurs',
+		compare: [
+			['secondsurf', '5 % (3 premières ventes), puis 10 % – frais de paiement inclus'],
+			['Depop', '10 % + frais PayPal (env. 3 %)'],
+			['Ricardo', '8–12 % de commission de succès, selon la catégorie'],
+		],
+		compareNote: 'Frais pour les vendeur·ses en Suisse, état novembre 2026, selon les pages d’aide des plateformes. Sans garantie.',
 		cta: 'Commencer à vendre',
 		terms: 'Conditions pour les vendeur·ses',
 	},
@@ -54,6 +68,13 @@ const text = {
 		],
 		dealTitle: 'Quanto costa',
 		deal: 'Caricare è gratis. Tratteniamo solo il 5 % sulle tue prime 3 vendite, poi il 10 %. La spedizione (CHF 9) ti viene rimborsata.',
+		compareTitle: 'Meno che altrove',
+		compare: [
+			['secondsurf', '5 % (prime 3 vendite), poi 10 % – commissioni di pagamento incluse'],
+			['Depop', '10 % + commissioni PayPal (ca. 3 %)'],
+			['Ricardo', '8–12 % di provvigione di successo, secondo la categoria'],
+		],
+		compareNote: 'Commissioni per chi vende in Svizzera, stato novembre 2026, secondo le pagine di aiuto delle piattaforme. Senza garanzia.',
 		cta: 'Inizia a vendere',
 		terms: 'Condizioni per chi vende',
 	},
@@ -70,6 +91,13 @@ const text = {
 		],
 		dealTitle: 'What it costs',
 		deal: 'Uploading is free. We only keep 5 % on your first 3 sales, then 10 %. You get the shipping (CHF 9) back.',
+		compareTitle: 'Less than elsewhere',
+		compare: [
+			['secondsurf', '5 % (first 3 sales), then 10 % – payment fees included'],
+			['Depop', '10 % + PayPal fees (approx. 3 %)'],
+			['Ricardo', '8–12 % success fee, depending on the category'],
+		],
+		compareNote: 'Fees for sellers in Switzerland, as of November 2026, according to the platforms’ help pages. No guarantee.',
 		cta: 'Start selling now',
 		terms: 'Terms for sellers',
 	},
@@ -103,6 +131,18 @@ const text = {
 		<section>
 			<h2>{text.dealTitle}</h2>
 			<p class="card deal">{text.deal}</p>
+			<h3>{text.compareTitle}</h3>
+			<table class="compare">
+				<tbody>
+					{text.compare.map(([who, fee], i) => (
+						<tr class={i === 0 ? 'us' : undefined}>
+							<th scope="row">{who}</th>
+							<td>{fee}</td>
+						</tr>
+					))}
+				</tbody>
+			</table>
+			<p class="small muted">{text.compareNote}</p>
 		</section>
 
 		<p class="cta end">
@@ -143,6 +183,28 @@ const text = {
 		background: var(--accent);
 		color: var(--on-accent);
 		font-weight: 700;
+	}
+	h3 {
+		margin: 2rem 0 0.75rem;
+	}
+	.compare {
+		width: 100%;
+		border-collapse: collapse;
+	}
+	.compare th,
+	.compare td {
+		text-align: left;
+		vertical-align: top;
+		padding: 0.75rem 0.5rem;
+		border-bottom: 1px solid var(--line);
+	}
+	.compare th {
+		white-space: nowrap;
+		padding-right: 1rem;
+	}
+	.compare .us {
+		font-weight: 700;
+		color: var(--accent);
 	}
 	.deal {
 		padding: 1rem 1.25rem;
