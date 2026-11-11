@@ -24,6 +24,8 @@ const nav: NavItem[] = [
 	{ href: '/contact/', label: t('nav.contact') },
 ];
 const announcement = l(ANNOUNCEMENT, lang);
+// The trust line: the points of the announcement (settings, separated by "·"), standing still and centred.
+const trustPoints = announcement.split('·').map((point) => point.trim()).filter(Boolean);
 const holiday = l(HOLIDAY_BANNER, lang);
 const isActive = (href: string) => (href === '/' ? current === '/' : current.startsWith(href));
 ---
@@ -31,20 +33,11 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 {holiday && <p class="announcement holiday">{holiday}</p>}
 {
 	announcement && (
-		<p class="announcement ticker">
-			<span class="sr-only">{announcement}</span>
-			{/* Two identical halves: sliding by one half loops without a jump. */}
-			<span class="ticker-track" aria-hidden="true">
-				{[0, 1].map(() => (
-					<span class="ticker-half">
-						{[0, 1, 2, 3].map(() => (
-							<span class="ticker-item">{announcement}</span>
-						))}
-					</span>
-				))}
-			</span>
-			<span class="ticker-still" aria-hidden="true">{announcement}</span>
-		</p>
+		<ul class="announcement trust" role="list">
+			{trustPoints.map((point) => (
+				<li>{point}</li>
+			))}
+		</ul>
 	)
 }
 <header class="site-header">
@@ -195,50 +188,35 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 		background: var(--sand-tint);
 		color: var(--ink);
 	}
-	/* The shipping banner scrolls from left to right. */
-	.ticker {
-		overflow: hidden;
-		padding: 0.8rem 0;
-		font-size: clamp(0.95rem, 0.85rem + 0.5vw, 1.25rem);
-		letter-spacing: 0.14em;
-		white-space: nowrap;
-	}
-	.ticker-track {
+	/* Trust line: three short points, standing still, centred; they wrap onto more lines on narrow phones. */
+	.trust {
 		display: flex;
-		width: max-content;
-		animation: ticker 90s linear infinite;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.15rem 0;
+		margin: 0;
+		padding: 0.55rem var(--gutter);
+		list-style: none;
+		font-size: 0.74rem;
+		font-weight: 700;
 	}
-	.ticker:hover .ticker-track {
-		animation-play-state: paused;
+	.trust li {
+		display: inline-flex;
+		align-items: center;
 	}
-	.ticker-half {
-		display: flex;
+	.trust li + li::before {
+		content: '·';
+		padding-inline: 0.75em;
+		opacity: 0.7;
 	}
-	.ticker-item {
-		padding-inline: clamp(4rem, 12vw, 9rem);
-	}
-	.ticker-still {
-		display: none;
-	}
-	@keyframes ticker {
-		from {
-			transform: translateX(-50%);
+	/* Phones: the points wrap, so no dots at the start of a line; spacing separates them instead. */
+	@media (max-width: 40rem) {
+		.trust {
+			gap: 0.1rem 1.1rem;
+			font-size: 0.68rem;
 		}
-		to {
-			transform: translateX(0);
-		}
-	}
-	/* People who turn off animations on their device get the text standing still. */
-	@media (prefers-reduced-motion: reduce) {
-		.ticker {
-			padding-inline: var(--gutter);
-			white-space: normal;
-		}
-		.ticker-track {
-			display: none;
-		}
-		.ticker-still {
-			display: block;
+		.trust li + li::before {
+			content: none;
 		}
 	}
 	.site-header {

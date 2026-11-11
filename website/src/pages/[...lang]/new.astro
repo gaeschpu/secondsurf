@@ -6,6 +6,8 @@ import Base from '../../layouts/Base.astro';
 import Icon from '../../components/Icon.astro';
 import JsonLd from '../../components/JsonLd.astro';
 import ProductGrid from '../../components/ProductGrid.astro';
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 import { getNewDrop } from '../../lib/products';
 import { langPaths, url, useT, htmlLang, type Lang } from '../../i18n';
 import { DROP, OWNER, SITE, SOCIALS } from '../../config';
@@ -15,6 +17,55 @@ const { lang } = Astro.props as { lang: Lang };
 const t = useT(lang);
 const products = await getNewDrop();
 const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
+
+// Hero image: put the photo at src/assets/hero-home.jpg (or .jpeg/.png/.webp). Astro makes the sizes and formats.
+// TODO (owner): add src/assets/hero-home.jpg. Until then the hero shows a calm sand-coloured panel instead (no broken image).
+const heroFiles = import.meta.glob<{ default: ImageMetadata }>('../../assets/hero-home.{jpg,jpeg,png,webp}', { eager: true });
+const heroImage = Object.values(heroFiles)[0]?.default;
+
+const hero = {
+	de: {
+		title: 'Gebrauchte Surfmode. Jedes Stück ein Unikat.',
+		text: 'Kuratierte Secondhand-Surfmode – jedes Teil gibt es nur einmal, verschickt innert 48 h.',
+		browse: 'Jetzt stöbern',
+		sell: 'Verkaufen',
+		alt: 'Secondhand-Surfmode von secondsurf',
+		how: 'So funktioniert’s',
+		steps: ['Entdecken', 'Sicher bezahlen über Stripe', 'Geliefert innert 48 h'],
+		insta: 'secondsurf auf Instagram',
+	},
+	fr: {
+		title: 'Mode surf de seconde main. Chaque pièce est unique.',
+		text: 'Mode surf de seconde main sélectionnée – chaque pièce n’existe qu’une fois, envoyée sous 48 h.',
+		browse: 'Découvrir',
+		sell: 'Vendre',
+		alt: 'Mode surf de seconde main de secondsurf',
+		how: 'Comment ça marche',
+		steps: ['Découvrir', 'Payer en toute sécurité avec Stripe', 'Livré sous 48 h'],
+		insta: 'secondsurf sur Instagram',
+	},
+	it: {
+		title: 'Moda surf usata. Ogni pezzo è unico.',
+		text: 'Moda surf di seconda mano selezionata – ogni capo esiste una sola volta, spedito entro 48 h.',
+		browse: 'Scopri ora',
+		sell: 'Vendere',
+		alt: 'Moda surf di seconda mano di secondsurf',
+		how: 'Come funziona',
+		steps: ['Scoprire', 'Pagare in sicurezza con Stripe', 'Consegnato entro 48 h'],
+		insta: 'secondsurf su Instagram',
+	},
+	en: {
+		title: 'Second-hand surf wear. Every piece one of a kind.',
+		text: 'Curated second-hand surf wear – every piece exists only once, shipped within 48 h.',
+		browse: 'Browse now',
+		sell: 'Sell',
+		alt: 'Second-hand surf wear from secondsurf',
+		how: 'How it works',
+		steps: ['Discover', 'Pay securely with Stripe', 'Delivered within 48 h'],
+		insta: 'secondsurf on Instagram',
+	},
+}[lang];
+const insta = SOCIALS[0];
 
 const at = DROP.at;
 const dateText = at
@@ -47,8 +98,38 @@ const google = at
 		}}
 	/>
 	<div class="container-wide drop-page" data-at={at?.toISOString() ?? ''} data-lang={lang} data-sitekey={siteKey} data-off={t('drop.off')}>
-		<header class="page-head">
-			<h1>{t('shop.newTitle')}</h1>
+		<section class="hero" aria-labelledby="hero-title">
+			<div class="hero-text">
+				<h1 id="hero-title">{hero.title}</h1>
+				<p class="hero-lead">{hero.text}</p>
+				<p class="hero-actions">
+					<a class="btn hero-cta" href="#drop">{hero.browse} <Icon name="arrow" /></a>
+					<a class="hero-sell" href={url(lang, '/sell/')}>{hero.sell}</a>
+				</p>
+			</div>
+			<div class="hero-media">
+				{
+					heroImage ? (
+						<Image
+							src={heroImage}
+							alt={hero.alt}
+							widths={[480, 800, 1200]}
+							sizes="(min-width: 50rem) 34rem, 100vw"
+							loading="eager"
+							fetchpriority="high"
+							class="hero-img"
+						/>
+					) : (
+						<div class="hero-placeholder" aria-hidden="true">
+							<Icon name="wave" size={72} />
+						</div>
+					)
+				}
+			</div>
+		</section>
+
+		<header class="page-head drop-head" id="drop">
+			<h2>{t('shop.newTitle')}</h2>
 		</header>
 
 		{
@@ -116,6 +197,23 @@ const google = at
 		<div class="drop-grid" hidden={Boolean(at)}>
 			<ProductGrid lang={lang} products={products} filter />
 		</div>
+
+		<section class="how" aria-labelledby="how-title">
+			<h2 id="how-title">{hero.how}</h2>
+			<ol class="how-steps">
+				{hero.steps.map((step, i) => (
+					<li>
+						<span class="how-num" aria-hidden="true">{i + 1}</span>
+						<span class="how-text">{step}</span>
+					</li>
+				))}
+			</ol>
+			<p class="insta">
+				<a href={insta.href} rel="noopener" target="_blank">
+					<Icon name="instagram" size={18} /> {hero.insta} <span class="muted">{insta.handle}</span>
+				</a>
+			</p>
+		</section>
 	</div>
 </Base>
 
@@ -235,6 +333,139 @@ const google = at
 </script>
 
 <style>
+	/* ---------- Hero: text left, image right; on phones text above the image ---------- */
+	.hero {
+		display: grid;
+		gap: clamp(1.5rem, 4vw, 3rem);
+		align-items: center;
+		padding-block: clamp(2rem, 6vw, 4rem) clamp(1rem, 3vw, 2rem);
+	}
+	@media (min-width: 50rem) {
+		.hero {
+			grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+		}
+	}
+	.hero h1 {
+		font-size: var(--step-4);
+		text-wrap: balance;
+	}
+	.hero-lead {
+		margin-top: 1rem;
+		max-width: 34rem;
+		font-size: var(--step-1);
+		color: var(--ink-soft);
+	}
+	.hero-actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.75rem 1.5rem;
+		margin-top: 1.75rem;
+	}
+	/* Primary: accent colour, same square bold look as the buttons under a piece. */
+	.hero-cta {
+		min-height: 3.2rem;
+		padding: 0.85rem 1.75rem;
+		border-radius: 0;
+		font-size: var(--step-0);
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+	.hero-sell {
+		font-weight: 700;
+	}
+	.hero-media {
+		aspect-ratio: 4 / 5;
+		max-height: 34rem;
+		width: 100%;
+		overflow: hidden;
+		background: var(--sand-tint);
+	}
+	@media (max-width: 49.99rem) {
+		.hero-media {
+			aspect-ratio: 4 / 3;
+		}
+	}
+	.hero-media :global(.hero-img) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	.hero-placeholder {
+		display: grid;
+		place-items: center;
+		width: 100%;
+		height: 100%;
+		color: var(--sand);
+	}
+	.drop-head {
+		padding-top: clamp(1.5rem, 4vw, 2.5rem);
+		scroll-margin-top: 5rem;
+	}
+	.drop-head h2 {
+		font-size: var(--step-3);
+	}
+
+	/* ---------- How it works ---------- */
+	.how {
+		margin-top: clamp(3rem, 8vw, 5rem);
+		padding-top: clamp(2rem, 5vw, 3rem);
+		border-top: 1px solid var(--line);
+		text-align: center;
+	}
+	.how h2 {
+		font-size: var(--step-2);
+	}
+	.how-steps {
+		display: grid;
+		gap: 1rem;
+		margin: 1.5rem 0 0;
+		padding: 0;
+		list-style: none;
+	}
+	@media (min-width: 40rem) {
+		.how-steps {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+	.how-steps li {
+		display: grid;
+		justify-items: center;
+		gap: 0.6rem;
+		padding: 1.25rem 1rem;
+		background: var(--bg-raised);
+		border: 1px solid var(--line);
+	}
+	.how-num {
+		display: grid;
+		place-items: center;
+		width: 2.4rem;
+		height: 2.4rem;
+		border-radius: 50%;
+		background: var(--accent);
+		color: var(--on-accent);
+		font-weight: 700;
+	}
+	.how-text {
+		font-weight: 700;
+	}
+	.insta {
+		margin-top: 1.75rem;
+		font-size: var(--step--1);
+	}
+	.insta a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		color: var(--ink);
+		text-decoration: none;
+	}
+	.insta a:hover {
+		color: var(--accent);
+		text-decoration: underline;
+	}
+
 	.countdown {
 		display: grid;
 		justify-items: center;
@@ -295,19 +526,19 @@ const google = at
 		gap: 0.6rem;
 		min-height: 3.4rem;
 		padding: 0.9rem 2rem;
-		border: 1.5px solid var(--ink);
+		border: 1.5px solid var(--accent);
 		border-radius: 0;
-		background: var(--ink);
-		color: var(--bg);
+		background: var(--accent);
+		color: var(--on-accent);
 		font-size: var(--step-0);
 		font-weight: 700;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 	}
 	.btn:hover {
-		border-color: var(--ink-soft);
-		background: var(--ink-soft);
-		color: var(--bg);
+		border-color: var(--accent-strong);
+		background: var(--accent-strong);
+		color: var(--on-accent);
 	}
 	.btn:disabled {
 		opacity: 0.6;

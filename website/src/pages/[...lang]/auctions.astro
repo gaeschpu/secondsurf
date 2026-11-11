@@ -181,8 +181,12 @@ const a = auctionTexts[lang];
 	.lots :global(.title) {
 		margin: 0.4rem 0 0;
 		font-size: var(--step--1);
+		overflow-wrap: anywhere;
+		hyphens: auto;
+	}
+	.lots :global(.title strong) {
 		text-transform: uppercase;
-		letter-spacing: 0.03em;
+		letter-spacing: 0.06em;
 	}
 	.lots :global(.meta),
 	.lots :global(.price),

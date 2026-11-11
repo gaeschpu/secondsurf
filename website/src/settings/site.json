@@ -15,10 +15,10 @@
 	"freeShippingFrom": 100,
 	"shippingPrice": 9,
 	"announcement": {
-		"de": "☆ Schweizweiter Versand innert 48H ☆",
-		"fr": "☆ Envoi sous 48H dans toute la Suisse ☆",
-		"it": "☆ Spedizione entro 48H in tutta la Svizzera ☆",
-		"en": "☆ We ship within 48H all over Switzerland ☆"
+		"de": "Versand innert 48 h · Sichere Zahlung über Stripe · Jedes Stück ein Unikat",
+		"fr": "Envoi sous 48 h · Paiement sécurisé avec Stripe · Chaque pièce est unique",
+		"it": "Spedizione entro 48 h · Pagamento sicuro con Stripe · Ogni pezzo è unico",
+		"en": "Shipped within 48 h · Secure payment with Stripe · Every piece is one of a kind"
 	},
 	"holidayBanner": {
 		"enabled": false,

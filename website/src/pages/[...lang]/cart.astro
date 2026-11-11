@@ -222,9 +222,12 @@ const texts = {
 	.items :global(.name) {
 		color: var(--ink);
 		text-decoration: none;
-		text-transform: uppercase;
 		font-size: var(--step--1);
-		letter-spacing: 0.03em;
+		overflow-wrap: anywhere;
+	}
+	.items :global(.name strong) {
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
 	}
 	.items :global(.info p) {
 		margin: 0.25rem 0;

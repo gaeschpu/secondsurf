@@ -269,12 +269,17 @@ const slider = photos.length > 1;
 		background: #fde68a;
 		color: #713f12;
 	}
+	/* Title in its normal spelling; only the brand (first word, bold) in capitals. Long titles wrap. */
 	.title {
 		margin-top: 0.7rem;
 		font-size: var(--step--1);
 		line-height: 1.35;
+		overflow-wrap: anywhere;
+		hyphens: auto;
+	}
+	.title strong {
 		text-transform: uppercase;
-		letter-spacing: 0.03em;
+		letter-spacing: 0.06em;
 	}
 	.meta {
 		display: flex;

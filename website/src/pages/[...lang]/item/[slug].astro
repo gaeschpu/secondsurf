@@ -418,10 +418,12 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 		position: sticky;
 		top: 6rem;
 	}
+	/* The title in its normal spelling (the brand above it stays in capitals). Long titles wrap. */
 	h1 {
 		margin-top: 0.4rem;
 		font-size: var(--step-3);
-		text-transform: uppercase;
+		overflow-wrap: anywhere;
+		hyphens: auto;
 	}
 	.price {
 		margin-top: 0.75rem;
@@ -473,14 +475,16 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 		text-transform: uppercase;
 		-webkit-font-smoothing: auto;
 	}
+	/* Main action in the accent colour (teal); wishlist and price offer stay outlined. */
 	.btn.big {
-		background: var(--ink);
-		color: var(--bg);
+		border-color: var(--accent);
+		background: var(--accent);
+		color: var(--on-accent);
 	}
 	.btn.big:hover {
-		border-color: var(--ink-soft);
-		background: var(--ink-soft);
-		color: var(--bg);
+		border-color: var(--accent-strong);
+		background: var(--accent-strong);
+		color: var(--on-accent);
 	}
 	.btn.big :global(svg) {
 		transition: transform 0.15s;
