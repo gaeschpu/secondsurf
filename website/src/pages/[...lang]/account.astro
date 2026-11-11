@@ -6,6 +6,7 @@ import { langPaths, url, useT, type Lang } from '../../i18n';
 import { accountTexts } from '../../i18n/account';
 import { auctionTexts } from '../../i18n/auction';
 import { SITE } from '../../config';
+import SellerSection from '../../components/SellerSection.astro';
 
 export const getStaticPaths = langPaths;
 const { lang } = Astro.props as { lang: Lang };
@@ -128,6 +129,8 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 				<h2 id="auctions-title">{au.mine}</h2>
 				<ul class="auction-list"></ul>
 			</section>
+
+			<SellerSection lang={lang} />
 
 			<section class="block" aria-labelledby="address-title">
 				<h2 id="address-title">{a.addresses}</h2>
@@ -343,6 +346,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
 	const forms = { login: $<HTMLFormElement>('#login-form'), register: $<HTMLFormElement>('#register-form'), forgot: $<HTMLFormElement>('#forgot-form') };
 	function showGuest(which: keyof typeof forms = 'login') {
+		window.dispatchEvent(new Event('profile-hidden'));
 		$('#profile').hidden = true;
 		$('#reset').hidden = true;
 		$('#guest').hidden = false;
@@ -516,6 +520,8 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 		renderAddresses();
 		await renderWishlist();
 		renderAuctions().catch(() => {});
+		// The "Verkaufen" section (src/components/SellerSection.astro) loads itself now.
+		window.dispatchEvent(new Event('profile-shown'));
 		// Emails come in the language the customer last used the site in.
 		if (me.lang !== lang) api('me', 'PATCH', { lang }).catch(() => {});
 	}

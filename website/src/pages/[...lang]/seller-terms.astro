@@ -1,0 +1,270 @@
+---
+// Seller terms (Verkaufsbedingungen) for selling through secondsurf, in all four languages; German is binding.
+// They follow functions/_lib/sellers.ts (commission, shipping refund, payout after PAYOUT_DAYS). Draft written on 11.11.2026:
+// have it checked legally before relying on it.
+import LegalPage from '../../components/LegalPage.astro';
+import { chf, langPaths, url, type Lang } from '../../i18n';
+import { SHIPPING, SITE } from '../../config';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const fill = (text: string) =>
+	esc(text)
+		.replace(/\{shipping\}/g, chf(SHIPPING.price))
+		.replace(/\{email\}/g, `<a href="mailto:${SITE.email}">${SITE.email}</a>`)
+		.replace(/\{terms\}/g, `<a href="${url(lang, '/terms/')}">${{ de: 'AGB', fr: 'CGV', it: 'CG', en: 'terms' }[lang]}</a>`)
+		.replace(/\{privacy\}/g, `<a href="${url(lang, '/privacy/')}">${{ de: 'Datenschutzerklärung', fr: 'déclaration de confidentialité', it: 'informativa sulla privacy', en: 'privacy policy' }[lang]}</a>`);
+
+const content: Record<Lang, { title: string; note?: string; sections: [string, string[]][]; updated: string }> = {
+	de: {
+		title: 'Verkaufsbedingungen',
+		updated: 'Stand: 11.11.2026',
+		sections: [
+			['1. Geltungsbereich', ['1.1 Diese Bedingungen gelten für alle, die über secondsurf.ch eigene Kleidungsstücke verkaufen (nachfolgend «Verkäufer:in»). Ergänzend gelten unsere {terms}.']],
+			[
+				'2. Einreichen und Freigabe',
+				[
+					'2.1 Die Verkäuferin reicht ein Piece mit eigenen Fotos und wahrheitsgemässen Angaben zu Marke, Grösse, Zustand und Mängeln ein.',
+					'2.2 secondsurf prüft jedes Piece und kann es ohne Angabe von Gründen ablehnen. secondsurf darf Titel, Beschreibung und Fotos für den Shop anpassen und einen anderen Preis festlegen; der Preis im Shop gilt als vereinbart, solange die Verkäuferin ihr Piece nicht zurückzieht.',
+					'2.3 Solange ein Piece im Shop ist, verkauft die Verkäuferin es nicht anderswo. Verkauft sie es doch, meldet sie das sofort an {email}.',
+				],
+			],
+			[
+				'3. Verkauf durch secondsurf',
+				[
+					'3.1 secondsurf verkauft die Pieces in eigenem Namen und auf Rechnung der Verkäuferin (Kommission, Art. 425 ff. OR). Vertragspartnerin der Käuferin oder des Käufers ist secondsurf; es gelten die {terms}.',
+					'3.2 Die Zahlung der Käuferin geht an secondsurf. Das Eigentum am Piece geht mit der Übergabe an die Käuferin über.',
+				],
+			],
+			[
+				'4. Versand',
+				[
+					'4.1 Nach dem Verkauf bekommt die Verkäuferin per E-Mail und im Profil Name und Lieferadresse der Käuferin. Sie verschickt das Piece innert 2 Werktagen sauber verpackt mit der Schweizerischen Post und markiert es im Profil als verschickt.',
+					'4.2 Für den Versand erstattet secondsurf {shipping} pro Paket. Die Adressdaten der Käuferin dürfen nur für diesen Versand verwendet und müssen danach gelöscht werden.',
+				],
+			],
+			[
+				'5. Kommission und Auszahlung',
+				[
+					'5.1 secondsurf behält vom bezahlten Verkaufspreis (nach allfälligen Rabatten) eine Kommission ein: 3 % auf die ersten 3 Verkäufe der Verkäuferin, danach 10 %.',
+					'5.2 Den Rest und die Versanderstattung überweist secondsurf 14 Tage nach dem Versand auf die im Profil angegebene IBAN, sofern keine Rückgabe gemeldet wurde.',
+					'5.3 Gibt die Käuferin ein Piece nach Ziffer 6 der {terms} zurück, weil es falsch, beschädigt oder nicht wie beschrieben ist, bekommt die Verkäuferin das Piece zurück und keine Auszahlung; war die Beschreibung falsch, trägt sie die Kosten der Rücksendung. Eine bereits geleistete Auszahlung zahlt sie zurück.',
+				],
+			],
+			[
+				'6. Pflichten der Verkäuferin',
+				[
+					'6.1 Die Verkäuferin verkauft nur Pieces, die ihr gehören, echt (keine Fälschungen), sauber und wie beschrieben sind.',
+					'6.2 Verletzt eine Verkäuferin diese Bedingungen (z. B. Fälschungen, falsche Angaben, nicht verschickte Verkäufe), kann secondsurf ihre Pieces entfernen und das Konto für den Verkauf sperren.',
+					'6.3 Allfällige Steuern auf ihre Einnahmen trägt die Verkäuferin selbst.',
+				],
+			],
+			[
+				'7. Daten',
+				['7.1 Für den Verkauf bearbeitet secondsurf Name, E-Mail, Telefon, IBAN, eingereichte Pieces und Verkäufe der Verkäuferin. Einzelheiten stehen in der {privacy}. Auszahlungsbelege bewahren wir 10 Jahre auf.'],
+			],
+			[
+				'8. Schlussbestimmungen',
+				[
+					'8.1 secondsurf kann diese Bedingungen anpassen; für ein Piece gelten die Bedingungen, die bei seiner Freigabe veröffentlicht waren.',
+					'8.2 Es gilt Schweizer Recht. Gerichtsstand ist Biel/Bienne, Kanton Bern, soweit gesetzlich zulässig.',
+				],
+			],
+		],
+	},
+	fr: {
+		title: 'Conditions de vente',
+		note: 'Cette traduction est fournie à titre d’information. La version allemande fait foi.',
+		updated: 'État au 11.11.2026',
+		sections: [
+			['1. Champ d’application', ['1.1 Ces conditions s’appliquent à toute personne qui vend ses propres vêtements via secondsurf.ch (ci-après « vendeur·se »). Nos {terms} s’appliquent en complément.']],
+			[
+				'2. Proposition et validation',
+				[
+					'2.1 La vendeuse propose une pièce avec ses propres photos et des indications véridiques sur la marque, la taille, l’état et les défauts.',
+					'2.2 secondsurf vérifie chaque pièce et peut la refuser sans indiquer de motif. secondsurf peut adapter le titre, la description et les photos pour la boutique et fixer un autre prix ; le prix en boutique est réputé convenu tant que la vendeuse ne retire pas sa pièce.',
+					'2.3 Tant qu’une pièce est en boutique, la vendeuse ne la vend pas ailleurs. Si elle la vend tout de même, elle le signale immédiatement à {email}.',
+				],
+			],
+			[
+				'3. Vente par secondsurf',
+				[
+					'3.1 secondsurf vend les pièces en son propre nom et pour le compte de la vendeuse (commission, art. 425 ss CO). Le contrat de l’acheteur·se est conclu avec secondsurf ; les {terms} s’appliquent.',
+					'3.2 Le paiement de l’acheteur·se est versé à secondsurf. La propriété passe à l’acheteur·se à la remise de la pièce.',
+				],
+			],
+			[
+				'4. Envoi',
+				[
+					'4.1 Après la vente, la vendeuse reçoit par e-mail et dans son profil le nom et l’adresse de livraison de l’acheteur·se. Elle envoie la pièce dans les 2 jours ouvrables, bien emballée, par La Poste Suisse, et la marque comme envoyée dans son profil.',
+					'4.2 secondsurf rembourse {shipping} par colis pour l’envoi. Les données d’adresse de l’acheteur·se ne peuvent servir qu’à cet envoi et doivent ensuite être effacées.',
+				],
+			],
+			[
+				'5. Commission et versement',
+				[
+					'5.1 secondsurf retient une commission sur le prix de vente payé (après d’éventuelles réductions) : 3 % sur les 3 premières ventes de la vendeuse, ensuite 10 %.',
+					'5.2 secondsurf verse le reste et le remboursement de l’envoi 14 jours après l’envoi sur l’IBAN indiqué dans le profil, si aucun retour n’a été signalé.',
+					'5.3 Si l’acheteur·se retourne une pièce selon le chiffre 6 des {terms} parce qu’elle est erronée, endommagée ou non conforme à la description, la vendeuse récupère la pièce et ne reçoit pas de versement ; si la description était fausse, elle supporte les frais de retour. Un versement déjà effectué doit être remboursé.',
+				],
+			],
+			[
+				'6. Obligations de la vendeuse',
+				[
+					'6.1 La vendeuse ne vend que des pièces qui lui appartiennent, authentiques (pas de contrefaçons), propres et conformes à la description.',
+					'6.2 En cas de violation de ces conditions (p. ex. contrefaçons, fausses indications, ventes non envoyées), secondsurf peut retirer ses pièces et bloquer son compte pour la vente.',
+					'6.3 La vendeuse supporte elle-même les éventuels impôts sur ses revenus.',
+				],
+			],
+			['7. Données', ['7.1 Pour la vente, secondsurf traite le nom, l’e-mail, le téléphone, l’IBAN, les pièces proposées et les ventes de la vendeuse. Les détails figurent dans la {privacy}. Nous conservons les justificatifs de versement 10 ans.']],
+			[
+				'8. Dispositions finales',
+				[
+					'8.1 secondsurf peut modifier ces conditions ; une pièce est régie par les conditions publiées lors de sa validation.',
+					'8.2 Le droit suisse est applicable. Le for est à Biel/Bienne, canton de Berne, dans la mesure permise par la loi.',
+				],
+			],
+		],
+	},
+	it: {
+		title: 'Condizioni di vendita',
+		note: 'Questa traduzione è solo informativa. Fa fede la versione tedesca.',
+		updated: 'Stato: 11.11.2026',
+		sections: [
+			['1. Campo d’applicazione', ['1.1 Queste condizioni valgono per chiunque venda i propri vestiti tramite secondsurf.ch (di seguito «venditore/venditrice»). In aggiunta valgono le nostre {terms}.']],
+			[
+				'2. Proposta e approvazione',
+				[
+					'2.1 La venditrice propone un pezzo con foto proprie e dati veritieri su marca, taglia, stato e difetti.',
+					'2.2 secondsurf controlla ogni pezzo e può rifiutarlo senza indicarne il motivo. secondsurf può adattare titolo, descrizione e foto per il negozio e fissare un altro prezzo; il prezzo nel negozio si considera concordato finché la venditrice non ritira il pezzo.',
+					'2.3 Finché un pezzo è nel negozio, la venditrice non lo vende altrove. Se lo vende comunque, lo comunica subito a {email}.',
+				],
+			],
+			[
+				'3. Vendita da parte di secondsurf',
+				[
+					'3.1 secondsurf vende i pezzi in nome proprio e per conto della venditrice (commissione, art. 425 segg. CO). Il contratto dell’acquirente è concluso con secondsurf; valgono le {terms}.',
+					'3.2 Il pagamento dell’acquirente va a secondsurf. La proprietà passa all’acquirente con la consegna del pezzo.',
+				],
+			],
+			[
+				'4. Spedizione',
+				[
+					'4.1 Dopo la vendita, la venditrice riceve per e-mail e nel profilo nome e indirizzo di consegna dell’acquirente. Spedisce il pezzo entro 2 giorni lavorativi, ben imballato, con la Posta Svizzera e lo segna come spedito nel profilo.',
+					'4.2 Per la spedizione secondsurf rimborsa {shipping} per pacco. I dati d’indirizzo dell’acquirente possono essere usati solo per questa spedizione e vanno poi cancellati.',
+				],
+			],
+			[
+				'5. Commissione e pagamento',
+				[
+					'5.1 secondsurf trattiene una commissione sul prezzo di vendita pagato (dopo eventuali sconti): 3 % sulle prime 3 vendite della venditrice, poi 10 %.',
+					'5.2 secondsurf versa il resto e il rimborso della spedizione 14 giorni dopo la spedizione sull’IBAN indicato nel profilo, se non è stato segnalato alcun reso.',
+					'5.3 Se l’acquirente restituisce un pezzo secondo la cifra 6 delle {terms} perché sbagliato, danneggiato o non conforme alla descrizione, la venditrice riceve indietro il pezzo e nessun pagamento; se la descrizione era errata, sostiene le spese di rispedizione. Un pagamento già effettuato va rimborsato.',
+				],
+			],
+			[
+				'6. Obblighi della venditrice',
+				[
+					'6.1 La venditrice vende solo pezzi di sua proprietà, autentici (nessuna contraffazione), puliti e conformi alla descrizione.',
+					'6.2 In caso di violazione di queste condizioni (p. es. contraffazioni, dati falsi, vendite non spedite), secondsurf può rimuovere i suoi pezzi e bloccare il suo account per la vendita.',
+					'6.3 Eventuali imposte sui suoi redditi sono a carico della venditrice.',
+				],
+			],
+			['7. Dati', ['7.1 Per la vendita secondsurf tratta nome, e-mail, telefono, IBAN, pezzi proposti e vendite della venditrice. I dettagli sono nella {privacy}. Conserviamo i giustificativi dei pagamenti per 10 anni.']],
+			[
+				'8. Disposizioni finali',
+				[
+					'8.1 secondsurf può modificare queste condizioni; per un pezzo valgono le condizioni pubblicate al momento della sua approvazione.',
+					'8.2 Si applica il diritto svizzero. Il foro competente è Biel/Bienne, Canton Berna, nella misura consentita dalla legge.',
+				],
+			],
+		],
+	},
+	en: {
+		title: 'Seller terms',
+		note: 'This translation is for information only. The German version is the binding one.',
+		updated: 'Last updated: 11 November 2026',
+		sections: [
+			['1. Scope', ['1.1 These terms apply to anyone who sells their own clothing through secondsurf.ch (the "seller"). Our {terms} apply in addition.']],
+			[
+				'2. Submission and approval',
+				[
+					'2.1 The seller submits a piece with their own photos and truthful details on brand, size, condition and flaws.',
+					'2.2 secondsurf checks every piece and may decline it without giving reasons. secondsurf may adapt the title, description and photos for the shop and set a different price; the price in the shop counts as agreed as long as the seller does not withdraw the piece.',
+					'2.3 While a piece is in the shop, the seller does not sell it elsewhere. If they do, they tell us at once at {email}.',
+				],
+			],
+			[
+				'3. Sale by secondsurf',
+				[
+					'3.1 secondsurf sells the pieces in its own name and on the seller’s account (commission sale, Art. 425 et seq. CO). The buyer’s contract is with secondsurf; the {terms} apply.',
+					'3.2 The buyer pays secondsurf. Ownership passes to the buyer when the piece is handed over.',
+				],
+			],
+			[
+				'4. Shipping',
+				[
+					'4.1 After the sale, the seller receives the buyer’s name and shipping address by email and in their profile. They send the piece within 2 working days, well packed, with Swiss Post, and mark it as sent in their profile.',
+					'4.2 secondsurf refunds {shipping} per parcel for shipping. The buyer’s address may only be used for this shipment and must be deleted afterwards.',
+				],
+			],
+			[
+				'5. Commission and payout',
+				[
+					'5.1 secondsurf keeps a commission on the price paid (after any discounts): 3 % on the seller’s first 3 sales, then 10 %.',
+					'5.2 secondsurf transfers the rest and the shipping refund 14 days after shipping to the IBAN in the profile, provided no return has been reported.',
+					'5.3 If the buyer returns a piece under section 6 of the {terms} because it is wrong, damaged or not as described, the seller gets the piece back and no payout; if the description was wrong, they bear the cost of the return. A payout already made is to be repaid.',
+				],
+			],
+			[
+				'6. The seller’s duties',
+				[
+					'6.1 The seller only sells pieces they own that are genuine (no counterfeits), clean and as described.',
+					'6.2 If a seller breaches these terms (e.g. counterfeits, false details, sales not sent), secondsurf may remove their pieces and block their account from selling.',
+					'6.3 Any taxes on their income are the seller’s own responsibility.',
+				],
+			],
+			['7. Data', ['7.1 For selling, secondsurf processes the seller’s name, email, phone, IBAN, submitted pieces and sales. Details are in the {privacy}. We keep payout records for 10 years.']],
+			[
+				'8. Final provisions',
+				[
+					'8.1 secondsurf may change these terms; a piece is governed by the terms published when it was approved.',
+					'8.2 Swiss law applies. The place of jurisdiction is Biel/Bienne, Canton of Bern, as far as the law allows.',
+				],
+			],
+		],
+	},
+};
+const c = content[lang];
+---
+
+<LegalPage lang={lang} title={c.title} description={c.title}>
+	{c.note && <p class="note">{c.note}</p>}
+	{
+		c.sections.map(([title, paragraphs]) => (
+			<>
+				<h2>{title}</h2>
+				{paragraphs.map((p) => (
+					<p set:html={fill(p)} />
+				))}
+			</>
+		))
+	}
+	<p class="updated">{c.updated}</p>
+</LegalPage>
+
+<style>
+	.note {
+		padding: 0.75rem 1rem;
+		border-left: 3px solid var(--accent);
+		background: var(--accent-tint);
+		font-size: var(--step--1);
+	}
+	.updated {
+		margin-top: 2rem;
+		font-size: var(--step--1);
+		color: var(--ink-soft);
+	}
+</style>

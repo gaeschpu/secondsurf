@@ -117,6 +117,16 @@ Im Dashboard unter **Orders** stehen alle online bezahlten Bestellungen, die off
 
 Sind mehrere Bestellungen offen, druckst du mit **Print all open labels** alle auf einmal.
 
+## Verkäuferinnen und Verkäufer
+
+Jede Person mit Konto kann über secondsurf verkaufen: im Profil unter **Verkaufen** die Verkaufsbedingungen akzeptieren, IBAN eintragen und unter **Neues Piece einreichen** Fotos und Angaben hochladen.
+
+1. Du bekommst eine E-Mail. Im Dashboard unter **Sellers** siehst du die Fotos und alle Angaben. Ändere Texte oder Preis, wenn nötig, und tippe auf **Approve → shop** (das Piece kommt in den Shop) oder **Reject** (mit Grund). Die Person bekommt jeweils eine E-Mail.
+2. Wird ein solches Piece verkauft, bekommt die Verkäuferin die Adresse per E-Mail und im Profil, druckt Etikette und Lieferschein und **verschickt selbst**. In deinen Orders ist es als «Seller ships» markiert und steht nicht auf deiner Etikette.
+3. Unter **Payouts** siehst du, was du wem schuldest: Verkaufspreis minus Kommission (3 % auf die ersten 3 Verkäufe einer Person, danach 10 %) plus CHF 9 Versand pro Paket. Fällig 14 Tage nach dem Versand. Überweise den Betrag auf die angezeigte IBAN und tippe auf **Paid**.
+
+Die Verkaufsbedingungen stehen unter /seller-terms/ (Entwurf: bitte rechtlich prüfen lassen).
+
 ## Ein Piece als verkauft markieren
 
 So verkaufst du im Moment: Kundinnen und Kunden tippen auf **Anfragen**, du bekommst eine E-Mail und schickst ihnen die Zahlungsangaben. Sie bezahlen sofort. Reserviert wird nichts: Wer zuerst bezahlt, bekommt das Piece.

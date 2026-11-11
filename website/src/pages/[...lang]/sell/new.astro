@@ -1,0 +1,303 @@
+---
+// /sell/new/: a seller submits a piece with their own photos (rules in functions/_lib/sellers.ts). Photos are made smaller in
+// the browser and uploaded one by one (POST /api/seller/photos), then the piece (POST /api/seller/submissions).
+// The owner checks it in /admin (Submissions) and approves or rejects it.
+import Base from '../../../layouts/Base.astro';
+import { l, langPaths, url, useT, type Lang } from '../../../i18n';
+import { sellerTexts } from '../../../i18n/seller';
+import { CATEGORIES, CONDITIONS, SIZES } from '../../../config';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+const t = useT(lang);
+const st = sellerTexts[lang];
+---
+
+<Base lang={lang} title={st.newTitle} description={st.newIntro} noindex>
+	<div class="container page-head submit-page" data-texts={JSON.stringify(st)} data-profile={`${url(lang, '/account/')}#selling`}>
+		<h1>{st.newTitle}</h1>
+		<p>{st.newIntro}</p>
+
+		<p class="gate" data-gate hidden></p>
+		<p class="gate" data-login hidden>
+			{st.loginFirst} <a class="btn" href={`${url(lang, '/account/')}?back=${encodeURIComponent(url(lang, '/sell/new/'))}`}>{st.login}</a>
+		</p>
+
+		<form class="submit stack" data-form novalidate hidden>
+			<div class="photos">
+				<span class="label">{st.photos}</span>
+				<ul class="previews" data-previews></ul>
+				<label class="btn-line pick">
+					{st.addPhotos}
+					<input type="file" accept="image/*" multiple data-files hidden />
+				</label>
+				<p class="small muted">{st.first}</p>
+			</div>
+			<label><span>{st.brand}</span><input name="brand" maxlength="80" required /></label>
+			<label><span>{st.itemTitle}</span><input name="title" maxlength="120" required placeholder={st.itemTitleHint} /></label>
+			<div class="row">
+				<label>
+					<span>{st.category}</span>
+					<select name="category" required>
+						<option value="">{st.choose}</option>
+						{CATEGORIES.map((c) => <option value={c.id}>{l(c.label, lang)}</option>)}
+					</select>
+				</label>
+				<label>
+					<span>{st.size}</span>
+					<select name="size" required>
+						<option value="">{st.choose}</option>
+						{SIZES.filter((s) => s !== 'Mix').map((s) => <option value={s}>{s}</option>)}
+					</select>
+				</label>
+			</div>
+			<label>
+				<span>{st.condition}</span>
+				<select name="condition" required>
+					<option value="">{st.choose}</option>
+					{Object.entries(CONDITIONS).map(([id, label]) => <option value={id}>{l(label, lang)}</option>)}
+				</select>
+			</label>
+			<label>
+				<span>{st.price}</span>
+				<input name="price" type="number" inputmode="decimal" min="1" max="10000" step="1" required />
+				<small class="muted">{st.priceHint}</small>
+			</label>
+			<label><span>{st.measurements}</span><input name="measurements" maxlength="200" /></label>
+			<label>
+				<span>{st.description}</span>
+				<textarea name="description" rows="5" maxlength="2000" required placeholder={st.descriptionHint}></textarea>
+			</label>
+			<button class="btn big" type="submit" data-send>{st.send}</button>
+			<p class="status" role="status" data-status></p>
+		</form>
+
+		<div class="done" data-done hidden>
+			<p>{st.sent}</p>
+			<a class="btn" href={`${url(lang, '/account/')}#selling`}>{st.toProfile}</a>
+			<a class="link" href={url(lang, '/sell/new/')}>+ {st.submit}</a>
+		</div>
+		<p class="small"><a href={url(lang, '/seller-terms/')}>{st.termsLink}</a> · <a href={url(lang, '/shop/')}>{t('nav.shopAll')}</a></p>
+	</div>
+</Base>
+
+<script>
+	import type { SellerTexts } from '../../../i18n/seller';
+
+	const page = document.querySelector<HTMLElement>('.submit-page')!;
+	const t: SellerTexts = JSON.parse(page.dataset.texts!);
+	const $ = <T extends HTMLElement = HTMLElement>(sel: string) => page.querySelector<T>(sel)!;
+	const form = $<HTMLFormElement>('[data-form]');
+	const status = $('[data-status]');
+	const message = (code: string) => (t.errors as Record<string, string>)[code] ?? t.errors.generic;
+	/** The chosen photos, already made smaller (JPEG). */
+	let photos: { blob: Blob; url: string }[] = [];
+
+	/** Redraws a photo at most 1600 px wide or high as JPEG (also drops the GPS position). */
+	async function shrink(file: File) {
+		const src = URL.createObjectURL(file);
+		try {
+			const image = new Image();
+			image.src = src;
+			await image.decode();
+			const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight));
+			const canvas = document.createElement('canvas');
+			canvas.width = Math.round(image.naturalWidth * scale);
+			canvas.height = Math.round(image.naturalHeight * scale);
+			canvas.getContext('2d')!.drawImage(image, 0, 0, canvas.width, canvas.height);
+			const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+			if (!blob) throw new Error('photo');
+			return blob;
+		} finally {
+			URL.revokeObjectURL(src);
+		}
+	}
+
+	const toBase64 = (blob: Blob) =>
+		new Promise<string>((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = () => resolve(String(reader.result).split(',')[1]);
+			reader.onerror = reject;
+			reader.readAsDataURL(blob);
+		});
+
+	function renderPhotos() {
+		$('[data-previews]').replaceChildren(
+			...photos.map((photo, i) => {
+				const li = document.createElement('li');
+				const img = Object.assign(document.createElement('img'), { src: photo.url, alt: '' });
+				const remove = Object.assign(document.createElement('button'), { type: 'button', textContent: '✕', title: t.remove, className: 'remove' });
+				remove.addEventListener('click', () => {
+					URL.revokeObjectURL(photo.url);
+					photos.splice(i, 1);
+					renderPhotos();
+				});
+				li.append(img, remove);
+				return li;
+			}),
+		);
+	}
+
+	$<HTMLInputElement>('[data-files]').addEventListener('change', async (event) => {
+		const input = event.currentTarget as HTMLInputElement;
+		for (const file of [...(input.files ?? [])]) {
+			if (photos.length >= 8) break;
+			try {
+				const blob = await shrink(file);
+				photos.push({ blob, url: URL.createObjectURL(blob) });
+			} catch {
+				status.textContent = t.errors.photo;
+			}
+		}
+		input.value = '';
+		renderPhotos();
+	});
+
+	form.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		if (!photos.length) return (status.textContent = t.errors.photos);
+		if (!form.reportValidity()) return;
+		const button = $<HTMLButtonElement>('[data-send]');
+		button.disabled = true;
+		try {
+			const ids: number[] = [];
+			for (const [i, photo] of photos.entries()) {
+				status.textContent = t.uploading.replace('{n}', String(i + 1));
+				const res = await fetch('/api/seller/photos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base64: await toBase64(photo.blob) }) });
+				const data = await res.json().catch(() => ({}));
+				if (!res.ok) throw new Error(data.error ?? 'generic');
+				ids.push(data.id);
+			}
+			status.textContent = '…';
+			const fields = Object.fromEntries(new FormData(form)) as Record<string, string>;
+			const res = await fetch('/api/seller/submissions', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ ...fields, price: Number(fields.price), photos: ids }),
+			});
+			const data = await res.json().catch(() => ({}));
+			if (!res.ok) throw new Error(data.error ?? 'generic');
+			form.hidden = true;
+			$('[data-done]').hidden = false;
+			status.textContent = '';
+		} catch (error) {
+			status.textContent = message((error as Error).message);
+		} finally {
+			button.disabled = false;
+		}
+	});
+
+	// Only sellers can submit: check the account first.
+	fetch('/api/seller/me', { cache: 'no-store' })
+		.then(async (res) => {
+			if (res.status === 401) return ($('[data-login]').hidden = false);
+			const me = await res.json();
+			if (!me.seller) {
+				const gate = $('[data-gate]');
+				gate.innerHTML = '';
+				gate.append(t.becomeFirst, ' ', Object.assign(document.createElement('a'), { href: page.dataset.profile!, textContent: `${t.title} →` }));
+				gate.hidden = false;
+				return;
+			}
+			form.hidden = false;
+		})
+		.catch(() => ($('[data-gate]').textContent = t.errors.generic));
+</script>
+
+<style>
+	.submit-page {
+		max-width: 40rem;
+	}
+	.submit {
+		display: grid;
+		gap: 1rem;
+		margin: 1.5rem 0;
+	}
+	.submit[hidden],
+	.done[hidden],
+	.gate[hidden] {
+		display: none;
+	}
+	.submit label > span,
+	.photos .label {
+		display: block;
+		margin-bottom: 0.3rem;
+		font-weight: 700;
+		font-size: var(--step--1);
+	}
+	.submit input:not([type='file']),
+	.submit select,
+	.submit textarea {
+		width: 100%;
+		padding: 0.65rem 0.75rem;
+		border: 1.5px solid var(--line);
+		background: var(--bg-raised);
+		color: var(--ink);
+		font: inherit;
+	}
+	.row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+	}
+	.previews {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+		gap: 0.5rem;
+		margin: 0 0 0.6rem;
+		padding: 0;
+		list-style: none;
+	}
+	.previews:empty {
+		display: none;
+	}
+	.previews :global(li) {
+		position: relative;
+	}
+	.previews :global(img) {
+		display: block;
+		width: 100%;
+		aspect-ratio: 4 / 5;
+		object-fit: cover;
+	}
+	.previews :global(li:first-child img) {
+		outline: 3px solid var(--accent);
+		outline-offset: -3px;
+	}
+	.previews :global(.remove) {
+		position: absolute;
+		top: 0.25rem;
+		right: 0.25rem;
+		width: 2rem;
+		height: 2rem;
+		border: 0;
+		border-radius: 50%;
+		background: rgb(0 0 0 / 0.6);
+		color: #fff;
+		cursor: pointer;
+	}
+	.pick {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.6em 1.2em;
+		border: 1.5px solid var(--ink);
+		border-radius: 999px;
+		font-weight: 700;
+		cursor: pointer;
+	}
+	.gate,
+	.done {
+		margin: 1.5rem 0;
+		padding: 1rem;
+		background: var(--bg-raised);
+		border: 1px solid var(--line);
+	}
+	.done {
+		display: grid;
+		gap: 0.75rem;
+		justify-items: start;
+	}
+	.status:empty {
+		display: none;
+	}
+</style>

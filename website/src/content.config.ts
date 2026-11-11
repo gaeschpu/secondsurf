@@ -51,6 +51,8 @@ const products = defineCollection({
 			 * or the home page, never buyable at a fixed price; shown on /auctions/ while its auction runs.
 			 */
 			auctionOnly: z.boolean().default(false),
+			/** Account id of the seller who submitted and ships the piece (functions/_lib/sellers.ts). Never shown on the site. */
+			seller: z.number().int().positive().optional(),
 			/** Shown in the "Staff Picks" row on the home page. */
 			staffPick: z.boolean().default(false),
 			sold: z.boolean().default(false),

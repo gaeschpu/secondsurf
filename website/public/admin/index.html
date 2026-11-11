@@ -35,6 +35,7 @@
 				<nav class="tabs" aria-label="Dashboard pages">
 					<a href="#pieces" data-page="pieces" aria-current="page">Pieces</a>
 					<a href="#orders" data-page="orders">Orders <span id="orders-count" class="count" hidden></span></a>
+					<a href="#submissions" data-page="submissions">Sellers <span id="submissions-count" class="count" hidden></span></a>
 					<a href="#offers" data-page="offers">Offers <span id="offers-count" class="count" hidden></span></a>
 					<a href="#auctions" data-page="auctions">Auctions <span id="auctions-count" class="count" hidden></span></a>
 				</nav>
@@ -55,6 +56,25 @@
 					<p id="offers-error" class="error" role="alert" hidden></p>
 					<p id="offers-status" class="status" role="status" hidden></p>
 					<ul id="offers" class="offers"></ul>
+				</section>
+			</main>
+
+			<main id="submissions-page" hidden>
+				<section>
+					<h1>Pieces from sellers</h1>
+					<p class="hint">
+						Sellers submit pieces with their own photos. Check the details, change the texts or the price if needed, then approve (the piece goes
+						into the shop) or reject with a reason. They get an email either way. Commission: 3 % on a seller's first 3 sales, then 10 %.
+					</p>
+					<p id="submissions-error" class="error" role="alert" hidden></p>
+					<p id="submissions-status" class="status" role="status" hidden></p>
+					<ul id="submissions" class="offers"></ul>
+				</section>
+				<section>
+					<h2>Payouts</h2>
+					<p class="hint">Sellers ship their pieces themselves. Transfer the payout to their IBAN once it is due (14 days after shipping), then tap Paid.</p>
+					<p id="payouts-error" class="error" role="alert" hidden></p>
+					<ul id="payouts" class="offers"></ul>
 				</section>
 			</main>
 

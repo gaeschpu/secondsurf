@@ -4,17 +4,19 @@
 // and the customer an order confirmation in their language (AGB 2.3).
 // Paid through an auction (metadata auction_id): the auction is marked as paid. Every paid order is recorded (purchases),
 // because accounts without one may only hold one auction at a time (functions/_lib/auctions.ts).
+// Pieces from sellers (seller: in the piece file) are recorded as seller sales; the seller gets the address and ships.
 // Expired or failed: the hold is released so someone else can buy the piece.
 // In Stripe: Developers → Webhooks → add https://secondsurf.ch/api/stripe-webhook with the events listed in the README.
 
-import { database, markWelcomeUsed } from '../_lib/accounts.ts';
+import { database, markWelcomeUsed, welcomePrice } from '../_lib/accounts.ts';
 import { auctionsDb, now as nowSeconds, recordPurchase } from '../_lib/auctions.ts';
 import { json, type Handler } from '../_lib/auth.ts';
 import { markPaid, orderByRef, ordersDb } from '../_lib/orders.ts';
 import { commit, PRODUCTS_DIR, readText } from '../_lib/github.ts';
 import { sendMail } from '../_lib/mail.ts';
 import { now, offersDb } from '../_lib/offers.ts';
-import { PRODUCT_ID, setSold } from '../_lib/product.ts';
+import { PRODUCT_ID, setSold, summarize } from '../_lib/product.ts';
+import { recordSellerSales } from '../_lib/sellers.ts';
 import { firstTime, forgetDone, holdSold, holds, releaseHold, verifyWebhook } from '../_lib/stripe.ts';
 import { SITE } from '../../src/config.ts';
 import { url, type Lang } from '../../src/i18n/index.ts';
@@ -30,6 +32,7 @@ type Session = {
 	collected_information?: { shipping_details?: { name?: string; address?: Address } | null } | null;
 	shipping_details?: { name?: string; address?: Address } | null;
 	livemode?: boolean;
+	shipping_cost?: { amount_total?: number | null } | null;
 };
 
 const chf = (cents?: number | null) => `CHF ${((cents ?? 0) / 100).toFixed(2)}`;
@@ -47,14 +50,24 @@ async function pieceIds(env: Parameters<Handler>[0]['env'], session: Session) {
 }
 
 async function sell(env: Parameters<Handler>[0]['env'], session: Session, ids: string[]) {
-	if (!ids.length) return { alreadySold: false };
+	if (!ids.length) return { alreadySold: false, fromSellers: [] };
 	const files = [];
 	const doubles: string[] = [];
+	/** Pieces that a seller ships (seller: in the file), with what the buyer paid for each. */
+	const fromSellers: { id: string; name: string; price: number; seller: number }[] = [];
+	const single = ids.length === 1 ? ((session.amount_total ?? 0) - (session.shipping_cost?.amount_total ?? 0)) / 100 : null;
 	for (const id of ids) {
 		const path = `${PRODUCTS_DIR}/${id}/index.md`;
 		const markdown = await readText(env, path);
 		if (/^sold:\s*true\b/m.test(markdown)) doubles.push(id);
 		else files.push({ path, mode: '100644' as const, type: 'blob' as const, content: setSold(markdown, true) });
+		const seller = Number(markdown.match(/^seller:\s*(\d+)/m)?.[1]);
+		if (seller > 0) {
+			const info = summarize(id, markdown);
+			// One piece: what was paid without shipping (an offer or auction price too); several: list price, less the welcome code.
+			const price = single ?? (session.metadata?.discount ? welcomePrice(info.price) : info.price);
+			fromSellers.push({ id, name: `${info.brand} ${info.title}`, price, seller });
+		}
 	}
 	if (files.length) await commit(env, `Sold online: ${ids.join(', ')}`, files);
 	const alreadySold = doubles.length > 0;
@@ -73,7 +86,7 @@ async function sell(env: Parameters<Handler>[0]['env'], session: Session, ids: s
 				? `Achtung: ${doubles.join(', ')} war schon als verkauft markiert. Bitte diesen Betrag in Stripe rückerstatten und der Kundin / dem Kunden schreiben.\n`
 				: `Online bezahlt und jetzt als verkauft markiert. Bitte innert 48 Stunden verschicken.\n`,
 			`Pieces (${ids.length}):`,
-			...ids.map((piece) => `- ${piece}`),
+			...ids.map((piece) => `- ${piece}${fromSellers.some((p) => p.id === piece) ? ' (verschickt die Verkäuferin / der Verkäufer)' : ''}`),
 			'',
 			`Betrag (inkl. Versand): ${chf(session.amount_total)}${session.metadata?.discount ? ` (mit Rabattcode ${session.metadata.discount})` : ''}`,
 			'',
@@ -90,7 +103,7 @@ async function sell(env: Parameters<Handler>[0]['env'], session: Session, ids: s
 			`Zahlung in Stripe: ${dashboard}`,
 		].join('\n'),
 	});
-	return { alreadySold };
+	return { alreadySold, fromSellers };
 }
 
 const CONFIRMATION: Record<Lang, { subject: string; lines: (v: Record<string, string>) => string[]; countries: Record<string, string> }> = {
@@ -224,8 +237,9 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 	if (paid) {
 		if (!(await firstTime(db, session.id))) return json({ ok: true, duplicate: true });
 		let alreadySold = false;
+		let fromSellers: { id: string; name: string; price: number; seller: number }[] = [];
 		try {
-			({ alreadySold } = await sell(env, session, ids));
+			({ alreadySold, fromSellers } = await sell(env, session, ids));
 		} catch (error) {
 			// Let Stripe retry later (it does for up to 3 days).
 			console.error('Marking as sold failed', error);
@@ -247,6 +261,14 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 				email: session.customer_details?.email,
 				phone: session.customer_details?.phone,
 			}).catch((error) => console.error('Saving the order failed', error));
+			// Sellers ship their own pieces: record the sales (commission, payout) and send them the address.
+			if (fromSellers.length && !alreadySold) {
+				const a = ship?.address;
+				const address = [a?.line1, a?.line2, `${a?.postal_code ?? ''} ${a?.city ?? ''}`.trim()].filter(Boolean).join('\n');
+				await recordSellerSales(env, ref, fromSellers, { name: ship?.name ?? session.customer_details?.name ?? '', address }, new URL(request.url).origin).catch((error) =>
+					console.error('Recording seller sales failed', error),
+				);
+			}
 		}
 		// A double sale gets no confirmation: the owner refunds that customer (see the owner's email).
 		if (!alreadySold) await confirm(env, session).catch((error) => console.error('Order confirmation failed', error));

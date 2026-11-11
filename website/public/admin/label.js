@@ -1,4 +1,6 @@
 // Fills /admin/label.html: one A4 page per order (address label + packing slip) from GET /api/admin/orders?refs=…
+// For a seller (?seller=1&order=<ref>) the data comes from /api/seller/label: only their pieces, their own sender address.
+// The owner's labels leave out pieces that sellers ship themselves (seller_ids).
 
 const $ = (id) => document.getElementById(id);
 const SENDER_KEY = 'label-sender';
@@ -82,13 +84,23 @@ function render() {
 }
 
 async function load() {
-	const refs = new URLSearchParams(location.search).get('refs') ?? '';
-	const res = await fetch(`/api/admin/orders?refs=${encodeURIComponent(refs)}`);
+	const params = new URLSearchParams(location.search);
+	const seller = params.has('seller');
+	const res = await fetch(
+		seller ? `/api/seller/label?order=${encodeURIComponent(params.get('order') ?? '')}` : `/api/admin/orders?refs=${encodeURIComponent(params.get('refs') ?? '')}`,
+	);
 	const data = await res.json().catch(() => ({}));
-	if (res.status === 401) throw new Error('Bitte zuerst im Dashboard anmelden (/admin/).');
+	if (res.status === 401) throw new Error(seller ? 'Bitte zuerst im Profil anmelden.' : 'Bitte zuerst im Dashboard anmelden (/admin/).');
 	if (!res.ok) throw new Error(data.error ?? `Fehler ${res.status}`);
-	orders = data.orders;
-	if (!orders.length) throw new Error('Keine Bestellung gefunden.');
+	// The owner's labels: only the pieces the shop ships itself.
+	orders = data.orders
+		.map((o) => {
+			const skip = new Set(o.seller_ids ?? []);
+			const keep = o.ids.map((id, i) => [id, o.names[i]]).filter(([id]) => !skip.has(id));
+			return { ...o, ids: keep.map(([id]) => id), names: keep.map(([, name]) => name) };
+		})
+		.filter((o) => o.ids.length);
+	if (!orders.length) throw new Error(data.orders.length ? 'Diese Bestellung verschicken die Verkäuferinnen und Verkäufer selbst.' : 'Keine Bestellung gefunden.');
 	render();
 }
 

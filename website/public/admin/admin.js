@@ -439,6 +439,7 @@ async function loadDashboard() {
 	loadOffers().catch((error) => show($('offers-error'), error.message));
 	loadAuctions().catch((error) => show($('auctions-error'), error.message));
 	loadOrders().catch((error) => show($('orders-error'), error.message));
+	loadSubmissions().catch((error) => show($('submissions-error'), error.message));
 }
 
 loadDashboard().catch((error) => {
@@ -449,11 +450,13 @@ loadDashboard().catch((error) => {
 // ---------- Pages ----------
 
 function showPage() {
-	const page = { '#offers': 'offers', '#auctions': 'auctions', '#orders': 'orders' }[location.hash] ?? 'pieces';
+	const page = { '#offers': 'offers', '#auctions': 'auctions', '#orders': 'orders', '#submissions': 'submissions' }[location.hash] ?? 'pieces';
 	$('pieces-page').hidden = page !== 'pieces';
 	$('offers-page').hidden = page !== 'offers';
 	$('auctions-page').hidden = page !== 'auctions';
 	$('orders-page').hidden = page !== 'orders';
+	$('submissions-page').hidden = page !== 'submissions';
+	if (page === 'submissions' && !$('dashboard').hidden) loadSubmissions().catch((error) => show($('submissions-error'), error.message));
 	if (page === 'orders' && !$('dashboard').hidden) loadOrders().catch((error) => show($('orders-error'), error.message));
 	if (page === 'auctions' && !$('dashboard').hidden) loadAuctions().catch((error) => show($('auctions-error'), error.message));
 	for (const tab of document.querySelectorAll('.tabs a')) {
@@ -871,6 +874,7 @@ function renderOrder(o) {
 		link.href = `/item/${id}/`;
 		link.target = '_blank';
 		li.append(link);
+		if (o.seller_ids?.includes(id)) li.append(el('span', 'tag', 'Seller ships'));
 		pieces.append(li);
 	});
 	item.append(pieces);
@@ -904,5 +908,165 @@ function renderOrder(o) {
 	});
 	actions.append(label, shipped);
 	item.append(actions);
+	return item;
+}
+
+// ---------- Sellers: submissions and payouts ----------
+
+const SUBMISSION_STATE = { pending: 'To check', approved: 'Approved ✓', rejected: 'Rejected' };
+
+async function loadSubmissions() {
+	const [{ submissions }, { payouts }] = await Promise.all([api('sellers/submissions'), api('sellers/payouts')]);
+	show($('submissions-error'));
+	const pending = submissions.filter((s) => s.status === 'pending').length;
+	const due = payouts.filter((p) => p.status === 'shipped').length;
+	$('submissions-count').textContent = String(pending + due);
+	$('submissions-count').hidden = pending + due === 0;
+	$('submissions').replaceChildren(...(submissions.length ? submissions.map(renderSubmission) : [el('li', 'hint', 'No pieces from sellers yet.')]));
+	$('payouts').replaceChildren(...(payouts.length ? payouts.map(renderPayout) : [el('li', 'hint', 'No seller sales yet.')]));
+}
+
+function field(label, input) {
+	const wrap = el('label', '', label);
+	wrap.append(input);
+	return wrap;
+}
+
+function renderSubmission(s) {
+	const item = el('li', s.status === 'pending' ? 'offer' : 'offer closed');
+	item.append(el('span', `state ${s.status === 'pending' ? 'pending' : s.status === 'approved' ? 'paid' : 'declined'}`, SUBMISSION_STATE[s.status] ?? s.status));
+	const who = el('p', 'who');
+	const mail = el('a', '', s.seller_email ?? '–');
+	if (s.seller_email) mail.href = `mailto:${s.seller_email}`;
+	who.append(`${s.seller_name ?? ''} · `, mail, ` · ${when(s.created_at)}`);
+	item.append(who);
+
+	if (s.status !== 'pending') {
+		item.append(el('strong', '', `${s.brand} ${s.title} · ${chf(s.price)}`));
+		if (s.status === 'approved' && s.product_id) {
+			const link = el('a', '', ' → in the shop');
+			link.href = `/item/${s.product_id}/`;
+			link.target = '_blank';
+			item.append(link);
+		}
+		if (s.reason) item.append(el('p', 'hint', `Reason: ${s.reason}`));
+		return item;
+	}
+
+	const gallery = el('div', 'sub-photos');
+	for (const id of s.photo_ids) {
+		const img = el('img');
+		img.src = `/api/admin/sellers/photo?id=${id}`;
+		img.alt = '';
+		img.loading = 'lazy';
+		gallery.append(img);
+	}
+	item.append(gallery);
+
+	// Every field can be changed before approving.
+	const f = {};
+	const input = (name, value, attrs = {}) => Object.assign(el(name === 'description' ? 'textarea' : 'input'), { name, value: value ?? '', ...attrs });
+	const select = (name, options, value) => {
+		const sel = el('select');
+		sel.name = name;
+		sel.replaceChildren(...options.map((o) => new Option(o.label, o.id)));
+		sel.value = value;
+		return sel;
+	};
+	f.brand = input('brand', s.brand, { maxLength: 80 });
+	f.title = input('title', s.title, { maxLength: 120 });
+	f.category = select('category', formOptions?.categories ?? [], s.category);
+	f.size = select('size', (formOptions?.sizes ?? []).map((x) => ({ id: x, label: x })), s.size);
+	f.condition = select('condition', formOptions?.conditions ?? [], s.condition);
+	f.price = input('price', String(s.price), { type: 'number', min: '1', step: '1', inputMode: 'decimal' });
+	f.measurements = input('measurements', s.measurements, { maxLength: 200 });
+	f.description = input('description', s.description, { rows: 4, maxLength: 2000 });
+	const form = el('div', 'sub-form');
+	form.append(
+		field('Brand', f.brand),
+		field('Title (German)', f.title),
+		field('Category', f.category),
+		field('Size', f.size),
+		field('Condition', f.condition),
+		field('Price (CHF)', f.price),
+		field('Measurements', f.measurements),
+		field('Description', f.description),
+	);
+	item.append(form);
+
+	const actions = el('div', 'actions');
+	const approve = el('button', 'primary', 'Approve → shop');
+	approve.type = 'button';
+	approve.addEventListener('click', () =>
+		submissionAction(approve, `sellers/submissions/${s.id}/approve`, {
+			brand: f.brand.value,
+			title: f.title.value,
+			category: f.category.value,
+			size: f.size.value,
+			condition: f.condition.value,
+			price: Number(f.price.value),
+			measurements: f.measurements.value,
+			description: f.description.value,
+		}, 'Approved. The piece shows in the shop after the site rebuilds (about 2 minutes); the seller got an email.'),
+	);
+	const reject = el('button', 'danger', 'Reject');
+	reject.type = 'button';
+	reject.addEventListener('click', () => {
+		const reason = prompt('Why? The seller sees this in the email (optional).');
+		if (reason === null) return;
+		submissionAction(reject, `sellers/submissions/${s.id}/reject`, { reason }, 'Rejected; the seller got an email.');
+	});
+	actions.append(approve, reject);
+	item.append(actions);
+	return item;
+}
+
+async function submissionAction(button, path, body, done) {
+	button.disabled = true;
+	show($('submissions-error'));
+	show($('submissions-status'));
+	try {
+		await api(path, { method: 'POST', body });
+		await loadSubmissions();
+		show($('submissions-status'), done);
+	} catch (error) {
+		show($('submissions-error'), error.message);
+		button.disabled = false;
+	}
+}
+
+function renderPayout(p) {
+	const item = el('li', p.status === 'paid_out' ? 'offer closed' : 'offer');
+	const state = { to_ship: 'Seller still has to ship', shipped: p.due_at && p.due_at * 1000 <= Date.now() ? 'Due now' : 'Shipped – not due yet', paid_out: 'Paid out ✓' }[p.status];
+	item.append(el('span', `state ${p.status === 'paid_out' ? 'paid' : p.status === 'shipped' ? 'accepted' : 'pending'}`, state));
+	const title = el('strong');
+	const link = el('a', '', p.product_name);
+	link.href = `/item/${p.product_id}/`;
+	link.target = '_blank';
+	title.append(link);
+	item.append(title);
+	item.append(el('p', 'amounts', `Pay ${chf(p.payout)} = ${chf(p.price)} − ${Math.round(p.rate * 100)} % (${chf(p.commission)}) + shipping ${chf(p.shipping)}`));
+	item.append(el('p', 'who', `${p.account_holder || p.seller_name || ''} · ${p.iban || 'IBAN missing'} · ${p.seller_email ?? ''}`));
+	item.append(
+		el('p', 'when', `Sold ${when(p.created_at)}${p.shipped_at ? ` · shipped ${when(p.shipped_at)} · due ${when(p.due_at)}` : ''}${p.paid_out_at ? ` · paid ${when(p.paid_out_at)}` : ''}`),
+	);
+	if (p.status === 'shipped') {
+		const actions = el('div', 'actions');
+		const paid = el('button', 'primary', 'Paid');
+		paid.type = 'button';
+		paid.addEventListener('click', async () => {
+			if (!confirm(`Did you transfer ${chf(p.payout)} to ${p.iban || 'the seller'}?`)) return;
+			paid.disabled = true;
+			try {
+				await api(`sellers/payouts/${p.id}/paid`, { method: 'POST', body: {} });
+				await loadSubmissions();
+			} catch (error) {
+				show($('payouts-error'), error.message);
+				paid.disabled = false;
+			}
+		});
+		actions.append(paid);
+		item.append(actions);
+	}
 	return item;
 }

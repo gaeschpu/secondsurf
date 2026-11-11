@@ -18,6 +18,8 @@ export interface NewProduct {
 	staffPick: boolean;
 	/** Only sold by auction (functions/_lib/auctions.ts), never in the shop. */
 	auctionOnly: boolean;
+	/** Account id of the seller who ships it (functions/_lib/sellers.ts); missing for the shop's own pieces. */
+	seller?: number;
 	photos: string[];
 	/** Per photo: 'women', 'men' or '' (no model). */
 	models: string[];
@@ -114,6 +116,7 @@ export function toMarkdown(product: NewProduct, drop: number) {
 		`drop: ${drop}`,
 		...(product.staffPick ? ['staffPick: true'] : []),
 		...(product.auctionOnly ? ['auctionOnly: true'] : []),
+		...(product.seller ? [`seller: ${product.seller}`] : []),
 		'---',
 		'',
 	];
