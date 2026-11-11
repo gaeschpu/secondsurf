@@ -147,6 +147,42 @@
 			</main>
 		</div>
 
+		<!-- Edit a published piece: everything except the photos. Filled from GET /api/admin/products/<id>. -->
+		<dialog id="edit-dialog" class="edit-dialog">
+			<form id="edit-form" method="dialog" novalidate>
+				<h2>Edit piece</h2>
+				<p id="edit-id" class="hint"></p>
+				<label>Brand <input name="brand" maxlength="80" required /></label>
+				<label>Title (German) <input name="title_de" maxlength="120" required /></label>
+				<label>Category <select name="category" required></select></label>
+				<div class="row">
+					<label>Size <select name="size" required></select></label>
+					<label>Price (CHF) <input name="price" type="number" inputmode="decimal" min="1" step="0.05" required /></label>
+				</div>
+				<label>Size note <input name="sizeNote" maxlength="60" placeholder="W32, fits like M" /></label>
+				<label>Condition <select name="condition" required></select></label>
+				<label>Measurements <input name="measurements" maxlength="200" placeholder="Pit to pit 52 cm, length 70 cm" /></label>
+				<label>Description (German) <textarea name="description_de" rows="5" maxlength="2000"></textarea></label>
+				<details>
+					<summary>Translations (French, Italian, English)</summary>
+					<p class="hint">Empty fields show the German text. If you change the German text, update these too or empty them.</p>
+					<label>Title FR <input name="title_fr" maxlength="120" /></label>
+					<label>Title IT <input name="title_it" maxlength="120" /></label>
+					<label>Title EN <input name="title_en" maxlength="120" /></label>
+					<label>Description FR <textarea name="description_fr" rows="4" maxlength="2000"></textarea></label>
+					<label>Description IT <textarea name="description_it" rows="4" maxlength="2000"></textarea></label>
+					<label>Description EN <textarea name="description_en" rows="4" maxlength="2000"></textarea></label>
+				</details>
+				<label class="check"><input name="staffPick" type="checkbox" /> Show in Staff Picks</label>
+				<label class="check"><input name="auctionOnly" type="checkbox" /> Auction only – not in the shop</label>
+				<p id="edit-error" class="error" role="alert" hidden></p>
+				<div class="edit-actions">
+					<button class="primary" type="submit" id="edit-save">Save changes</button>
+					<button type="button" id="edit-cancel">Cancel</button>
+				</div>
+			</form>
+		</dialog>
+
 		<noscript>This dashboard needs JavaScript.</noscript>
 	</body>
 </html>

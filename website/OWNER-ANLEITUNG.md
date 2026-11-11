@@ -96,6 +96,10 @@ Willst du etwas versteigern, das nicht im Shop sein soll (zum Beispiel ein Bundl
 
 Alle laufenden Auktionen, auch normale Shop-Pieces in einer Auktion, stehen auf der Seite `/auctions/`.
 
+## Ein Piece bearbeiten
+
+Im Dashboard unter **Pieces** tippst du auf das Foto, den Namen oder **Edit**. Dann kannst du alles ändern: Marke, Titel, Kategorie, Grösse, Preis, Zustand, Masse, Beschreibung, Staff Pick und «Auction only». Die Übersetzungen (Französisch, Italienisch, Englisch) stehen unter **Translations**; leere Felder zeigen den deutschen Text. Tippe auf **Save changes**. Nach 1 bis 2 Minuten ist die Änderung im Shop. Senkst du dabei den Preis, bekommen Kundinnen und Kunden mit Preisalarm eine E-Mail. Fotos änderst du hier nicht.
+
 ## Ein Piece als verkauft markieren
 
 So verkaufst du im Moment: Kundinnen und Kunden tippen auf **Anfragen**, du bekommst eine E-Mail und schickst ihnen die Zahlungsangaben. Sie bezahlen sofort. Reserviert wird nichts: Wer zuerst bezahlt, bekommt das Piece.

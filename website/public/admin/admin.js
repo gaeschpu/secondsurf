@@ -19,6 +19,8 @@ const form = $('add-form');
 let photos = [];
 /** The pieces from the last list load, for the auction form. */
 let pieceList = [];
+/** Categories, sizes and conditions, for the edit form. */
+let formOptions = null;
 
 async function api(path, options = {}) {
 	const res = await fetch(`/api/admin/${path}`, {
@@ -310,6 +312,12 @@ function renderProduct(product) {
 	const details = document.createElement('small');
 	details.textContent = `CHF ${product.price} · ${product.size}`;
 	meta.append(name, details);
+	// Tap the photo or the name to edit the piece.
+	for (const target of [thumb, name]) {
+		target.classList.add('editable');
+		target.title = 'Edit';
+		target.addEventListener('click', () => openEdit(product));
+	}
 	for (const [active, label] of [
 		[product.auctionOnly, 'Auction only'],
 		[product.sold, 'Sold'],
@@ -331,7 +339,11 @@ function renderProduct(product) {
 		if (!confirm(`Delete ${product.brand} ${product.title} from the shop?`)) return null;
 		return api(`products/${product.id}`, { method: 'DELETE' });
 	});
-	actions.append(sold, remove);
+	const editButton = document.createElement('button');
+	editButton.type = 'button';
+	editButton.textContent = 'Edit';
+	editButton.addEventListener('click', () => openEdit(product));
+	actions.append(editButton, sold, remove);
 	// Put a shop piece up for auction: opens the Auctions tab with this piece chosen.
 	if (!product.sold) {
 		const auction = document.createElement('button');
@@ -410,6 +422,7 @@ function fillSelect(name, options) {
 async function loadProducts() {
 	const { products, options } = await api('products');
 	pieceList = products;
+	formOptions = options;
 	if (!form.elements.category.options.length) {
 		fillSelect('category', options.categories);
 		fillSelect('size', options.sizes.map((size) => ({ id: size, label: size })));
@@ -746,4 +759,82 @@ for (const button of document.querySelectorAll('[data-lot-days]')) {
 form.addEventListener('reset', () => {
 	form.elements.price.closest('label').hidden = false;
 	form.elements.price.required = true;
+});
+
+// ---------- Edit a piece ----------
+
+const editDialog = $('edit-dialog');
+const editForm = $('edit-form');
+let editing = null;
+
+function fillOptions(select, list, value) {
+	select.replaceChildren(...list.map((o) => new Option(o.label, o.id)));
+	select.value = value;
+}
+
+async function openEdit(product) {
+	show($('list-error'));
+	try {
+		const piece = await api(`products/${product.id}`);
+		editing = piece;
+		const f = editForm.elements;
+		fillOptions(f.category, formOptions.categories, piece.category);
+		fillOptions(f.size, formOptions.sizes.map((s) => ({ id: s, label: s })), piece.size);
+		fillOptions(f.condition, formOptions.conditions, piece.condition);
+		f.brand.value = piece.brand;
+		f.price.value = String(piece.price);
+		f.sizeNote.value = piece.sizeNote;
+		f.measurements.value = piece.measurements;
+		for (const lang of ['de', 'fr', 'it', 'en']) {
+			f[`title_${lang}`].value = piece.title[lang];
+			f[`description_${lang}`].value = piece.description[lang];
+		}
+		f.staffPick.checked = piece.staffPick;
+		f.auctionOnly.checked = piece.auctionOnly;
+		$('edit-id').textContent = `${piece.id} · ${piece.photos} photo${piece.photos === 1 ? '' : 's'}${piece.sold ? ' · sold' : ''}`;
+		show($('edit-error'));
+		editDialog.showModal();
+	} catch (error) {
+		show($('list-error'), error.message);
+	}
+}
+
+$('edit-cancel').addEventListener('click', () => editDialog.close());
+
+editForm.addEventListener('submit', async (event) => {
+	event.preventDefault();
+	if (!editing) return;
+	if (!editForm.reportValidity()) return;
+	const f = editForm.elements;
+	const both = (name) => Object.fromEntries(['de', 'fr', 'it', 'en'].map((lang) => [lang, f[`${name}_${lang}`].value]));
+	const button = $('edit-save');
+	button.disabled = true;
+	show($('edit-error'));
+	try {
+		const result = await api(`products/${editing.id}`, {
+			method: 'PATCH',
+			body: {
+				edit: {
+					brand: f.brand.value,
+					title: both('title'),
+					category: f.category.value,
+					size: f.size.value,
+					sizeNote: f.sizeNote.value,
+					condition: f.condition.value,
+					price: Number(f.price.value),
+					measurements: f.measurements.value,
+					description: both('description'),
+					staffPick: f.staffPick.checked,
+					auctionOnly: f.auctionOnly.checked,
+				},
+			},
+		});
+		editDialog.close();
+		await loadProducts();
+		show($('list-status'), result.unchanged ? 'Nothing changed.' : 'Saved! The shop updates after the site rebuilds, usually within 2 minutes.');
+	} catch (error) {
+		show($('edit-error'), error.message);
+	} finally {
+		button.disabled = false;
+	}
 });

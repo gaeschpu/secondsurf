@@ -235,6 +235,52 @@ button:disabled {
 .previews .remove {
 	right: 0.25rem;
 }
+.editable {
+	cursor: pointer;
+}
+strong.editable {
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+}
+.edit-dialog {
+	margin: auto;
+	width: min(36rem, calc(100vw - 1.5rem));
+	max-height: calc(100dvh - 1.5rem);
+	padding: 1.25rem;
+	border: 0;
+	border-radius: 12px;
+	background: var(--bg-raised);
+	color: inherit;
+}
+.edit-dialog::backdrop {
+	background: rgb(0 0 0 / 0.45);
+}
+.edit-dialog h2 {
+	margin-top: 0;
+}
+.edit-dialog details {
+	margin: 0.75rem 0;
+}
+.edit-dialog summary {
+	cursor: pointer;
+	font-weight: 600;
+	min-height: 2.75rem;
+	display: flex;
+	align-items: center;
+}
+.edit-actions {
+	display: flex;
+	gap: 0.5rem;
+	margin-top: 1rem;
+	position: sticky;
+	bottom: -1.25rem;
+	padding: 0.75rem 0 1.25rem;
+	background: var(--bg-raised);
+}
+.edit-actions button {
+	flex: 1;
+}
 .quick {
 	display: flex;
 	gap: 0.5rem;
