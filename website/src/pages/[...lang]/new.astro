@@ -18,10 +18,14 @@ const t = useT(lang);
 const products = await getNewDrop();
 const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
-// Hero image: put the photo at src/assets/hero-home.jpg (or .jpeg/.png/.webp). Astro makes the sizes and formats.
-// TODO (owner): add src/assets/hero-home.jpg. Until then the hero shows a calm sand-coloured panel instead (no broken image).
-const heroFiles = import.meta.glob<{ default: ImageMetadata }>('../../assets/hero-home.{jpg,jpeg,png,webp}', { eager: true });
-const heroImage = Object.values(heroFiles)[0]?.default;
+// Hero photos: every image in src/assets/hero/, sorted by file name (1-…, 2-…, 3-…). The first is shown large, the next
+// two smaller beside it (phones: only the first). Sources and licences: src/assets/hero/CREDITS.md. Astro makes the sizes
+// and formats. Without any photo the hero shows a calm sand-coloured panel instead (no broken image).
+const heroFiles = import.meta.glob<{ default: ImageMetadata }>('../../assets/hero/*.{jpg,jpeg,png,webp}', { eager: true });
+const heroImages = Object.keys(heroFiles)
+	.sort()
+	.map((key) => heroFiles[key].default)
+	.slice(0, 3);
 
 const hero = {
 	de: {
@@ -29,7 +33,7 @@ const hero = {
 		text: 'Kuratierte Secondhand-Surfmode – jedes Teil gibt es nur einmal, verschickt innert 48 h.',
 		browse: 'Jetzt stöbern',
 		sell: 'Verkaufen',
-		alt: 'Secondhand-Surfmode von secondsurf',
+		alt: 'Ein Berg gebrauchter Kleider',
 		how: 'So funktioniert’s',
 		steps: ['Entdecken', 'Sicher bezahlen über Stripe', 'Geliefert innert 48 h'],
 		insta: 'secondsurf auf Instagram',
@@ -39,7 +43,7 @@ const hero = {
 		text: 'Mode surf de seconde main sélectionnée – chaque pièce n’existe qu’une fois, envoyée sous 48 h.',
 		browse: 'Découvrir',
 		sell: 'Vendre',
-		alt: 'Mode surf de seconde main de secondsurf',
+		alt: 'Une montagne de vêtements usagés',
 		how: 'Comment ça marche',
 		steps: ['Découvrir', 'Payer en toute sécurité avec Stripe', 'Livré sous 48 h'],
 		insta: 'secondsurf sur Instagram',
@@ -49,7 +53,7 @@ const hero = {
 		text: 'Moda surf di seconda mano selezionata – ogni capo esiste una sola volta, spedito entro 48 h.',
 		browse: 'Scopri ora',
 		sell: 'Vendere',
-		alt: 'Moda surf di seconda mano di secondsurf',
+		alt: 'Una montagna di vestiti usati',
 		how: 'Come funziona',
 		steps: ['Scoprire', 'Pagare in sicurezza con Stripe', 'Consegnato entro 48 h'],
 		insta: 'secondsurf su Instagram',
@@ -59,7 +63,7 @@ const hero = {
 		text: 'Curated second-hand surf wear – every piece exists only once, shipped within 48 h.',
 		browse: 'Browse now',
 		sell: 'Sell',
-		alt: 'Second-hand surf wear from secondsurf',
+		alt: 'A mountain of used clothes',
 		how: 'How it works',
 		steps: ['Discover', 'Pay securely with Stripe', 'Delivered within 48 h'],
 		insta: 'secondsurf on Instagram',
@@ -107,18 +111,20 @@ const google = at
 					<a class="hero-sell" href={url(lang, '/sell/')}>{hero.sell}</a>
 				</p>
 			</div>
-			<div class="hero-media">
+			<div class={`hero-media${heroImages.length > 1 ? ' collage' : ''}`}>
 				{
-					heroImage ? (
-						<Image
-							src={heroImage}
-							alt={hero.alt}
-							widths={[480, 800, 1200]}
-							sizes="(min-width: 50rem) 34rem, 100vw"
-							loading="eager"
-							fetchpriority="high"
-							class="hero-img"
-						/>
+					heroImages.length ? (
+						heroImages.map((image, i) => (
+							<Image
+								src={image}
+								alt={i === 0 ? hero.alt : ''}
+								widths={i === 0 ? [480, 800, 1200] : [320, 600]}
+								sizes={i === 0 ? '(min-width: 50rem) 22rem, 100vw' : '(min-width: 50rem) 12rem, 1px'}
+								loading={i === 0 ? 'eager' : 'lazy'}
+								fetchpriority={i === 0 ? 'high' : 'auto'}
+								class={`hero-img hero-img-${i + 1}`}
+							/>
+						))
 					) : (
 						<div class="hero-placeholder" aria-hidden="true">
 							<Icon name="wave" size={72} />
@@ -391,6 +397,28 @@ const google = at
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+	}
+	/* Several photos: the first large on the left, the others stacked on the right. Phones: only the first. */
+	.hero-media.collage {
+		display: grid;
+		grid-template-columns: 1.6fr 1fr;
+		grid-template-rows: 1fr 1fr;
+		gap: 0.5rem;
+		background: none;
+	}
+	.collage :global(.hero-img-1) {
+		grid-row: 1 / 3;
+	}
+	.collage :global(.hero-img) {
+		min-height: 0;
+	}
+	@media (max-width: 49.99rem) {
+		.hero-media.collage {
+			display: block;
+		}
+		.collage :global(.hero-img:not(.hero-img-1)) {
+			display: none;
+		}
 	}
 	.hero-placeholder {
 		display: grid;
