@@ -13,6 +13,8 @@ const text = {
 	it: { description: 'Note legali di secondsurf: gestore e contatto.', operator: 'Gestore', owner: 'Titolare', address: 'Indirizzo', contact: 'Contatto', vat: 'IVA', notVat: 'Non assoggettato all’IVA.', uid: 'IDI', missing: 'Manca ancora l’indirizzo di contatto (obbligatorio secondo l’art. 3 cpv. 1 lett. s LCSl).' },
 	en: { description: 'Imprint of secondsurf: operator and contact.', operator: 'Operator', owner: 'Owner', address: 'Address', contact: 'Contact', vat: 'VAT', notVat: 'Not registered for VAT.', uid: 'UID', missing: 'The contact address is still missing (required by Art. 3 para. 1 let. s UCA).' },
 }[lang];
+// The address is required for an online shop (Art. 3 para. 1 let. s UCA): reminder in the build log until it is set.
+if (!OWNER.address.length && lang === 'de') console.warn('[secondsurf] Impressum: addressLine1/addressLine2 in src/settings/site.json are still empty.');
 ---
 
 <LegalPage lang={lang} title={t('legal.imprint')} description={text.description}>
@@ -22,8 +24,8 @@ const text = {
 		{OWNER.legalForm}<br />
 		{text.owner}: {OWNER.name}
 	</p>
-	<h2>{text.address}</h2>
-	{OWNER.address.length > 0 ? <p set:html={OWNER.address.map((line) => line.replace(/&/g, '&amp;').replace(/</g, '&lt;')).join('<br />')} /> : <p><span class="todo">TODO</span> {text.missing}</p>}
+	{OWNER.address.length > 0 && <h2>{text.address}</h2>}
+	{OWNER.address.length > 0 && <p set:html={OWNER.address.map((line) => line.replace(/&/g, '&amp;').replace(/</g, '&lt;')).join('<br />')} />}
 	<h2>{text.contact}</h2>
 	<p>
 		<a href={`mailto:${SITE.email}`}>{SITE.email}</a>

@@ -1,5 +1,6 @@
 ---
-// Layout for terms, privacy and imprint. Shows a note until OWNER.legalReviewed is set in src/settings/site.json.
+// Layout for terms, privacy and imprint. While OWNER.legalReviewed is false (src/settings/site.json), a review note shows in
+// local development only (astro dev), never on the live site.
 import Base from '../layouts/Base.astro';
 import { useT, type Lang } from '../i18n';
 import { OWNER } from '../config';
@@ -18,7 +19,7 @@ const t = useT(lang);
 		<header class="page-head">
 			<h1>{title}</h1>
 		</header>
-		{!OWNER.legalReviewed && <p class="template card"><span class="todo">TODO</span> {t('legal.template')}</p>}
+		{import.meta.env.DEV && !OWNER.legalReviewed && <p class="template card"><span class="todo">TODO</span> {t('legal.template')}</p>}
 		<div class="prose">
 			<slot />
 		</div>

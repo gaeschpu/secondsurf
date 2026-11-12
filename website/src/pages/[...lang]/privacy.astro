@@ -23,7 +23,7 @@ const mail = `mailto:${SITE.email}`;
 		<>
 			<p>Diese Erklärung richtet sich nach dem Schweizer Datenschutzgesetz (revDSG) und, soweit anwendbar, nach der EU-Datenschutz-Grundverordnung (DSGVO).</p>
 			<h2>Verantwortlich</h2>
-			<p>{SITE.name}, {OWNER.name}, <a href={mail}>{SITE.email}</a>. Die Adresse steht im Impressum.</p>
+			<p>{SITE.name}, {OWNER.name}{OWNER.addressText ? `, ${OWNER.addressText}` : ''}, <a href={mail}>{SITE.email}</a>.{!OWNER.addressText && ' Die Adresse steht im Impressum.'}</p>
 			<h2>Welche Daten wir bearbeiten</h2>
 			<ul>
 				<li><strong>Formulare:</strong> Name, E-Mail, Nachricht und deine weiteren Angaben (z.&nbsp;B. Betreff oder Bestelldatum), um deine Anfrage zu beantworten.</li>
@@ -58,7 +58,7 @@ const mail = `mailto:${SITE.email}`;
 		<>
 			<p>La présente déclaration se fonde sur la loi suisse sur la protection des données (nLPD) et, si applicable, sur le règlement général européen sur la protection des données (RGPD).</p>
 			<h2>Responsable</h2>
-			<p>{SITE.name}, {OWNER.name}, <a href={mail}>{SITE.email}</a>. L’adresse figure dans les mentions légales.</p>
+			<p>{SITE.name}, {OWNER.name}{OWNER.addressText ? `, ${OWNER.addressText}` : ''}, <a href={mail}>{SITE.email}</a>.{!OWNER.addressText && ' L’adresse figure dans les mentions légales.'}</p>
 			<h2>Données que nous traitons</h2>
 			<ul>
 				<li><strong>Formulaires :</strong> nom, e-mail, message et tes autres indications (p.&nbsp;ex. objet ou date de commande), pour répondre à ta demande.</li>
@@ -93,7 +93,7 @@ const mail = `mailto:${SITE.email}`;
 		<>
 			<p>Questa informativa si basa sulla legge svizzera sulla protezione dei dati (nLPD) e, se applicabile, sul regolamento generale europeo sulla protezione dei dati (RGPD).</p>
 			<h2>Responsabile</h2>
-			<p>{SITE.name}, {OWNER.name}, <a href={mail}>{SITE.email}</a>. L’indirizzo si trova nelle note legali.</p>
+			<p>{SITE.name}, {OWNER.name}{OWNER.addressText ? `, ${OWNER.addressText}` : ''}, <a href={mail}>{SITE.email}</a>.{!OWNER.addressText && ' L’indirizzo si trova nelle note legali.'}</p>
 			<h2>Quali dati trattiamo</h2>
 			<ul>
 				<li><strong>Moduli:</strong> nome, e-mail, messaggio e le altre indicazioni che fornisci (p.&nbsp;es. oggetto o data dell’ordine), per rispondere alla tua richiesta.</li>
@@ -128,7 +128,7 @@ const mail = `mailto:${SITE.email}`;
 		<>
 			<p>This policy follows the Swiss Federal Act on Data Protection (revFADP) and, where it applies, the EU General Data Protection Regulation (GDPR).</p>
 			<h2>Who is responsible</h2>
-			<p>{SITE.name}, {OWNER.name}, <a href={mail}>{SITE.email}</a>. The address is in the imprint.</p>
+			<p>{SITE.name}, {OWNER.name}{OWNER.addressText ? `, ${OWNER.addressText}` : ''}, <a href={mail}>{SITE.email}</a>.{!OWNER.addressText && ' The address is in the imprint.'}</p>
 			<h2>What data we process</h2>
 			<ul>
 				<li><strong>Forms:</strong> name, email, message and any other details you give (such as subject or order date), to answer your request.</li>

@@ -40,6 +40,8 @@ export const OWNER = {
 	name: settings.ownerName,
 	legalForm: settings.legalForm,
 	address: [settings.addressLine1, settings.addressLine2].filter(Boolean),
+	/** The address on one line (Impressum, AGB 1.2, privacy policy), empty until addressLine1/2 are set in site.json. */
+	addressText: [settings.addressLine1, settings.addressLine2].filter(Boolean).join(', '),
 	uid: settings.uid,
 	/** While false, the legal pages show a visible "template" note. */
 	legalReviewed: settings.legalReviewed,

@@ -145,3 +145,13 @@ Lehnt die Bank die Datei ab, schick mir die Fehlermeldung. Zum Ausprobieren ohne
 - **Updates:** GitHub → Settings → Code security → «Dependabot alerts» und «Dependabot security updates» einschalten. Dependabot schlägt dann jede Woche Updates vor.
 - **Protokoll:** Fehl-Logins und abgelehnte Anfragen stehen in Cloudflare → Workers & Pages → secondsurf → Logs (Ereignisse `login-failed`, `admin-login-failed`, `api-refused`).
 - **Sicherheitslücke gemeldet?** Meldungen kommen über `secondsurf.ch/.well-known/security.txt` an info.secondsurf@gmail.com.
+
+## Gleicher Hintergrund für Model-Bilder
+
+Alle Model-Bilder haben denselben hellen Hintergrund (#ECEAE5) mit einem weichen Schatten unter den Füssen. Für ein neues Piece am Computer im Ordner `website`:
+
+```
+npm run photos:background -- 0013
+```
+
+(0013 = die Nummer des Pieces). Bearbeitet werden nur die Bilder, die in `models:` stehen; Person und Kleidung bleiben unverändert. Die Originale landen in `raw-docs/photo-originals/`. Danach committen und pushen.

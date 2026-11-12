@@ -28,6 +28,8 @@ const inquireHref = `${url(lang, '/contact/')}?item=${encodeURIComponent(`${p.br
 const ogImage = p.photos[0] && (await getImage({ src: p.photos[0], width: 1200, format: 'jpeg' })).src;
 // Auction lot (auctionOnly): never sold at a fixed price, only through its auction (see /auctions/).
 const lot = p.auctionOnly;
+/** Has AI-generated model pictures (the "models" list): then a short note under the gallery says so. */
+const hasModels = Boolean(p.models && Object.values(p.models).some((list) => Array.isArray(list) && list.length > 0));
 const au = auctionTexts[lang];
 // Stripe Checkout (functions/api/checkout.ts) when it's switched on in src/settings/site.json, unless the piece has its own buyUrl.
 const checkout = CHECKOUT.enabled && !p.buyUrl;
@@ -80,7 +82,7 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 									{p.photos.map((photo, i) => (
 										<Image
 											src={photo}
-											alt={i === 0 ? `${p.brand} ${name}` : ''}
+											alt={`${p.brand} ${name}, ${t('shop.size')} ${p.size} – ${t('shop.photo')} ${i + 1}`}
 											widths={[480, 900, 1400]}
 											sizes="(max-width: 48rem) 100vw, 55vw"
 											loading={i === 0 ? 'eager' : 'lazy'}
@@ -106,7 +108,7 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 							{p.photos.length > 1 && (
 								<div class="thumbs">
 									{p.photos.map((photo, i) => (
-										<button type="button" class:list={['thumb', { on: i === 0 }]} data-index={i} aria-label={`${i + 1} / ${p.photos.length}`}>
+										<button type="button" class:list={['thumb', { on: i === 0 }]} data-index={i} aria-label={`${t('shop.photo')} ${i + 1} / ${p.photos.length}`}>
 											<Image src={photo} alt="" widths={[120, 240]} sizes="5rem" loading="lazy" />
 										</button>
 									))}
@@ -119,6 +121,7 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 						</div>
 					)
 				}
+				{hasModels && <p class="ai-note small muted">{t('shop.aiNote')}</p>}
 			</div>
 			<div class="info">
 				{p.draft && <p class="small"><span class="todo">DRAFT</span> {t('shop.example')}</p>}
@@ -220,9 +223,8 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 		const order = modelOrder(slides.map((img) => img.dataset.model));
 		if (order) {
 			const first = slides[order[0]];
-			first.alt = slides[0].alt;
+			[first.alt, slides[0].alt] = [slides[0].alt, first.alt];
 			first.loading = 'eager';
-			slides[0].alt = '';
 			const row = gallery.querySelector('.thumbs');
 			applyOrder(order, track, row);
 			row?.querySelectorAll('.thumb').forEach((thumb, n, all) => {
@@ -530,6 +532,9 @@ const checkout = CHECKOUT.enabled && !p.buyUrl;
 		font-weight: 400;
 		font-size: max(1rem, var(--step-0));
 		text-transform: uppercase;
+	}
+	.ai-note {
+		margin-top: 0.6rem;
 	}
 	.wish-row {
 		margin-top: 1.5rem;

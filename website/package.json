@@ -11,7 +11,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check",
-    "build:scanner": "esbuild scripts/scanner-src.js --bundle --minify --format=iife --target=es2019 --outfile=public/scanner.js"
+    "build:scanner": "esbuild scripts/scanner-src.js --bundle --minify --format=iife --target=es2019 --outfile=public/scanner.js",
+    "photos:background": "node scripts/uniform-background.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
@@ -22,6 +23,7 @@
     "@astrojs/check": "^0.9.12",
     "@zxing/browser": "^0.2.1",
     "@zxing/library": "^0.23.0",
+    "onnxruntime-node": "^1.20.1",
     "typescript": "^6.0.3"
   }
 }

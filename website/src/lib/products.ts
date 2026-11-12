@@ -1,7 +1,7 @@
 // Products come from src/content/products/ (see content.config.ts).
 
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { SITE } from '../config';
+import { CATEGORIES, SITE } from '../config';
 
 export type Product = CollectionEntry<'products'>;
 
@@ -21,4 +21,14 @@ export const availableFirst = (list: Product[]) => [...list.filter((p) => !p.dat
 
 export async function getNewDrop() {
 	return availableFirst((await getProducts()).filter((p) => p.data.drop === SITE.currentDrop));
+}
+
+/**
+ * The categories that have at least one available (unsold) piece in the shop, in the order of CATEGORIES.
+ * The footer and the filter panel only list these; an empty category comes back by itself once a piece is added.
+ * The category pages themselves always exist (no 404 for old links).
+ */
+export async function categoriesInStock() {
+	const stocked = new Set((await getProducts()).filter((p) => !p.data.sold).map((p) => p.data.category));
+	return CATEGORIES.filter((c) => stocked.has(c.id));
 }

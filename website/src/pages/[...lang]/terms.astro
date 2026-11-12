@@ -13,7 +13,9 @@ const t = useT(lang);
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const link = (href: string, label: string) => `<a href="${esc(href)}">${esc(label)}</a>`;
-/** Fills {email}, {privacy}, {returns}, {price}, {free}, {owner} in a paragraph. */
+/** Before the full address is set (addressLine1/2 in site.json): only the place, as on the original AGB. */
+const place = { de: 'Biel/Bienne, Kanton Bern', fr: 'Biel/Bienne, canton de Berne', it: 'Biel/Bienne, Canton Berna', en: 'Biel/Bienne, Canton of Bern' }[lang];
+/** Fills {email}, {privacy}, {returns}, {price}, {free}, {owner}, {address} in a paragraph. */
 const fill = (text: string) =>
 	esc(text)
 		.replace(/\{email\}/g, link(`mailto:${SITE.email}`, SITE.email))
@@ -21,7 +23,8 @@ const fill = (text: string) =>
 		.replace(/\{returns\}/g, link(url(lang, '/returns/'), t('returns.title')))
 		.replace(/\{price\}/g, chf(SHIPPING.price))
 		.replace(/\{free\}/g, chf(SHIPPING.freeFrom))
-		.replace(/\{owner\}/g, esc(OWNER.name));
+		.replace(/\{owner\}/g, esc(OWNER.name))
+		.replace(/\{address\}/g, esc(OWNER.addressText || place));
 
 type Section = { title: string; paragraphs: (string | string[])[] };
 
@@ -34,7 +37,7 @@ const content: Record<Lang, { subtitle: string; note?: string; sections: Section
 				title: '1. Geltungsbereich und Anbieter',
 				paragraphs: [
 					'1.1 Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle Bestellungen über den Onlineshop www.secondsurf.ch.',
-					'1.2 Anbieter und Vertragspartner ist: {owner}, secondsurf.ch, Biel/Bienne, Kanton Bern, Schweiz, E-Mail: {email} (nachfolgend «secondsurf» oder «wir»).',
+					'1.2 Anbieter und Vertragspartner ist: {owner}, secondsurf.ch, {address}, Schweiz, E-Mail: {email} (nachfolgend «secondsurf» oder «wir»).',
 					'1.3 Das Angebot richtet sich an Privatkundinnen und Privatkunden (nachfolgend «Kunde»). Für Wiederverkäufer und Grosshandelskunden gelten separate Bedingungen, die wir auf Anfrage zustellen.',
 					'1.4 Massgebend ist die zum Zeitpunkt der Bestellung gültige Fassung dieser AGB. Abweichende Bedingungen des Kunden gelten nur, wenn wir ihnen schriftlich zustimmen.',
 					'1.5 Einige Pieces verkauft secondsurf in eigenem Namen im Auftrag von Privatpersonen (Kommission). Diese verschickt die Verkäuferin oder der Verkäufer direkt an den Kunden; dafür geben wir ihnen Name und Lieferadresse weiter. Vertragspartner bleibt secondsurf, und diese AGB gelten unverändert.',
@@ -139,7 +142,7 @@ const content: Record<Lang, { subtitle: string; note?: string; sections: Section
 				title: '1. Champ d’application et fournisseur',
 				paragraphs: [
 					'1.1 Les présentes conditions générales de vente (CGV) s’appliquent à toutes les commandes passées sur la boutique en ligne www.secondsurf.ch.',
-					'1.2 Le fournisseur et partenaire contractuel est : {owner}, secondsurf.ch, Biel/Bienne, canton de Berne, Suisse, e-mail : {email} (ci-après « secondsurf » ou « nous »).',
+					'1.2 Le fournisseur et partenaire contractuel est : {owner}, secondsurf.ch, {address}, Suisse, e-mail : {email} (ci-après « secondsurf » ou « nous »).',
 					'1.3 L’offre s’adresse aux clientes et clients privés (ci-après le « client »). Des conditions séparées, que nous envoyons sur demande, s’appliquent aux revendeurs et aux clients grossistes.',
 					'1.4 La version des présentes CGV en vigueur au moment de la commande fait foi. Des conditions divergentes du client ne s’appliquent que si nous les acceptons par écrit.',
 					'1.5 secondsurf vend certaines pièces en son propre nom pour le compte de particuliers (commission). Ces pièces sont envoyées directement au client par la vendeuse ou le vendeur ; nous leur transmettons pour cela le nom et l’adresse de livraison. Le contrat reste conclu avec secondsurf et les présentes CGV s’appliquent sans changement.',
@@ -244,7 +247,7 @@ const content: Record<Lang, { subtitle: string; note?: string; sections: Section
 				title: '1. Campo d’applicazione e fornitore',
 				paragraphs: [
 					'1.1 Le presenti condizioni generali (CG) si applicano a tutti gli ordini effettuati tramite il negozio online www.secondsurf.ch.',
-					'1.2 Fornitore e partner contrattuale è: {owner}, secondsurf.ch, Biel/Bienne, Canton Berna, Svizzera, e-mail: {email} (di seguito «secondsurf» o «noi»).',
+					'1.2 Fornitore e partner contrattuale è: {owner}, secondsurf.ch, {address}, Svizzera, e-mail: {email} (di seguito «secondsurf» o «noi»).',
 					'1.3 L’offerta si rivolge a clienti privati (di seguito «cliente»). Per rivenditori e grossisti valgono condizioni separate, che inviamo su richiesta.',
 					'1.4 Fa stato la versione delle presenti CG valida al momento dell’ordine. Condizioni divergenti del cliente valgono solo se le accettiamo per iscritto.',
 					'1.5 Alcuni pezzi secondsurf li vende in nome proprio per conto di privati (commissione). Questi pezzi vengono spediti direttamente al cliente dalla venditrice o dal venditore; a tal fine trasmettiamo loro nome e indirizzo di consegna. Il contratto resta concluso con secondsurf e le presenti CG valgono invariate.',
@@ -349,7 +352,7 @@ const content: Record<Lang, { subtitle: string; note?: string; sections: Section
 				title: '1. Scope and provider',
 				paragraphs: [
 					'1.1 These general terms and conditions (terms) apply to all orders placed through the online shop www.secondsurf.ch.',
-					'1.2 The provider and contracting party is: {owner}, secondsurf.ch, Biel/Bienne, Canton of Bern, Switzerland, email: {email} (hereinafter “secondsurf” or “we”).',
+					'1.2 The provider and contracting party is: {owner}, secondsurf.ch, {address}, Switzerland, email: {email} (hereinafter “secondsurf” or “we”).',
 					'1.3 The offer is aimed at private customers (hereinafter “customer”). Separate conditions, which we send on request, apply to resellers and wholesale customers.',
 					'1.4 The version of these terms valid at the time of the order applies. Different conditions of the customer only apply if we agree to them in writing.',
 					'1.5 secondsurf sells some pieces in its own name on behalf of private sellers (commission sale). The seller sends these pieces directly to the customer; for this we pass on the customer\u2019s name and shipping address. The contract remains with secondsurf and these terms apply unchanged.',

@@ -26,7 +26,8 @@ const back = url(lang, `/item/${id}/`);
 	hidden
 >
 	<p class="eyebrow">{a.title}</p>
-	<div class="clock" data-clock-row>
+	<p class="state-badge" data-state-badge hidden></p>
+	<div class="clock" data-clock-row hidden>
 		<span>{a.endsIn}</span>
 		<strong data-clock>--:--:--</strong>
 	</div>
@@ -88,6 +89,8 @@ const back = url(lang, `/item/${id}/`);
 	import type { AuctionTexts } from '../i18n/auction';
 
 	type View = {
+		/** Paid through the auction (sold). */
+		sold?: boolean;
 		auction: null | {
 			status: 'running' | 'payment';
 			startPrice: number;
@@ -111,7 +114,7 @@ const back = url(lang, `/item/${id}/`);
 		};
 	};
 
-	const found = document.querySelector<HTMLElement>('[data-auction]');
+	const found = document.querySelector<HTMLElement>('section[data-auction]');
 	if (found) {
 		const box: HTMLElement = found;
 		const t: AuctionTexts = JSON.parse(box.dataset.texts!);
@@ -150,8 +153,21 @@ const back = url(lang, `/item/${id}/`);
 		function render(v: View) {
 			view = v;
 			const a = v.auction;
+			const badge = $('[data-state-badge]');
+			// Paid through the auction: only "Verkauft", no buying, no price offer, nothing else of the auction.
+			if (v.sold) {
+				toggleSale(true);
+				for (const child of box.children as HTMLCollectionOf<HTMLElement>) child.hidden = child !== badge;
+				badge.textContent = t.sold;
+				badge.className = 'state-badge sold';
+				badge.hidden = false;
+				return;
+			}
 			toggleSale(Boolean(a));
 			if (!a) return;
+			badge.hidden = a.status !== 'payment';
+			badge.textContent = t.reserved;
+			badge.className = 'state-badge';
 			offset = a.serverNow - Date.now();
 			const running = a.status === 'running';
 			const you = v.you;
@@ -294,6 +310,20 @@ const back = url(lang, `/item/${id}/`);
 	.auction-box[hidden],
 	.auction-box [hidden] {
 		display: none !important;
+	}
+	/* "Reserviert" / "Verkauft": same pill as the badges on the photos. */
+	.state-badge {
+		justify-self: start;
+		width: fit-content;
+		margin: 0;
+		padding: 0.2em 0.8em;
+		border-radius: 999px;
+		background: var(--ink);
+		color: var(--bg);
+		font-size: 0.8rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
 	}
 	.auction-box .eyebrow {
 		margin: 0;

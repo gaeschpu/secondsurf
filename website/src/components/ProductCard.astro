@@ -31,7 +31,7 @@ const slider = photos.length > 1;
 						{photos.map((photo, i) => (
 							<Image
 								src={photo}
-								alt={i === 0 ? `${p.brand} ${name}` : ''}
+								alt={`${p.brand} ${name}, ${t('shop.size')} ${p.size} – ${t('shop.photo')} ${i + 1}`}
 								widths={[360, 640]}
 								sizes="(max-width: 40rem) 50vw, 18rem"
 								loading={i === 0 ? undefined : 'lazy'}
@@ -58,7 +58,18 @@ const slider = photos.length > 1;
 			{p.sold && <span class="badge">{t('shop.sold')}</span>}
 			{p.draft && <span class="badge draft">DRAFT</span>}
 			{/* Shown by the script below while the piece is being auctioned. */}
-			{!p.sold && <span class="badge auction" data-auction-badge hidden>{auctionTexts[lang].badge}</span>}
+			{
+				!p.sold && (
+					<span
+						class="badge auction"
+						data-auction-badge
+						data-auction={auctionTexts[lang].badge}
+						data-reserved={auctionTexts[lang].reserved}
+						data-sold={auctionTexts[lang].sold}
+						hidden
+					/>
+				)
+			}
 		</div>
 		<p class="title"><strong>{p.brand}</strong> {name}{p.staffPick && ' ★'}</p>
 		<p class="meta">
@@ -84,14 +95,22 @@ const slider = photos.length > 1;
 <script>
 	import { applyOrder, modelOrder } from '../scripts/models';
 
-	// Pieces being auctioned get an "Auktion" badge (one request for the whole page).
+	// Auction state of each piece (one request for the whole page): "Auktion" while it runs, "Reserviert" while the winner
+	// pays, and a piece paid through an auction leaves the list (the rebuild then marks it sold for good).
 	const cards = document.querySelectorAll<HTMLElement>('.product [data-auction-badge]');
 	if (cards.length)
-		fetch('/api/auctions/active')
+		fetch('/api/auctions/states', { cache: 'no-store' })
 			.then((res) => (res.ok ? res.json() : []))
-			.then((list: { id: string }[]) => {
-				const ids = new Set(list.map((a) => a.id));
-				cards.forEach((badge) => (badge.hidden = !ids.has(badge.closest<HTMLElement>('.product')!.dataset.id!)));
+			.then((list: { id: string; state: 'auction' | 'reserved' | 'sold' }[]) => {
+				const states = new Map(list.map((a) => [a.id, a.state]));
+				cards.forEach((badge) => {
+					const card = badge.closest<HTMLElement>('.product')!;
+					const state = states.get(card.dataset.id!);
+					badge.hidden = !state;
+					if (state) badge.textContent = badge.dataset[state] ?? '';
+					badge.classList.toggle('reserved', state === 'reserved');
+					card.classList.toggle('auction-sold', state === 'sold');
+				});
 			})
 			.catch(() => {});
 
@@ -103,9 +122,8 @@ const slider = photos.length > 1;
 		const order = modelOrder(photos.map((img) => img.dataset.model));
 		if (order) {
 			const first = photos[order[0]];
-			first.alt = photos[0].alt;
+			[first.alt, photos[0].alt] = [photos[0].alt, first.alt];
 			first.loading = 'eager';
-			photos[0].alt = '';
 			applyOrder(order, track);
 		}
 		const dots = [...card.querySelectorAll<HTMLElement>('.dot')];
@@ -262,6 +280,14 @@ const slider = photos.length > 1;
 	.badge.auction {
 		background: #b42318;
 		color: #fff;
+	}
+	.badge.auction.reserved {
+		background: var(--ink);
+		color: var(--bg);
+	}
+	/* Sold through an auction: out of the list right away (the rebuild removes it for good). */
+	:global(.product.auction-sold) {
+		display: none !important;
 	}
 	.badge.draft {
 		left: auto;

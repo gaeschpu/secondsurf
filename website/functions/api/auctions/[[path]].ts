@@ -13,7 +13,7 @@
 
 import { currentUser, database, tooMany } from '../../_lib/accounts.ts';
 import { json, type Handler } from '../../_lib/auth.ts';
-import {
+import { auctionStates,
 	acceptedTerms,
 	anonymous,
 	auctionsDb,
@@ -55,6 +55,8 @@ export const onRequest: Handler = async ({ request, env, params, waitUntil }) =>
 		if (!PRODUCT_ID.test(id)) return fail('invalid');
 		let a = await latestAuction(db, id);
 		if (a) a = await settle(env, db, a, origin, background);
+		// Paid through the auction: sold (the rebuild that marks it sold may still be running).
+		if (a?.status === 'paid') return json({ auction: null, sold: true });
 		if (!a || (a.status !== 'running' && a.status !== 'payment')) return json({ auction: null });
 
 		const { results: history } = await db
@@ -164,6 +166,9 @@ export const onRequest: Handler = async ({ request, env, params, waitUntil }) =>
 			},
 		});
 	}
+
+	// GET states: [{ id, state: 'auction' | 'reserved' | 'sold' }] for the shop grid, the cart and the piece pages.
+	if (route === 'states' && method === 'GET') return json(await auctionStates(db), 200, { 'Cache-Control': 'no-store' });
 
 	if (route === 'active' && method === 'GET') {
 		const { results } = await db

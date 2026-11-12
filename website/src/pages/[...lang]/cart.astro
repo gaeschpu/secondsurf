@@ -152,7 +152,8 @@ const texts = {
 		try {
 			const [list, active] = await Promise.all([
 				fetch('/products.json').then((r) => (r.ok ? (r.json() as Promise<Piece[]>) : [])),
-				fetch('/api/auctions/active', { cache: 'no-store' }).then((r) => (r.ok ? (r.json() as Promise<{ id: string }[]>) : [])).catch(() => []),
+				// Auctioned, reserved for an auction winner or sold through an auction: can't be bought from the cart.
+				fetch('/api/auctions/states', { cache: 'no-store' }).then((r) => (r.ok ? (r.json() as Promise<{ id: string }[]>) : [])).catch(() => []),
 			]);
 			pieces = list;
 			blocked = new Set(active.map((a) => a.id));

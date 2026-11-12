@@ -7,7 +7,7 @@ import ProductCard from './ProductCard.astro';
 import Icon from './Icon.astro';
 import { chf, l, url, useT, type Lang } from '../i18n';
 import { CATEGORIES, SIZES } from '../config';
-import type { Product } from '../lib/products';
+import { categoriesInStock, type Product } from '../lib/products';
 
 interface Props {
 	lang: Lang;
@@ -46,6 +46,9 @@ const groups = [
 ].filter((group) => group.options.length > 1);
 
 const showCategories = categories !== undefined;
+// Only categories with available pieces, plus the one being shown (so its page still marks itself).
+const stocked = new Set((await categoriesInStock()).map((c) => c.id));
+const categoryLinks = CATEGORIES.filter((c) => stocked.has(c.id) || c.id === categories);
 const showButton = filter && (groups.length > 0 || showCategories);
 const panelId = `filter-panel-${Math.random().toString(36).slice(2, 8)}`;
 ---
@@ -73,7 +76,7 @@ const panelId = `filter-panel-${Math.random().toString(36).slice(2, 8)}`;
 								<a href={url(lang, '/shop/')} aria-current={categories === '' ? 'page' : undefined}>
 									{t('nav.shopAll')}
 								</a>
-								{CATEGORIES.map((c) => (
+								{categoryLinks.map((c) => (
 									<a href={url(lang, `/shop/${c.id}/`)} aria-current={categories === c.id ? 'page' : undefined}>
 										{l(c.label, lang)}
 									</a>

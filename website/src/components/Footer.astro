@@ -2,7 +2,8 @@
 import Icon from './Icon.astro';
 import { getCollection } from 'astro:content';
 import { l, url, useT, type Lang } from '../i18n';
-import { CATEGORIES, SITE, SOCIALS } from '../config';
+import { SITE, SOCIALS } from '../config';
+import { categoriesInStock } from '../lib/products';
 
 interface Props {
 	lang: Lang;
@@ -12,6 +13,8 @@ const { lang } = Astro.props;
 const t = useT(lang);
 const year = new Date().getFullYear();
 const hasNews = (await getCollection('news')).length > 0;
+// Only categories with available pieces (src/lib/products.ts).
+const stocked = await categoriesInStock();
 
 const columns = [
 	{
@@ -20,7 +23,7 @@ const columns = [
 			{ href: '/new/', label: t('nav.new') },
 			{ href: '/shop/', label: t('nav.shopAll') },
 			{ href: '/auctions/', label: t('nav.auctions') },
-			...CATEGORIES.slice(0, 5).map((c) => ({ href: `/shop/${c.id}/`, label: l(c.label, lang) })),
+			...stocked.slice(0, 6).map((c) => ({ href: `/shop/${c.id}/`, label: l(c.label, lang) })),
 		],
 	},
 	{
@@ -80,7 +83,7 @@ const columns = [
 		}
 	</div>
 	<div class="container-wide bottom">
-		<p>© {year} {SITE.name} · {t('shop.priceNote')} · <a class="admin-link" href="/admin/" rel="nofollow">Admin</a></p>
+		<p>© {year} {SITE.name} · {t('shop.priceNote')}</p>
 	</div>
 </footer>
 

@@ -6,6 +6,8 @@ import type { Lang } from './index';
 
 const de = {
 	badge: 'Auktion',
+	reserved: 'Reserviert',
+	sold: 'Verkauft',
 	title: 'Auktion',
 	endsIn: 'Endet in',
 	endsAt: 'Ende: {date}',
@@ -87,6 +89,8 @@ export type AuctionTexts = typeof de;
 
 const fr: AuctionTexts = {
 	badge: 'Enchère',
+	reserved: 'Réservé',
+	sold: 'Vendu',
 	title: 'Enchère',
 	endsIn: 'Se termine dans',
 	endsAt: 'Fin : {date}',
@@ -166,6 +170,8 @@ const fr: AuctionTexts = {
 
 const it: AuctionTexts = {
 	badge: 'Asta',
+	reserved: 'Riservato',
+	sold: 'Venduto',
 	title: 'Asta',
 	endsIn: 'Termina tra',
 	endsAt: 'Fine: {date}',
@@ -245,6 +251,8 @@ const it: AuctionTexts = {
 
 const en: AuctionTexts = {
 	badge: 'Auction',
+	reserved: 'Reserved',
+	sold: 'Sold',
 	title: 'Auction',
 	endsIn: 'Ends in',
 	endsAt: 'Ends: {date}',

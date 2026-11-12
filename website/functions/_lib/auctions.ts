@@ -172,10 +172,34 @@ export const latestAuction = (db: D1Database, productId: string) =>
 export const byPayToken = (db: D1Database, token: string) =>
 	/^[0-9a-f]{48}$/.test(token) ? db.prepare('SELECT * FROM auctions WHERE pay_token = ?').bind(token).first<Auction>() : Promise.resolve(null);
 
-/** True while a piece is being auctioned or waits for the winner's payment: then it can't be bought or offered for. */
+/** True while a piece is being auctioned, waits for the winner's payment, or was paid through an auction (sold, even before
+ *  the rebuild marks it sold): then it can't be bought or offered for. */
 export async function auctionBlocksSale(env: Env, productId: string) {
 	const db = await auctionsDb(env).catch(() => null);
-	return db ? Boolean(await openAuction(db, productId)) : false;
+	if (!db) return false;
+	if (await openAuction(db, productId)) return true;
+	return Boolean(await db.prepare("SELECT 1 FROM auctions WHERE product_id = ? AND status = 'paid' LIMIT 1").bind(productId).first());
+}
+
+/**
+ * What the shop shows on a piece because of an auction: 'auction' (running), 'reserved' (ended with a winner who hasn't paid
+ * yet) or 'sold' (paid through the auction). Pieces without any of these aren't listed.
+ */
+export async function auctionStates(db: D1Database) {
+	const t = Math.floor(Date.now() / 1000);
+	const { results } = await db
+		.prepare("SELECT product_id, status, ends_at, bids FROM auctions WHERE status IN ('running', 'payment', 'paid')")
+		.all<{ product_id: string; status: AuctionStatus; ends_at: number; bids: number }>();
+	const rank = { auction: 1, reserved: 2, sold: 3 } as const;
+	const states = new Map<string, keyof typeof rank>();
+	for (const a of results) {
+		// A running auction past its end is settled within minutes (tick): with bids it is already as good as reserved.
+		const state = a.status === 'paid' ? 'sold' : a.status === 'payment' ? 'reserved' : a.ends_at > t ? 'auction' : a.bids > 0 ? 'reserved' : null;
+		const before = states.get(a.product_id);
+		// Several auctions for one piece (an old paid one, a new one): the strongest state counts.
+		if (state && (!before || rank[state] > rank[before])) states.set(a.product_id, state);
+	}
+	return [...states].map(([id, state]) => ({ id, state }));
 }
 
 /** "K***3": first letter of the name and the last digit of the account number. */
