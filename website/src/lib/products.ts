@@ -1,7 +1,7 @@
 // Products come from src/content/products/ (see content.config.ts).
 
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { CATEGORIES, SHOW_MODEL_PHOTOS, SITE } from '../config';
+import { CATEGORIES, SEASONS, SHOW_MODEL_PHOTOS, SITE } from '../config';
 
 export type Product = CollectionEntry<'products'>;
 
@@ -45,4 +45,10 @@ export async function getNewDrop() {
 export async function categoriesInStock() {
 	const stocked = new Set((await getProducts()).filter((p) => !p.data.sold).map((p) => p.data.category));
 	return CATEGORIES.filter((c) => stocked.has(c.id));
+}
+
+/** The shop's pieces of one season (SEASONS in src/config.ts), available first. */
+export async function seasonProducts(id: (typeof SEASONS)[number]['id']) {
+	const season = SEASONS.find((s) => s.id === id)!;
+	return availableFirst((await getProducts()).filter((p) => (season.categories as readonly string[]).includes(p.data.category)));
 }

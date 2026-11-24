@@ -1,0 +1,119 @@
+---
+// Big cards for the seasons (SEASONS in src/config.ts): photo of a piece in stock, the season in large capitals, a short
+// line, link to the season page. A season without available pieces is left out; the section disappears if none has any.
+import { Image } from 'astro:assets';
+import { l, url, type Lang } from '../i18n';
+import { SEASONS } from '../config';
+import { seasonProducts } from '../lib/products';
+
+interface Props {
+	lang: Lang;
+}
+const { lang } = Astro.props;
+
+const text = {
+	de: { title: 'Nach Saison', sub: 'Für jede Saison das Richtige.', shop: 'Ansehen' },
+	fr: { title: 'Par saison', sub: 'Ce qu’il faut pour chaque saison.', shop: 'Voir' },
+	it: { title: 'Per stagione', sub: 'Il giusto per ogni stagione.', shop: 'Scopri' },
+	en: { title: 'By season', sub: 'The right pieces for every season.', shop: 'Shop' },
+}[lang];
+
+const cards = (
+	await Promise.all(
+		SEASONS.map(async (season) => {
+			const available = (await seasonProducts(season.id)).filter((p) => !p.data.sold);
+			return { season, count: available.length, photo: available.find((p) => p.data.photos.length)?.data.photos[0] };
+		}),
+	)
+).filter((card) => card.count > 0);
+---
+
+{
+	cards.length > 0 && (
+		<section class="seasons" aria-labelledby="seasons-title">
+			<div class="head">
+				<h2 id="seasons-title">{text.title}</h2>
+				<p class="muted small">{text.sub}</p>
+			</div>
+			<ul class="cards" role="list">
+				{cards.map(({ season, count, photo }) => (
+					<li>
+						<a class="card-link" href={url(lang, `/season/${season.id}/`)}>
+							<span class="media">
+								{photo && <Image src={photo} alt="" widths={[400, 700, 1000]} sizes="(min-width: 50rem) 45vw, 100vw" loading="lazy" />}
+							</span>
+							<span class="label">{l(season.label, lang)}</span>
+							<span class="line small">
+								{l(season.text, lang)} · {count}
+							</span>
+						</a>
+					</li>
+				))}
+			</ul>
+		</section>
+	)
+}
+
+<style>
+	.seasons {
+		margin-top: clamp(3rem, 8vw, 5rem);
+	}
+	.head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem 1rem;
+		margin-bottom: 1.25rem;
+	}
+	.head h2 {
+		font-size: var(--step-3);
+	}
+	.cards {
+		display: grid;
+		gap: 1rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	@media (min-width: 40rem) {
+		.cards {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+	.card-link {
+		display: grid;
+		gap: 0.35rem;
+		color: var(--ink);
+		text-decoration: none;
+	}
+	.media {
+		display: block;
+		aspect-ratio: 4 / 5;
+		overflow: hidden;
+		background: var(--bg-sunken);
+	}
+	.media :global(img) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.4s;
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.card-link:hover .media :global(img) {
+			transform: scale(1.03);
+		}
+	}
+	.label {
+		margin-top: 0.5rem;
+		font-family: var(--font-display);
+		font-size: var(--step-3);
+		font-style: italic;
+		font-weight: 800;
+		line-height: 1;
+		text-transform: uppercase;
+	}
+	.line {
+		color: var(--ink-soft);
+	}
+</style>

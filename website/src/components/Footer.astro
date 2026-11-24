@@ -1,8 +1,9 @@
 ---
 import Icon from './Icon.astro';
+import Logo from './Logo.astro';
 import { getCollection } from 'astro:content';
 import { l, url, useT, type Lang } from '../i18n';
-import { SITE, SOCIALS } from '../config';
+import { SEASONS, SITE, SOCIALS } from '../config';
 import { categoriesInStock } from '../lib/products';
 
 interface Props {
@@ -23,6 +24,7 @@ const columns = [
 			{ href: '/new/', label: t('nav.new') },
 			{ href: '/shop/', label: t('nav.shopAll') },
 			{ href: '/auctions/', label: t('nav.auctions') },
+			...SEASONS.map((s) => ({ href: `/season/${s.id}/`, label: l(s.label, lang) })),
 			...stocked.slice(0, 6).map((c) => ({ href: `/shop/${c.id}/`, label: l(c.label, lang) })),
 		],
 	},
@@ -50,7 +52,7 @@ const columns = [
 <footer class="site-footer">
 	<div class="container-wide cols">
 		<div class="brand-col">
-			<p class="name"><Icon name="wave" size={22} /> {SITE.name}</p>
+			<p class="name"><Logo size={38} /> {SITE.name}</p>
 			<p class="made">{t('footer.made')}</p>
 			<ul class="social">
 				{

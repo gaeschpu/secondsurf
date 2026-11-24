@@ -80,6 +80,26 @@ export const CATEGORIES = [
 	{ id: 'accessories', label: { de: 'Accessoires', fr: 'Accessoires', it: 'Accessori', en: 'Accessories' } },
 ] as const satisfies readonly { id: string; label: Localized }[];
 
+/**
+ * Seasons: groups of categories with their own page (/season/summer/, /season/winter/) and a big card on the New Drop page.
+ * A category can be in both (caps in summer, beanies in winter). Seasons without pieces in stock are not shown.
+ */
+export const SEASONS = [
+	{
+		id: 'summer',
+		label: { de: 'Sommer', fr: 'Été', it: 'Estate', en: 'Summer' },
+		text: { de: 'Boardshorts, T-Shirts & Badesachen', fr: 'Boardshorts, t-shirts & maillots', it: 'Boardshort, t-shirt & costumi', en: 'Boardshorts, tees & swim' },
+		categories: ['boardshorts', 'tees', 'swim', 'headwear'],
+	},
+	{
+		id: 'winter',
+		label: { de: 'Winter', fr: 'Hiver', it: 'Inverno', en: 'Winter' },
+		text: { de: 'Hoodies, Jacken & warme Layers', fr: 'Sweats, vestes & couches chaudes', it: 'Felpe, giacche & strati caldi', en: 'Hoodies, jackets & warm layers' },
+		categories: ['hoodies', 'longsleeves', 'jackets', 'wetsuits', 'headwear'],
+	},
+] as const satisfies readonly { id: string; label: Localized; text: Localized; categories: readonly string[] }[];
+
+
 export type CategoryId = (typeof CATEGORIES)[number]['id'];
 
 /** Sizes offered in the size filter, in this order. */

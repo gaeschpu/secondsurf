@@ -1,0 +1,42 @@
+---
+// The secondsurf logo: a hand-drawn line surfer on a board, riding a small wave. Lines in currentColor, so it follows the
+// text colour (surf blue in the header, white in the navy footer, lighter in dark mode). The static version for the
+// browser tab and phone icons is public/logo.svg.
+interface Props {
+	size?: number;
+	class?: string;
+}
+const { size = 40, class: className } = Astro.props;
+---
+
+<svg
+	class:list={['logo', className]}
+	width={size}
+	height={size}
+	viewBox="0 0 64 64"
+	fill="none"
+	stroke="currentColor"
+	stroke-width="2.4"
+	stroke-linecap="round"
+	stroke-linejoin="round"
+	aria-hidden="true"
+>
+	<path d="M3 53c4 1 7-1 7-4s-3-4-5-2" />
+	<path d="M10 51c8 4 17 3 26-1s17-5 25-2" />
+	<path class="board" d="M7 45c10-6 33-12 51-11-6 6-33 13-47 13-3 0-4-1-4-2z" />
+	<circle cx="36.5" cy="8.5" r="3.6" />
+	<path d="M35 13.5l-4 12" />
+	<path d="M31 25.5l6 4.5 3 7" />
+	<path d="M31 25.5l-6 6.5-2 9" />
+	<path d="M34.5 16l10 3.5 6-2.5" />
+	<path d="M34.5 16l-9-4.5-6 2" />
+</svg>
+
+<style>
+	.logo {
+		flex: none;
+	}
+	.board {
+		fill: color-mix(in srgb, currentColor 12%, transparent);
+	}
+</style>

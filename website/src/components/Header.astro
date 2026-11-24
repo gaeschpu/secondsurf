@@ -1,5 +1,6 @@
 ---
 import Icon from './Icon.astro';
+import Logo from './Logo.astro';
 import { htmlLang, l, langLabel, languages, stripLang, url, useT, type Lang } from '../i18n';
 import { ANNOUNCEMENT, HOLIDAY_BANNER, SITE } from '../config';
 import { accountTexts } from '../i18n/account';
@@ -42,7 +43,8 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 }
 <header class="site-header">
 	<div class="container-wide bar">
-		<a class="brand" href={url(lang, '/new/')}>
+		<a class="brand" href={url(lang, '/new/')} aria-label={SITE.name}>
+			<Logo size={42} class="brand-logo" />
 			<span class="brand-text">
 				<span class="brand-name">{SITE.name}</span>
 				<span class="brand-sub">{t('site.tagline')}</span>
@@ -241,9 +243,21 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 		color: var(--ink);
 		text-decoration: none;
 		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: 1.1rem;
+		font-weight: 800;
+		font-size: 1.5rem;
+		font-style: italic;
+		text-transform: uppercase;
+		letter-spacing: 0.01em;
 		white-space: nowrap;
+	}
+	.brand :global(.brand-logo) {
+		color: var(--sand);
+		transition: transform 0.2s;
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.brand:hover :global(.brand-logo) {
+			transform: rotate(-6deg) translateY(-1px);
+		}
 	}
 	.brand:hover {
 		color: var(--ink);
@@ -251,9 +265,11 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 	.brand-text {
 		display: flex;
 		flex-direction: column;
-		line-height: 1.15;
+		line-height: 1;
 	}
 	.brand-sub {
+		font-style: normal;
+		text-transform: none;
 		font-family: var(--font-body);
 		font-size: 0.72rem;
 		font-weight: 500;

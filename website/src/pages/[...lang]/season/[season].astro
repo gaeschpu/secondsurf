@@ -1,0 +1,27 @@
+---
+// /season/summer/ and /season/winter/: every piece of the season's categories (SEASONS in src/config.ts), with the filter.
+import Base from '../../../layouts/Base.astro';
+import ProductGrid from '../../../components/ProductGrid.astro';
+import { seasonProducts } from '../../../lib/products';
+import { l, langPaths, useT, type Lang } from '../../../i18n';
+import { SEASONS } from '../../../config';
+
+export function getStaticPaths() {
+	return langPaths().flatMap(({ params, props }) => SEASONS.map((s) => ({ params: { ...params, season: s.id }, props: { ...props, season: s } })));
+}
+const { lang, season } = Astro.props as { lang: Lang; season: (typeof SEASONS)[number] };
+const t = useT(lang);
+const products = await seasonProducts(season.id);
+const title = l(season.label, lang);
+---
+
+<Base lang={lang} title={title} description={`${title}: ${l(season.text, lang)}. ${t('shop.intro')}`}>
+	<div class="container-wide">
+		<header class="page-head">
+			<p class="eyebrow">{t('nav.shop')}</p>
+			<h1>{title}</h1>
+			<p>{l(season.text, lang)}</p>
+		</header>
+		<ProductGrid lang={lang} products={products} filter />
+	</div>
+</Base>

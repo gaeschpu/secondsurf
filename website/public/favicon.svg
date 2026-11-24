@@ -1,1 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#0e5f6e"/><g fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round"><path d="M12 26c3 2.5 6 2.5 10 0s7-2.5 10 0 6 2.5 10 0 7-2.5 10 0"/><path d="M12 38c3 2.5 6 2.5 10 0s7-2.5 10 0 6 2.5 10 0 7-2.5 10 0"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#2b5c9c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="secondsurf">
+	<!-- Wave under the board, rolling into a small curl on the left. -->
+	<path d="M3 53c4 1 7-1 7-4s-3-4-5-2" />
+	<path d="M10 51c8 4 17 3 26-1s17-5 25-2" />
+	<!-- Board, nose up. -->
+	<path d="M7 45c10-6 33-12 51-11-6 6-33 13-47 13-3 0-4-1-4-2z" fill="#edf1f8" />
+	<!-- Surfer: wide stance, knees bent, arms out. -->
+	<circle cx="36.5" cy="8.5" r="3.6" />
+	<path d="M35 13.5l-4 12" />
+	<path d="M31 25.5l6 4.5 3 7" />
+	<path d="M31 25.5l-6 6.5-2 9" />
+	<path d="M34.5 16l10 3.5 6-2.5" />
+	<path d="M34.5 16l-9-4.5-6 2" />
+</svg>
