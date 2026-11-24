@@ -26,7 +26,7 @@ sharp.cache(false);
 /** The background: a warm light grey between the site's sand (#f5f2ea) and a neutral studio grey. */
 export const BACKGROUND = { r: 0xec, g: 0xea, b: 0xe5 }; // #ECEAE5
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const PRODUCTS = path.join(ROOT, 'src/content/products');
 const BACKUP = path.resolve(ROOT, '../raw-docs/photo-originals');
 const MODEL_URL = 'https://github.com/danielgatis/rembg/releases/download/v0.0.0/isnet-general-use.onnx';

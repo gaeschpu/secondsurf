@@ -1,0 +1,10 @@
+{
+  "name": "secondsurf-photo-tools",
+  "private": true,
+  "description": "Local photo tools (uniform background, flat-lay floor). Own folder so Cloudflare never installs the big AI package when it builds the site.",
+  "type": "module",
+  "dependencies": {
+    "onnxruntime-node": "1.20.1",
+    "sharp": "0.34.4"
+  }
+}
