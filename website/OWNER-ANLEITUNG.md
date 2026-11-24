@@ -160,15 +160,10 @@ npm run photos:background -- 0013
 
 - Farben Navy / Off-White, Überschriften in schmalen Grossbuchstaben, eckige Buttons. Das alte Design (Petrol / Sand) ist auf dem Branch **save-before-syds-look** gespeichert. Zurück wechseln: Claude sagen «stell das Design von save-before-syds-look wieder her».
 - **Model-Bilder** sind ausgeschaltet: `showModelPhotos` in `src/settings/site.json` auf `true` stellen, dann erscheinen sie wieder (die Dateien sind noch da).
-- **Fotos der Pieces** liegen alle auf demselben hellen Betonboden und sind «gebügelt» (Falten weicher). Für ein neues Piece: `npm run photos:background -- 0013 --flatlay --iron`. Nahaufnahmen von Etiketten bleiben unverändert und werden ausgeblendet (`showLabelPhotos` in `site.json`). Originale in `raw-docs/photo-originals/`. Die Fotos ohne Bügeln sind auf dem Branch **save-before-ironing** gespeichert.
+- **Fotos der Pieces** liegen alle auf demselben hellen Betonboden und sind «gebügelt» (Falten weicher). Für ein neues Piece: `npm run photos:background -- 0013 --flatlay --iron`. Nahaufnahmen von Etiketten bleiben unverändert und werden ausgeblendet (`showLabelPhotos` in `site.json`). Originale in `raw-docs/photo-originals/`. Die Fotos ohne Bügeln sind auf dem Branch **save-before-ironing** gespeichert. Alle Pieces werden automatisch gerade ausgerichtet. Liegt ein Pullover mit schrägen Ärmeln trotzdem schief, zusätzlich `--level` anhängen (richtet den unteren Saum waagrecht aus).
 
 ## Hero (Startbild)
 
-Das grosse Bild oben auf der New-Drop-Seite zeigt deine eigenen Pieces als Flat-Lay (Vorder- und Rückseiten). Nach neuen Pieces im Ordner `website`:
+Das grosse Slider-Bild oben zeigt Surf-Fotos (Boardshorts, Surf-Shirts, Neopren) von Pexels, frei für kommerzielle Nutzung. Quellen in `src/assets/hero/CREDITS.md`. Bilder austauschen: Dateien in `src/assets/hero/` ersetzen (nur eigene oder lizenzfreie Fotos), Liste in CREDITS.md nachführen.
 
-```
-npm run photos:background -- --haul src/assets/hero/1-haul-front.jpg
-npm run photos:background -- --haul src/assets/hero/2-haul-back.jpg --side back
-```
-
-Danach committen und pushen. Alle Pieces werden dabei automatisch gerade (90°) ausgerichtet.
+Ein Flat-Lay deiner eigenen Pieces als Bild: `npm run photos:background -- --haul src/assets/hero/7-haul.jpg` (mit `--side back` die Rückseiten).

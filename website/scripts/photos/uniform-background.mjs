@@ -178,7 +178,13 @@ function guided(p, w, h, r, eps) {
  * seams, colour blocks) is left alone, so nothing gets a halo. Only brightness changes; colours and outline stay.
  * Small marks or stains are fine detail and are not removed (the piece's real condition stays visible).
  */
-export async function iron(png, w, h, strength = 0.9) {
+/** Ironing settings (stronger settings left streaks in the fabric of boardshorts, so one gentle setting for everything). */
+const IRON = {
+	default: { strength: 0.9, eps: 0.03, radius: 28, edge: 0.12 },
+};
+export const ironFor = (category) => IRON[category] ?? IRON.default;
+
+export async function iron(png, w, h, { strength, eps, radius, edge: edgeLimit } = IRON.default) {
 	const { data } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 	const n = w * h;
 	const lum = new Float32Array(n);
@@ -198,10 +204,10 @@ export async function iron(png, w, h, strength = 0.9) {
 		for (let x = 1; x < w - 1; x++) {
 			const i = y * w + x;
 			const g = Math.max(Math.abs(lum[i + 1] - lum[i - 1]), Math.abs(lum[i + w] - lum[i - w]));
-			edge[i] = g > 0.12 ? 1 : 0;
+			edge[i] = g > edgeLimit ? 1 : 0;
 		}
 	const protect = boxMean(edge, w, h, Math.round(14 * scale)).map((v) => Math.min(1, v * 6));
-	const flat = guided(lum, w, h, Math.round(28 * scale), 0.03);
+	const flat = guided(lum, w, h, Math.round(radius * scale), eps);
 	const r = Math.max(2, Math.round(3 * scale));
 	const base = boxMean(lum, w, h, r);
 	const baseFlat = boxMean(flat, w, h, r);
@@ -217,6 +223,7 @@ export async function iron(png, w, h, strength = 0.9) {
 	return sharp(out, { raw: { width: w, height: h, channels: 4 } }).png().toBuffer();
 }
 let ironing = false;
+let leveling = false;
 
 /**
  * The angle (degrees, clockwise like sharp's rotate) that stands the piece upright: the one at which its outline fits the
@@ -252,13 +259,81 @@ async function uprightAngle(png) {
 	return Math.abs(best) < 0.6 ? 0 : best;
 }
 
-/** Turns the cut-out piece upright (transparent corners), trimmed to its new outline. */
-async function straighten(png) {
-	const angle = await uprightAngle(png);
-	if (!angle) return { png, angle };
-	const rotated = await sharp(png).rotate(angle, { background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
-	return { png: await sharp(rotated).trim({ threshold: 10 }).png().toBuffer(), angle };
+/** Categories whose straight edge is at the bottom (the hem of the body); for the others it is the waistband at the top. */
+const TOPS = new Set(['hoodies', 'tees', 'longsleeves', 'jackets', 'wetsuits']);
+
+/**
+ * Second step: the straight edge of the piece must be level. Tops: the hem of the body (bottom edge of the middle part,
+ * so the sleeves don't count). Boardshorts and other bottoms: the waistband (top edge of the middle part). A line is fitted
+ * through that edge; if it is really straight (small error) its slope is corrected. Returns degrees for sharp's rotate.
+ */
+async function levelAngle(png, category) {
+	const { data, info } = await sharp(png).extractChannel(3).resize({ width: 300, fit: 'inside' }).raw().toBuffer({ resolveWithObject: true });
+	const { width: w, height: h } = info;
+	const top = !TOPS.has(category);
+	// Only the middle of the piece: for tops the body between the arms, for shorts the waistband between the side seams.
+	const from = Math.round(w * (top ? 0.25 : 0.4));
+	const to = Math.round(w * (top ? 0.75 : 0.6));
+	const xs = [];
+	const ys = [];
+	for (let x = from; x < to; x++) {
+		let edge = -1;
+		if (top) {
+			for (let y = 0; y < h; y++) if (data[y * w + x] > 128) ((edge = y), (y = h));
+		} else {
+			for (let y = h - 1; y >= 0; y--) if (data[y * w + x] > 128) ((edge = y), (y = -1));
+		}
+		if (edge >= 0) xs.push(x), ys.push(edge);
+	}
+	if (xs.length < 20) return 0;
+	// Line through the edge points; points far off the line (a cuff, a drawstring) are dropped and the line fitted again.
+	const fit = (idx) => {
+		const n = idx.length;
+		const mx = idx.reduce((s, i) => s + xs[i], 0) / n;
+		const my = idx.reduce((s, i) => s + ys[i], 0) / n;
+		let sxy = 0;
+		let sxx = 0;
+		for (const i of idx) (sxy += (xs[i] - mx) * (ys[i] - my)), (sxx += (xs[i] - mx) ** 2);
+		const slope = sxy / sxx;
+		const res = (i) => ys[i] - (my + slope * (xs[i] - mx));
+		const rms = Math.sqrt(idx.reduce((s, i) => s + res(i) ** 2, 0) / n);
+		return { slope, rms, res };
+	};
+	let idx = xs.map((_, i) => i);
+	let line = fit(idx);
+	for (let round = 0; round < 3; round++) {
+		const kept = idx.filter((i) => Math.abs(line.res(i)) <= Math.max(2, 2 * line.rms));
+		if (kept.length < 20 || kept.length === idx.length) break;
+		idx = kept;
+		line = fit(idx);
+	}
+	const { slope, rms } = line;
+	// Not a straight edge (a hood, a drawstring hanging over it): leave it to the symmetry step.
+	if (rms > h * 0.03 || idx.length < xs.length * 0.6) return 0;
+	const deg = (-Math.atan(slope) * 180) / Math.PI;
+	return Math.abs(deg) < 0.5 || Math.abs(deg) > 12 ? 0 : deg;
 }
+
+/** Turns the cut-out piece upright (transparent corners), trimmed to its new outline: symmetry first, then the level edge. */
+async function straighten(png, category = '') {
+	const turn = async (src, angle) => sharp(await sharp(src).rotate(angle, { background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer()).trim({ threshold: 10 }).png().toBuffer();
+	const first = await uprightAngle(png);
+	const upright = first ? await turn(png, first) : png;
+	// --level (opt-in, e.g. a sweater whose sleeves lie crooked): the hem of the body is made level. Tops only; a waistband
+	// has the fly and drawstring in it. Off by default: on most pieces the symmetry alone is better.
+	const level = leveling && TOPS.has(category) ? await levelAngle(upright, category) : 0;
+	if (!first && !level) return { png, angle: 0 };
+	// One rotation from the original (two rotations in a row would blur the photo twice).
+	return { png: await turn(png, first + level), angle: first + level };
+}
+
+/** The piece's category from its index.md ("category: boardshorts"). */
+const categoryOf = (file) => {
+	const md = path.join(path.dirname(file), 'index.md');
+	const piece = path.basename(path.dirname(file));
+	const own = fs.existsSync(md) ? md : path.join(PRODUCTS, piece, 'index.md');
+	return fs.existsSync(own) ? (fs.readFileSync(own, 'utf8').match(/^category:\s*(\S+)/m)?.[1] ?? '') : '';
+};
 export const setIroning = (on) => (ironing = on);
 
 /** The piece cut out (pixels unchanged, or ironed with --iron), centred on the concrete floor with a soft shadow, 1200×1500. */
@@ -270,14 +345,15 @@ export async function processFlatLay(model, file) {
 	const cut = await sharp(rgb, { raw: { width, height, channels: 3 } }).joinChannel(mask, { raw: { width, height, channels: 1 } }).png().toBuffer();
 	// Trim to the piece, then scale it to fill most of the frame.
 	const trimmed = await sharp(cut).trim({ threshold: 10 }).png().toBuffer();
+	const category = categoryOf(file);
 	// Stand the piece exactly upright (90°), then scale it to fill most of the frame.
-	const upright = (await straighten(trimmed)).png;
+	const upright = (await straighten(trimmed, category)).png;
 	const size = await sharp(upright).metadata();
 	const scale = Math.min((FLAT.width * FLAT.fill) / size.width, (FLAT.height * FLAT.fill) / size.height);
 	const w = Math.round(size.width * scale);
 	const h = Math.round(size.height * scale);
 	const resized = await sharp(upright).resize(w, h).png().toBuffer();
-	const piece = ironing ? await iron(resized, w, h) : resized;
+	const piece = ironing ? await iron(resized, w, h, ironFor(category)) : resized;
 	const left = Math.round((FLAT.width - w) / 2);
 	const top = Math.round((FLAT.height - h) / 2);
 	// Shadow: the piece's own outline, dark, blurred and moved down a little.
@@ -333,13 +409,14 @@ export async function makeHaul(model, sources, outFile, layoutSeed = 7) {
 		const mask = await personMask(model, rotated, width, height);
 		const rgb = await sharp(rotated).raw().toBuffer();
 		const cut = await sharp(rgb, { raw: { width, height, channels: 3 } }).joinChannel(mask, { raw: { width, height, channels: 1 } }).png().toBuffer();
-		const upright = (await straighten(await sharp(cut).trim({ threshold: 10 }).png().toBuffer())).png;
+		const category = categoryOf(src);
+		const upright = (await straighten(await sharp(cut).trim({ threshold: 10 }).png().toBuffer(), category)).png;
 		const meta = await sharp(upright).metadata();
 		const target = 560; // similar size for every piece
 		const s = target / Math.max(meta.width, meta.height);
 		const w = Math.round(meta.width * s);
 		const h = Math.round(meta.height * s);
-		pieces.push(await iron(await sharp(upright).resize(w, h).png().toBuffer(), w, h));
+		pieces.push(await iron(await sharp(upright).resize(w, h).png().toBuffer(), w, h, ironFor(category)));
 	}
 	// Two loose rows, each piece turned a little and moved a little: like clothes laid out on the floor.
 	const n = pieces.length;
@@ -416,6 +493,7 @@ async function main() {
 
 	const flat = args.includes('--flatlay');
 	ironing = args.includes('--iron');
+	leveling = args.includes('--level');
 	const model = await session();
 	for (const piece of pieces) {
 		const dir = path.join(PRODUCTS, piece);
