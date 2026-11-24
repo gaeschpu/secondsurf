@@ -10,13 +10,13 @@ import { auctionTexts } from '../../../i18n/auction';
 import JsonLd from '../../../components/JsonLd.astro';
 import { chf, l, langPaths, url, useT, type Lang } from '../../../i18n';
 import { CATEGORIES, CHECKOUT, CONDITIONS, SITE } from '../../../config';
-import type { Product } from '../../../lib/products';
+import { withVisiblePhotos, type Product } from '../../../lib/products';
 import { modelTag } from '../../../scripts/models';
 
 export async function getStaticPaths() {
 	const products = await getCollection('products', (p) => import.meta.env.DEV || !p.data.draft);
 	return langPaths().flatMap(({ params, props }) =>
-		products.map((product) => ({ params: { ...params, slug: product.id }, props: { ...props, product } })),
+		products.map((product) => ({ params: { ...params, slug: product.id }, props: { ...props, product: withVisiblePhotos(product) } })),
 	);
 }
 const { lang, product } = Astro.props as { lang: Lang; product: Product };

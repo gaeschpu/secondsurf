@@ -96,6 +96,76 @@ export async function processPhoto(model, file) {
 	return /\.png$/i.test(file) ? image.png().toBuffer() : image.jpeg({ quality: 88, mozjpeg: true }).toBuffer();
 }
 
+// ---------------------------------------------------------------- flat lay (photos of the piece itself)
+
+/** Flat-lay photos: always this size (4:5), the piece centred on a light concrete floor. */
+const FLAT = { width: 1200, height: 1500, fill: 0.84 };
+
+/** The concrete floor: grey with soft mottling and fine grain. Same seed = the very same floor on every photo. */
+async function concrete(width, height) {
+	let seed = 20261124;
+	const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+	const layer = async (w, h, amp, blur) => {
+		const buf = Buffer.alloc(w * h);
+		for (let i = 0; i < buf.length; i++) buf[i] = 128 + Math.round((rand() - 0.5) * 2 * amp);
+		let img = sharp(buf, { raw: { width: w, height: h, channels: 1 } }).resize(width, height, { fit: 'fill', kernel: 'cubic' });
+		if (blur) img = img.blur(blur);
+		// One channel exactly (sharp may hand back three after resizing, which shows as streaks).
+		return img.extractChannel(0).raw().toBuffer();
+	};
+	const [big, mid, fine] = await Promise.all([layer(12, 15, 60, 30), layer(60, 75, 50, 6), layer(width, height, 22, 0.6)]);
+	const out = Buffer.alloc(width * height * 3);
+	const base = [190, 188, 184]; // #BEBCB8, a light warm concrete
+	for (let i = 0; i < width * height; i++) {
+		const d = (big[i] - 128) * 0.22 + (mid[i] - 128) * 0.16 + (fine[i] - 128) * 0.35;
+		for (let c = 0; c < 3; c++) out[i * 3 + c] = Math.max(0, Math.min(255, Math.round(base[c] + d)));
+	}
+	return sharp(out, { raw: { width, height, channels: 3 } }).png().toBuffer();
+}
+let floor = null;
+
+/** True for a photo of the piece on a light background (not a close-up of a label): the corners are nearly white. */
+async function isFlatLay(file) {
+	const { data, info } = await sharp(file).rotate().removeAlpha().resize(40, 50, { fit: 'fill' }).raw().toBuffer({ resolveWithObject: true });
+	const at = (x, y) => data.slice((y * info.width + x) * 3, (y * info.width + x) * 3 + 3);
+	const corners = [at(1, 1), at(38, 1), at(1, 48), at(38, 48)];
+	return corners.every((px) => px[0] > 215 && px[1] > 215 && px[2] > 215);
+}
+
+/** The piece cut out (pixels unchanged), centred on the concrete floor with a soft contact shadow, 1200×1500. */
+export async function processFlatLay(model, file) {
+	const rotated = await sharp(file).rotate().removeAlpha().toBuffer();
+	const { width, height } = await sharp(rotated).metadata();
+	const mask = await personMask(model, rotated, width, height);
+	const rgb = await sharp(rotated).raw().toBuffer();
+	const cut = await sharp(rgb, { raw: { width, height, channels: 3 } }).joinChannel(mask, { raw: { width, height, channels: 1 } }).png().toBuffer();
+	// Trim to the piece, then scale it to fill most of the frame.
+	const trimmed = await sharp(cut).trim({ threshold: 10 }).png().toBuffer({ resolveWithObject: true });
+	const scale = Math.min((FLAT.width * FLAT.fill) / trimmed.info.width, (FLAT.height * FLAT.fill) / trimmed.info.height);
+	const w = Math.round(trimmed.info.width * scale);
+	const h = Math.round(trimmed.info.height * scale);
+	const piece = await sharp(trimmed.data).resize(w, h).png().toBuffer();
+	const left = Math.round((FLAT.width - w) / 2);
+	const top = Math.round((FLAT.height - h) / 2);
+	// Shadow: the piece's own outline, dark, blurred and moved down a little.
+	const alpha = await sharp(piece).extractChannel(3).raw().toBuffer();
+	const shade = Buffer.alloc(w * h * 4);
+	for (let i = 0; i < w * h; i++) (shade[i * 4] = 30), (shade[i * 4 + 1] = 27), (shade[i * 4 + 2] = 24), (shade[i * 4 + 3] = Math.round(alpha[i] * 0.45));
+	const shadow = await sharp(shade, { raw: { width: w, height: h, channels: 4 } })
+		.extend({ top: 40, bottom: 40, left: 40, right: 40, background: { r: 0, g: 0, b: 0, alpha: 0 } })
+		.blur(14)
+		.png()
+		.toBuffer();
+	floor ??= await concrete(FLAT.width, FLAT.height);
+	return sharp(floor)
+		.composite([
+			{ input: shadow, left: left - 40 + 4, top: top - 40 + 12 },
+			{ input: piece, left, top },
+		])
+		.jpeg({ quality: 86, mozjpeg: true })
+		.toBuffer();
+}
+
 /** Photo numbers with a model, from "models: { women: [..], men: [..] }" in index.md. */
 function modelPhotos(dir) {
 	const line = fs.readFileSync(path.join(dir, 'index.md'), 'utf8').match(/^models:\s*(.+)$/m)?.[1] ?? '';
@@ -113,21 +183,29 @@ async function main() {
 		.filter((name) => args.includes('--all') || args.some((a) => /^\d{4}/.test(a) && name.startsWith(a)));
 	if (!pieces.length) return console.log('Which piece? e.g. npm run photos:background -- 0013   (or --all)');
 
+	const flat = args.includes('--flatlay');
 	const model = await session();
 	for (const piece of pieces) {
 		const dir = path.join(PRODUCTS, piece);
-		const doneFile = path.join(dir, '.uniform-background.json');
+		const doneFile = path.join(dir, flat ? '.flatlay.json' : '.uniform-background.json');
 		const done = fs.existsSync(doneFile) ? JSON.parse(fs.readFileSync(doneFile, 'utf8')) : [];
 		const files = fs.readdirSync(dir).filter((f) => /\.(jpe?g|png|webp)$/i.test(f));
-		for (const n of only ?? modelPhotos(dir)) {
+		const models = modelPhotos(dir);
+		const numbers = files.map((f) => Number(f.replace(/\.\w+$/, ''))).filter(Number.isInteger).sort((a, b) => a - b);
+		// --flatlay: the photos of the piece itself (not the model photos), only those on a light background (no label close-ups).
+		for (const n of only ?? (flat ? numbers.filter((x) => !models.includes(x)) : models)) {
 			const file = files.find((f) => f.replace(/\.\w+$/, '') === String(n));
 			if (!file) continue;
+			if (flat && !only && !done.includes(file) && !(await isFlatLay(path.join(dir, file)))) {
+				console.log(`${piece}/${file}: close-up, left as it is`);
+				continue;
+			}
 			if (!preview && done.includes(file)) {
 				console.log(`${piece}/${file}: already done`);
 				continue;
 			}
 			const src = path.join(dir, file);
-			const out = await processPhoto(model, src);
+			const out = flat ? await processFlatLay(model, src) : await processPhoto(model, src);
 			if (preview) {
 				fs.mkdirSync(preview, { recursive: true });
 				fs.copyFileSync(src, path.join(preview, `${piece}-${file.replace(/\.\w+$/, '')}-before${path.extname(file)}`));

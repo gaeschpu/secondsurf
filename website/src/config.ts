@@ -36,6 +36,9 @@ export function zurichTime(value: string): Date | null {
 }
 
 /** Who runs the shop, for the imprint and the legal pages. */
+/** Show the AI model photos of the pieces (src/settings/site.json, showModelPhotos). Off: only the photos of the piece itself. */
+export const SHOW_MODEL_PHOTOS: boolean = settings.showModelPhotos ?? true;
+
 export const OWNER = {
 	name: settings.ownerName,
 	legalForm: settings.legalForm,

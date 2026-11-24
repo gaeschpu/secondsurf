@@ -295,17 +295,20 @@ const slider = photos.length > 1;
 		background: #fde68a;
 		color: #713f12;
 	}
-	/* Title in its normal spelling; only the brand (first word, bold) in capitals. Long titles wrap. */
+	/* Condensed capitals, like a shop tag. Long titles wrap. */
 	.title {
 		margin-top: 0.7rem;
-		font-size: var(--step--1);
-		line-height: 1.35;
+		font-family: var(--font-display);
+		font-size: var(--step-1);
+		font-weight: 700;
+		line-height: 1.1;
+		text-transform: uppercase;
+		letter-spacing: 0.01em;
 		overflow-wrap: anywhere;
 		hyphens: auto;
 	}
 	.title strong {
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
+		font-weight: 800;
 	}
 	.meta {
 		display: flex;
@@ -316,7 +319,9 @@ const slider = photos.length > 1;
 		color: var(--ink-soft);
 	}
 	.price {
+		font-family: var(--font-display);
+		font-size: var(--step-0);
 		font-weight: 700;
-		color: var(--ink);
+		color: var(--ink-soft);
 	}
 </style>

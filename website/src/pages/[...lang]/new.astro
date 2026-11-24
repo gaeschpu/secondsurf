@@ -519,8 +519,12 @@ const google = at
 		letter-spacing: 0.08em;
 		color: var(--ink-soft);
 	}
+	/* Big, heavy, italic condensed capitals. */
 	.hero h1 {
-		font-size: var(--step-4);
+		font-size: clamp(2.8rem, 1.6rem + 5vw, 5.6rem);
+		font-style: italic;
+		font-weight: 800;
+		line-height: 0.92;
 		text-wrap: balance;
 	}
 	.hero-lead {

@@ -1,14 +1,28 @@
 // Products come from src/content/products/ (see content.config.ts).
 
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { CATEGORIES, SITE } from '../config';
+import { CATEGORIES, SHOW_MODEL_PHOTOS, SITE } from '../config';
 
 export type Product = CollectionEntry<'products'>;
+
+/**
+ * Model photos (the "models" list) are shown only while showModelPhotos is true in src/settings/site.json. Switched off,
+ * every piece shows just its own photos; the model photo files stay in the folders, so switching back is one setting.
+ */
+export function withVisiblePhotos(product: Product): Product {
+	if (SHOW_MODEL_PHOTOS) return product;
+	const models = new Set([...product.data.models.women, ...product.data.models.men]);
+	if (!models.size) return product;
+	const photos = product.data.photos.filter((_, i) => !models.has(i + 1));
+	// A piece with only model photos keeps them (better than no photo at all).
+	if (!photos.length) return product;
+	return { ...product, data: { ...product.data, photos, models: { women: [], men: [] } } };
+}
 
 /** Every published piece, auction lots included: drafts only show in `npm run dev`. Newest (highest folder number) first. */
 export async function getAllProducts(): Promise<Product[]> {
 	const all = await getCollection('products', (p) => import.meta.env.DEV || !p.data.draft);
-	return all.sort((a, b) => b.id.localeCompare(a.id, undefined, { numeric: true }));
+	return all.sort((a, b) => b.id.localeCompare(a.id, undefined, { numeric: true })).map(withVisiblePhotos);
 }
 
 /** The shop's pieces: like getAllProducts, without the auction lots (auctionOnly), which only live on /auctions/. */

@@ -6,18 +6,23 @@
 :root {
 	color-scheme: light;
 
-	--bg: light-dark(#f5f2ea, #0b1416);
-	--bg-raised: light-dark(#fffdf8, #122024);
-	--bg-sunken: light-dark(#ebe5d8, #070e10);
-	--ink: light-dark(#14262b, #e6efee);
-	--ink-soft: light-dark(#4a5f63, #a3b8b9);
-	--line: light-dark(#dcd4c3, #23363a);
-	--accent: light-dark(#0e5f6e, #6cc6cf);
-	--accent-strong: light-dark(#0a4753, #9adce1);
-	--accent-tint: light-dark(#d9ecee, #12343a);
-	--on-accent: light-dark(#ffffff, #06191c);
-	--sand: light-dark(#9a6a1f, #e0b878);
-	--sand-tint: light-dark(#f1e5cc, #2c2617);
+	/* Palette "Night surf" (since 24 Nov 2026): warm off-white, ink, deep navy, surf blue. The earlier teal and sand
+	   palette is on the branch save-before-syds-look. */
+	--bg: light-dark(#fffdf9, #10161d);
+	--bg-raised: light-dark(#ffffff, #17202a);
+	--bg-sunken: light-dark(#f1eee7, #0b1015);
+	--ink: light-dark(#2e2a39, #eceaf1);
+	--ink-soft: light-dark(#5f5b6b, #aaa6b5);
+	--line: light-dark(#e3ded4, #27313d);
+	--accent: light-dark(#162a3d, #a9c4e8);
+	--accent-strong: light-dark(#0b1826, #cfdff3);
+	--accent-tint: light-dark(#e4eaf1, #1c2b3b);
+	--on-accent: light-dark(#ffffff, #0b1826);
+	--sand: light-dark(#2b5c9c, #8db3e6);
+	--sand-tint: light-dark(#edf1f8, #1a2534);
+	/* Deep navy for the top bar and the footer, in light and dark mode. */
+	--navy: light-dark(#162a3d, #0b1826);
+	--on-navy: #ffffff;
 	--focus: light-dark(#c2410c, #fdba74);
 
 	--font-body: var(--font-sans), system-ui, sans-serif;
@@ -30,8 +35,9 @@
 	--step-3: clamp(1.8rem, 1.5rem + 1.5vw, 2.7rem);
 	--step-4: clamp(2.2rem, 1.7rem + 2.6vw, 3.7rem);
 
-	--radius: 14px;
-	--radius-sm: 8px;
+	/* Square corners everywhere, like a printed shop tag. */
+	--radius: 0px;
+	--radius-sm: 0px;
 	--shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 6px 20px -8px rgb(0 0 0 / 0.15);
 	--content: 46rem;
 	--wide: 72rem;
@@ -103,9 +109,10 @@ h2,
 h3,
 h4 {
 	font-family: var(--font-display);
-	font-weight: 700;
-	line-height: 1.1;
-	letter-spacing: -0.02em;
+	font-weight: 800;
+	line-height: 1;
+	letter-spacing: 0.01em;
+	text-transform: uppercase;
 	text-wrap: balance;
 }
 h1 {
@@ -244,12 +251,15 @@ small,
 	align-items: center;
 	gap: 0.5em;
 	padding: 0.65em 1.15em;
-	border-radius: 999px;
+	border-radius: 0;
 	border: 1.5px solid var(--accent);
 	background: var(--accent);
 	color: var(--on-accent);
-	font-weight: 600;
-	font-size: var(--step--1);
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: var(--step-0);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
 	line-height: 1.2;
 	text-decoration: none;
 	cursor: pointer;
@@ -292,7 +302,7 @@ small,
 	font-size: 0.78rem;
 	font-weight: 500;
 	padding: 0.15em 0.65em;
-	border-radius: 999px;
+	border-radius: 0;
 	background: var(--sand-tint);
 	color: var(--ink);
 }

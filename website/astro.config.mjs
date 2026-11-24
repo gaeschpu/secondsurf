@@ -44,23 +44,23 @@ export default defineConfig({
 	fonts: [
 		{
 			provider: fontProviders.fontsource(),
-			name: 'Bricolage Grotesque',
+			// Headings: a bold condensed sans in capitals, 90s surf-shop style (italic for the big hero title).
+			name: 'Barlow Condensed',
 			cssVariable: '--font-serif',
-			// Only the heading weight, to keep the download small.
-			weights: ['700'],
-			styles: ['normal'],
+			weights: ['600', '700', '800'],
+			styles: ['normal', 'italic'],
 			subsets: ['latin'],
-			fallbacks: ['system-ui', 'sans-serif'],
+			fallbacks: ['Arial Narrow', 'system-ui', 'sans-serif'],
 		},
 		{
 			provider: fontProviders.fontsource(),
-			name: 'Inter',
+			// Body text: a narrow, plain sans that goes with the condensed headings.
+			name: 'Archivo Narrow',
 			cssVariable: '--font-sans',
-			// One file per weight: Safari draws bold too thin from the single variable-font file.
-			weights: ['400', '500', '600', '700', '900'],
+			weights: ['400', '500', '600', '700'],
 			styles: ['normal'],
 			subsets: ['latin'],
-			fallbacks: ['system-ui', 'sans-serif'],
+			fallbacks: ['Arial Narrow', 'system-ui', 'sans-serif'],
 		},
 	],
 });
