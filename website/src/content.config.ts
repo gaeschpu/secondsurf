@@ -41,6 +41,8 @@ const products = defineCollection({
 			 * Which photos show a model, by photo number (1 = first photo), e.g. { women: [3, 4], men: [1, 2] }.
 			 * Logged-in customers who chose "women" or "men" in their profile see those model photos first.
 			 */
+			/** Photo numbers that are close-ups of the label (size, brand). Hidden while showLabelPhotos is false in site.json. */
+			labels: z.array(z.number().int().positive()).default([]),
 			models: z
 				.object({ women: z.array(z.number().int().positive()).default([]), men: z.array(z.number().int().positive()).default([]) })
 				.default({ women: [], men: [] }),

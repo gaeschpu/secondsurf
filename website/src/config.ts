@@ -39,6 +39,9 @@ export function zurichTime(value: string): Date | null {
 /** Show the AI model photos of the pieces (src/settings/site.json, showModelPhotos). Off: only the photos of the piece itself. */
 export const SHOW_MODEL_PHOTOS: boolean = settings.showModelPhotos ?? true;
 
+/** Show the close-ups of the labels (the "labels" list of each piece; showLabelPhotos in site.json). */
+export const SHOW_LABEL_PHOTOS: boolean = settings.showLabelPhotos ?? true;
+
 export const OWNER = {
 	name: settings.ownerName,
 	legalForm: settings.legalForm,

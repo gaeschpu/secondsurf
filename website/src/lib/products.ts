@@ -1,22 +1,34 @@
 // Products come from src/content/products/ (see content.config.ts).
 
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { CATEGORIES, SEASONS, SHOW_MODEL_PHOTOS, SITE } from '../config';
+import { CATEGORIES, SEASONS, SHOW_LABEL_PHOTOS, SHOW_MODEL_PHOTOS, SITE } from '../config';
 
 export type Product = CollectionEntry<'products'>;
 
 /**
- * Model photos (the "models" list) are shown only while showModelPhotos is true in src/settings/site.json. Switched off,
- * every piece shows just its own photos; the model photo files stay in the folders, so switching back is one setting.
+ * Model photos ("models") and label close-ups ("labels") show only while showModelPhotos / showLabelPhotos are true in
+ * src/settings/site.json. The files stay in the folders, so switching back is one setting.
  */
 export function withVisiblePhotos(product: Product): Product {
-	if (SHOW_MODEL_PHOTOS) return product;
-	const models = new Set([...product.data.models.women, ...product.data.models.men]);
-	if (!models.size) return product;
-	const photos = product.data.photos.filter((_, i) => !models.has(i + 1));
-	// A piece with only model photos keeps them (better than no photo at all).
-	if (!photos.length) return product;
-	return { ...product, data: { ...product.data, photos, models: { women: [], men: [] } } };
+	const hidden = new Set<number>([
+		...(SHOW_MODEL_PHOTOS ? [] : [...product.data.models.women, ...product.data.models.men]),
+		...(SHOW_LABEL_PHOTOS ? [] : product.data.labels),
+	]);
+	if (!hidden.size) return product;
+	const keep = product.data.photos.map((_, i) => i + 1).filter((n) => !hidden.has(n));
+	// A piece with nothing left keeps its photos (better than no photo at all).
+	if (!keep.length) return product;
+	// Photo numbers in models/labels refer to the original order: renumber them for the photos that stay.
+	const renumber = (list: number[]) => list.filter((n) => keep.includes(n)).map((n) => keep.indexOf(n) + 1);
+	return {
+		...product,
+		data: {
+			...product.data,
+			photos: keep.map((n) => product.data.photos[n - 1]),
+			models: { women: renumber(product.data.models.women), men: renumber(product.data.models.men) },
+			labels: renumber(product.data.labels),
+		},
+	};
 }
 
 /** Every published piece, auction lots included: drafts only show in `npm run dev`. Newest (highest folder number) first. */

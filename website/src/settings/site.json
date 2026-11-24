@@ -27,5 +27,6 @@
 		"it": "",
 		"en": ""
 	},
-	"showModelPhotos": false
+	"showModelPhotos": false,
+	"showLabelPhotos": false
 }

@@ -166,6 +166,22 @@ export async function processFlatLay(model, file) {
 		.toBuffer();
 }
 
+/** Notes a label close-up in the piece's "labels" list (index.md), so the site can hide it (showLabelPhotos). */
+function addLabel(dir, n) {
+	const file = path.join(dir, 'index.md');
+	let md = fs.readFileSync(file, 'utf8');
+	const line = md.match(/^labels:\s*\[([^\]]*)\]/m);
+	const list = line ? [...line[1].matchAll(/\d+/g)].map(Number) : [];
+	if (list.includes(n)) return;
+	list.push(n);
+	list.sort((x, y) => x - y);
+	const text = `labels: [${list.join(', ')}]`;
+	if (line) md = md.replace(/^labels:.*$/m, text);
+	else if (/^models:.*$/m.test(md)) md = md.replace(/^(models:.*)$/m, `$1\n${text}`);
+	else md = md.replace(/^---\r?\n([\s\S]*?)\r?\n---/, (_, body) => `---\n${body}\n${text}\n---`);
+	fs.writeFileSync(file, md);
+}
+
 /** Photo numbers with a model, from "models: { women: [..], men: [..] }" in index.md. */
 function modelPhotos(dir) {
 	const line = fs.readFileSync(path.join(dir, 'index.md'), 'utf8').match(/^models:\s*(.+)$/m)?.[1] ?? '';
@@ -197,7 +213,8 @@ async function main() {
 			const file = files.find((f) => f.replace(/\.\w+$/, '') === String(n));
 			if (!file) continue;
 			if (flat && !only && !done.includes(file) && !(await isFlatLay(path.join(dir, file)))) {
-				console.log(`${piece}/${file}: close-up, left as it is`);
+				addLabel(dir, n);
+				console.log(`${piece}/${file}: close-up of the label, left as it is (added to "labels")`);
 				continue;
 			}
 			if (!preview && done.includes(file)) {

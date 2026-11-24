@@ -17,5 +17,6 @@ photos:
   - ./4.jpg
   - ./5.jpg
 models: { women: [2], men: [1] }
+labels: [5]
 drop: 1
 ---
