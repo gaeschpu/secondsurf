@@ -2,17 +2,15 @@
 
 All from Pexels, under the Pexels License (free for commercial use, editing allowed, no credit required;
 not allowed: selling unaltered copies, implying that people shown endorse the shop). https://www.pexels.com/license/
-Downloaded on 12 November 2026.
+Downloaded on 24 November 2026. Earlier hero photos (clothing piles) are in the git history.
 
-| File | Photo | Photographer |
+| File | Photo | Photographer (Pexels user) |
 |---|---|---|
-| 1-hall-istanbul.jpg | https://www.pexels.com/photo/bustling-indoor-market-in-istanbul-29247077/ | trksami |
-| 2-heap.jpg | https://www.pexels.com/photo/colorful-heap-of-mixed-clothes-piled-38909989/ | Neosiam |
-| 3-market.jpg | https://www.pexels.com/photo/bustling-outdoor-market-with-colorful-fabrics-36633248/ | Vikram Aditya |
-| 4-bursa.jpg | https://www.pexels.com/photo/bursa-fabric-shop-with-piled-textiles-display-37880306/ | Idil Celikler |
-| 5-heap-wide.jpg | https://www.pexels.com/photo/pile-of-colorful-clothes-for-recycling-or-donation-38909990/ | Neosiam |
-| 6-hall.jpg | https://www.pexels.com/photo/busy-indoor-flea-market-in-istanbul-29247078/ | trksami |
-| 7-flea-market.jpg | https://www.pexels.com/photo/vintage-car-surrounded-by-flea-market-chaos-37860883/ | orkhanshots |
+| 1-surf-shop.jpg | https://www.pexels.com/photo/choice-of-surfboards-and-clothes-23105772/ | matreding |
+| 2-wetsuits.jpg | https://www.pexels.com/photo/beach-surf-shop-with-colorful-surfboards-38411295/ | shojol |
+| 3-rack.jpg | https://www.pexels.com/photo/urban-clothing-store-with-surfing-decor-40820252/ | labibbb03 |
+| 4-wetsuit.jpg | https://www.pexels.com/photo/a-man-holding-a-wetsuit-4621414/ | arthousestudio |
+| 5-board-room.jpg | https://www.pexels.com/photo/four-people-inside-surfing-building-1897745/ | wendywei |
 
 The hero slider (src/pages/[...lang]/new.astro) shows every image in this folder, sorted by file name.
 Only use photos you took yourself or have a licence for, and add them to this list.

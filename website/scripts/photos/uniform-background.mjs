@@ -132,7 +132,94 @@ async function isFlatLay(file) {
 	return corners.every((px) => px[0] > 215 && px[1] > 215 && px[2] > 215);
 }
 
-/** The piece cut out (pixels unchanged), centred on the concrete floor with a soft contact shadow, 1200×1500. */
+/** Box mean of a float image (radius r) with an integral image: O(n), any radius. */
+function boxMean(src, w, h, r) {
+	const sat = new Float64Array((w + 1) * (h + 1));
+	for (let y = 0; y < h; y++) {
+		let row = 0;
+		for (let x = 0; x < w; x++) {
+			row += src[y * w + x];
+			sat[(y + 1) * (w + 1) + x + 1] = sat[y * (w + 1) + x + 1] + row;
+		}
+	}
+	const out = new Float32Array(w * h);
+	for (let y = 0; y < h; y++) {
+		const y0 = Math.max(0, y - r);
+		const y1 = Math.min(h, y + r + 1);
+		for (let x = 0; x < w; x++) {
+			const x0 = Math.max(0, x - r);
+			const x1 = Math.min(w, x + r + 1);
+			out[y * w + x] = (sat[y1 * (w + 1) + x1] - sat[y0 * (w + 1) + x1] - sat[y1 * (w + 1) + x0] + sat[y0 * (w + 1) + x0]) / ((y1 - y0) * (x1 - x0));
+		}
+	}
+	return out;
+}
+
+/** Self-guided filter (He et al.): smooths weak, gradual changes, keeps strong edges. */
+function guided(p, w, h, r, eps) {
+	const meanP = boxMean(p, w, h, r);
+	const sq = p.map((v) => v * v);
+	const meanPP = boxMean(sq, w, h, r);
+	const a = new Float32Array(p.length);
+	const b = new Float32Array(p.length);
+	for (let i = 0; i < p.length; i++) {
+		const v = meanPP[i] - meanP[i] * meanP[i];
+		a[i] = v / (v + eps);
+		b[i] = meanP[i] - a[i] * meanP[i];
+	}
+	const ma = boxMean(a, w, h, r);
+	const mb = boxMean(b, w, h, r);
+	return p.map((v, i) => ma[i] * v + mb[i]);
+}
+
+/**
+ * --iron: evens out the soft light and shadow of creases, like frequency-separation retouching. Broad shading is flattened
+ * by a guided filter, the fine texture (weave, stitches) is added back, and the area around strong edges (prints, logos,
+ * seams, colour blocks) is left alone, so nothing gets a halo. Only brightness changes; colours and outline stay.
+ * Small marks or stains are fine detail and are not removed (the piece's real condition stays visible).
+ */
+export async function iron(png, w, h, strength = 0.9) {
+	const { data } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+	const n = w * h;
+	const lum = new Float32Array(n);
+	let sum = 0;
+	let count = 0;
+	for (let i = 0; i < n; i++) {
+		const l = (0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2]) / 255;
+		lum[i] = l;
+		if (data[i * 4 + 3] > 128) (sum += l), count++;
+	}
+	const mean = count ? sum / count : 0.5;
+	for (let i = 0; i < n; i++) if (data[i * 4 + 3] <= 128) lum[i] = mean;
+	const scale = Math.max(w, h) / 1000;
+	// Where prints and seams are: strong local contrast between a pixel's neighbours (creases change brightness gently).
+	const edge = new Float32Array(n);
+	for (let y = 1; y < h - 1; y++)
+		for (let x = 1; x < w - 1; x++) {
+			const i = y * w + x;
+			const g = Math.max(Math.abs(lum[i + 1] - lum[i - 1]), Math.abs(lum[i + w] - lum[i - w]));
+			edge[i] = g > 0.12 ? 1 : 0;
+		}
+	const protect = boxMean(edge, w, h, Math.round(14 * scale)).map((v) => Math.min(1, v * 6));
+	const flat = guided(lum, w, h, Math.round(28 * scale), 0.03);
+	const r = Math.max(2, Math.round(3 * scale));
+	const base = boxMean(lum, w, h, r);
+	const baseFlat = boxMean(flat, w, h, r);
+	const out = Buffer.from(data);
+	for (let i = 0; i < n; i++) {
+		if (data[i * 4 + 3] === 0) continue;
+		const target = baseFlat[i] + (lum[i] - base[i]);
+		const k = strength * (1 - protect[i]);
+		const mixed = lum[i] + (target - lum[i]) * k;
+		const gain = lum[i] > 0.02 ? Math.max(0.7, Math.min(1.45, mixed / lum[i])) : 1;
+		for (let c = 0; c < 3; c++) out[i * 4 + c] = Math.max(0, Math.min(255, Math.round(data[i * 4 + c] * gain)));
+	}
+	return sharp(out, { raw: { width: w, height: h, channels: 4 } }).png().toBuffer();
+}
+let ironing = false;
+export const setIroning = (on) => (ironing = on);
+
+/** The piece cut out (pixels unchanged, or ironed with --iron), centred on the concrete floor with a soft shadow, 1200×1500. */
 export async function processFlatLay(model, file) {
 	const rotated = await sharp(file).rotate().removeAlpha().toBuffer();
 	const { width, height } = await sharp(rotated).metadata();
@@ -144,7 +231,8 @@ export async function processFlatLay(model, file) {
 	const scale = Math.min((FLAT.width * FLAT.fill) / trimmed.info.width, (FLAT.height * FLAT.fill) / trimmed.info.height);
 	const w = Math.round(trimmed.info.width * scale);
 	const h = Math.round(trimmed.info.height * scale);
-	const piece = await sharp(trimmed.data).resize(w, h).png().toBuffer();
+	const resized = await sharp(trimmed.data).resize(w, h).png().toBuffer();
+	const piece = ironing ? await iron(resized, w, h) : resized;
 	const left = Math.round((FLAT.width - w) / 2);
 	const top = Math.round((FLAT.height - h) / 2);
 	// Shadow: the piece's own outline, dark, blurred and moved down a little.
@@ -200,6 +288,7 @@ async function main() {
 	if (!pieces.length) return console.log('Which piece? e.g. npm run photos:background -- 0013   (or --all)');
 
 	const flat = args.includes('--flatlay');
+	ironing = args.includes('--iron');
 	const model = await session();
 	for (const piece of pieces) {
 		const dir = path.join(PRODUCTS, piece);
