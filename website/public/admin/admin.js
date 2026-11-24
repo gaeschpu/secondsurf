@@ -499,12 +499,17 @@ loadDashboard().catch((error) => {
 // ---------- Pages ----------
 
 function showPage() {
-	const page = { '#offers': 'offers', '#auctions': 'auctions', '#orders': 'orders', '#submissions': 'submissions' }[location.hash] ?? 'pieces';
+	const page = { '#offers': 'offers', '#auctions': 'auctions', '#orders': 'orders', '#submissions': 'submissions', '#stats': 'stats' }[location.hash] ?? 'pieces';
 	$('pieces-page').hidden = page !== 'pieces';
 	$('offers-page').hidden = page !== 'offers';
 	$('auctions-page').hidden = page !== 'auctions';
 	$('orders-page').hidden = page !== 'orders';
 	$('submissions-page').hidden = page !== 'submissions';
+	$('stats-page').hidden = page !== 'stats';
+	if (page === 'stats' && !$('dashboard').hidden) {
+		loadStats().catch((error) => show($('stats-error'), error.message));
+		loadTwoFactor().catch((error) => show($('tf-error'), error.message));
+	}
 	if (page === 'submissions' && !$('dashboard').hidden) loadSubmissions().catch((error) => show($('submissions-error'), error.message));
 	if (page === 'orders' && !$('dashboard').hidden) loadOrders().catch((error) => show($('orders-error'), error.message));
 	if (page === 'auctions' && !$('dashboard').hidden) loadAuctions().catch((error) => show($('auctions-error'), error.message));
@@ -1262,5 +1267,182 @@ $('payout-paid').addEventListener('click', async () => {
 		show($('payouts-status'), `${result.done} payouts marked as paid.`);
 	} catch (error) {
 		show($('payouts-error'), error.message);
+	}
+});
+
+// ---------- Stats ----------
+
+const day = (seconds) => (seconds ? new Date(seconds * 1000).toLocaleDateString('de-CH', { dateStyle: 'medium' }) : '–');
+const STATUS_LABEL = { live: 'Live', sold: 'Sold', pending: 'Waiting for your check', rejected: 'Rejected', to_ship: 'Sold – to ship', shipped: 'Shipped', paid_out: 'Paid out' };
+
+async function loadStats() {
+	show($('stats-error'));
+	const data = await api('stats');
+	const s = data.shop;
+	$('stats-time').textContent = `As of ${when(data.generated)}.`;
+
+	// Big numbers: label, value, small line underneath.
+	const cards = [
+		['Revenue (all time)', chf(s.revenue), `${s.orders} paid orders · ⌀ ${chf(s.averageOrder)}`],
+		['Last 30 days', chf(s.revenue30), `${s.orders30} orders`],
+		['To ship', String(s.toShip), 'paid orders not shipped yet'],
+		['Customers', String(s.customers), `${s.customers30} new in 30 days · ${s.verified} confirmed`],
+		['Pieces live', String(s.piecesLive), `stock value ${chf(s.stockValue)} · ${s.piecesSold} sold`],
+		['Auctions', String(s.auctionsRunning), `running · ${s.auctionsPaid} paid (${chf(s.auctionRevenue)}) · ${s.auctionLots} lots`],
+		['Price offers', String(s.offersOpen), `open · ${s.offersPaid} paid`],
+		['Wishlists', String(s.wishlist), `saved pieces · ${s.dropReminders} drop reminders`],
+		['Sellers', String(s.sellers), `sales ${chf(s.sellerRevenue)}`],
+		['Commission earned', chf(s.commission), `payouts open ${chf(s.payoutsOpen)}`],
+	];
+	$('stats-cards').replaceChildren(
+		...cards.map(([label, value, line]) => {
+			const card = el('div', 'stat');
+			card.append(el('span', 'stat-label', label), el('strong', 'stat-value', value), el('span', 'stat-line', line));
+			return card;
+		}),
+	);
+
+	// Months: bars relative to the best month.
+	const max = Math.max(1, ...s.months.map((m) => m.revenue));
+	$('stats-months').replaceChildren(
+		...(s.months.length
+			? s.months.map((m) => {
+					const row = el('div', 'month');
+					const wrap = el('span', 'bar-wrap');
+					const bar = el('span', 'bar');
+					bar.style.width = `${Math.max(2, (m.revenue / max) * 100)}%`;
+					wrap.append(bar);
+					const name = new Date(`${m.month}-01T00:00:00`).toLocaleDateString('de-CH', { month: 'short', year: 'numeric' });
+					row.append(el('span', 'month-name', name), wrap, el('span', 'month-value', `${chf(m.revenue)} · ${m.orders}`));
+					return row;
+				})
+			: [el('p', 'hint', 'No paid orders yet.')]),
+	);
+
+	// Sellers: one expandable block each.
+	const link = (name, id) => {
+		if (!id) return name;
+		const a = el('a', '', name);
+		a.href = `/item/${id}/`;
+		a.target = '_blank';
+		return a;
+	};
+	$('stats-sellers').replaceChildren(
+		...(data.sellers.length
+			? data.sellers.map((x) => {
+					const box = el('details', 'card seller');
+					const sum = el('summary');
+					sum.append(
+						el('strong', '', x.name),
+						el('span', 'seller-nums', `${x.live} live · ${x.sales} sold · ${chf(x.revenue)} sales · you ${chf(x.commission)} · open ${chf(x.open)}`),
+					);
+					box.append(sum);
+					box.append(
+						el(
+							'p',
+							'hint',
+							`${x.email}${x.phone ? ` · ${x.phone}` : ''} · seller since ${day(x.joined)} · IBAN ${x.iban ? `set (${x.accountHolder || 'name missing'})` : 'missing'} · paid out ${chf(x.paidOut)} · last sale ${day(x.lastSale)} · submissions: ${x.submissions.pending} waiting, ${x.submissions.approved} approved, ${x.submissions.rejected} rejected`,
+						),
+					);
+					const table = (title, rows, cols) => {
+						box.append(el('h3', '', title));
+						if (!rows.length) return box.append(el('p', 'hint', 'None yet.'));
+						const t = el('table', 'stat-table');
+						const head = el('tr');
+						for (const c of cols) head.append(el('th', '', c[0]));
+						t.append(head);
+						for (const r of rows) {
+							const tr = el('tr');
+							for (const c of cols) {
+								const td = el('td');
+								const v = c[1](r);
+								if (v instanceof Node) td.append(v);
+								else td.textContent = v;
+								tr.append(td);
+							}
+							t.append(tr);
+						}
+						box.append(t);
+					};
+					table('Pieces', x.pieces, [
+						['Piece', (r) => link(r.name, r.status === 'live' || r.status === 'sold' ? r.productId : null)],
+						['Price', (r) => chf(r.price)],
+						['Status', (r) => STATUS_LABEL[r.status] ?? r.status],
+						['Since', (r) => day(r.created)],
+					]);
+					table('Sales', x.salesList, [
+						['Piece', (r) => link(r.name, r.productId)],
+						['Price', (r) => chf(r.price)],
+						['Your commission', (r) => chf(r.commission)],
+						['Payout', (r) => chf(r.payout)],
+						['Status', (r) => STATUS_LABEL[r.status] ?? r.status],
+						['Sold', (r) => day(r.created)],
+					]);
+					return box;
+				})
+			: [el('p', 'hint', 'No sellers yet.')]),
+	);
+}
+
+// ---------- Two-factor login (Stats → Security) ----------
+
+async function loadTwoFactor() {
+	show($('tf-error'));
+	const state = await api('two-factor');
+	$('tf-setup').hidden = true;
+	$('tf-start').hidden = state.enabled;
+	$('tf-off').hidden = !(state.enabled && state.source === 'dashboard');
+	$('tf-state').textContent = state.enabled
+		? state.source === 'cloudflare'
+			? 'On (set in Cloudflare as ADMIN_TOTP_SECRET). The login asks for your password and the code from the app.'
+			: 'On. The login asks for your password and the 6-digit code from your authenticator app.'
+		: 'Off. With two-factor on, someone who knows your password still cannot log in without your phone.';
+}
+
+$('tf-start').addEventListener('click', async () => {
+	show($('tf-error'));
+	try {
+		const { secret, uri } = await api('two-factor', { method: 'POST', body: { action: 'start' } });
+		$('tf-key').textContent = secret.match(/.{1,4}/g).join(' ');
+		$('tf-link').href = uri;
+		const qr = qrcode(0, 'M');
+		qr.addData(uri);
+		qr.make();
+		$('tf-qr').innerHTML = qr.createSvgTag({ cellSize: 5, margin: 3, scalable: true });
+		$('tf-setup').hidden = false;
+		$('tf-start').hidden = true;
+		$('tf-code').focus();
+	} catch (error) {
+		show($('tf-error'), error.message);
+	}
+});
+
+$('tf-confirm').addEventListener('click', async () => {
+	show($('tf-error'));
+	try {
+		await api('two-factor', { method: 'POST', body: { action: 'confirm', code: $('tf-code').value } });
+		$('tf-code').value = '';
+		$('tf-qr').replaceChildren();
+		needsCode = true;
+		$('code-row').hidden = false;
+		$('reauth-code-row').hidden = false;
+		await loadTwoFactor();
+	} catch (error) {
+		show($('tf-error'), error.message);
+	}
+});
+
+$('tf-disable').addEventListener('click', async () => {
+	show($('tf-error'));
+	if (!confirm('Switch two-factor off? Then the password alone logs in again.')) return;
+	try {
+		await api('two-factor', { method: 'POST', body: { action: 'disable', code: $('tf-off-code').value } });
+		$('tf-off-code').value = '';
+		needsCode = false;
+		$('code-row').hidden = true;
+		$('reauth-code-row').hidden = true;
+		await loadTwoFactor();
+	} catch (error) {
+		show($('tf-error'), error.message);
 	}
 });

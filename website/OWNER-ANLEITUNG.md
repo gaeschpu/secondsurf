@@ -167,3 +167,8 @@ npm run photos:background -- 0013
 Das grosse Slider-Bild oben zeigt Surf-Fotos (Boardshorts, Surf-Shirts, Neopren) von Pexels, frei für kommerzielle Nutzung. Quellen in `src/assets/hero/CREDITS.md`. Bilder austauschen: Dateien in `src/assets/hero/` ersetzen (nur eigene oder lizenzfreie Fotos), Liste in CREDITS.md nachführen.
 
 Ein Flat-Lay deiner eigenen Pieces als Bild: `npm run photos:background -- --haul src/assets/hero/7-haul.jpg` (mit `--side back` die Rückseiten).
+
+## Stats und Zwei-Faktor-Login
+
+- **Stats** (Tab im Dashboard): Umsatz (total, 30 Tage, pro Monat), offene Pakete, Kund:innen, Pieces live und Lagerwert, Auktionen, Preisvorschläge, Wunschlisten. Darunter jede Verkäuferin: Kontakt, IBAN, eingereichte und live Pieces, Verkäufe, Umsatz, deine Kommission, ausbezahlt und offen. Antippen zeigt ihre Pieces und Verkäufe einzeln.
+- **Zwei-Faktor einschalten:** Stats → ganz unten «Security» → «Switch on two-factor». Mit der Authenticator-App den QR-Code scannen (oder auf dem Handy den Link antippen), den 6-stelligen Code eingeben, fertig. Ab dann braucht das Login Passwort **und** Code. Ausschalten geht dort auch (mit einem aktuellen Code). Neues Handy? Vorher ausschalten und mit dem neuen Handy neu einschalten.

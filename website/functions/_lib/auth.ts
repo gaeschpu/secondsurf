@@ -162,12 +162,52 @@ async function totpAt(secret: Uint8Array<ArrayBuffer>, step: number) {
 	return String(number % 1_000_000).padStart(6, '0');
 }
 
-export const totpEnabled = (env: Env) => (env.ADMIN_TOTP_SECRET?.replace(/[^A-Za-z2-7]/g, '').length ?? 0) >= 16;
+const validSecret = (text?: string | null) => ((text ?? '').replace(/[^A-Za-z2-7]/g, '').length >= 16 ? text! : null);
+
+/** Secrets of the dashboard (text), next to admin_state: 'totp' (active), 'totp_pending' (being set up). */
+const secretsDb = async (env: Env) => {
+	if (!env.DB) return null;
+	await env.DB.prepare('CREATE TABLE IF NOT EXISTS admin_secrets (key TEXT PRIMARY KEY, value TEXT NOT NULL, created_at INTEGER NOT NULL)').run();
+	return env.DB;
+};
+export async function readSecret(env: Env, key: 'totp' | 'totp_pending') {
+	const db = await secretsDb(env);
+	return (await db?.prepare('SELECT value FROM admin_secrets WHERE key = ?').bind(key).first<{ value: string }>())?.value ?? null;
+}
+export async function writeSecret(env: Env, key: 'totp' | 'totp_pending', value: string | null) {
+	const db = await secretsDb(env);
+	if (!db) return;
+	if (value === null) await db.prepare('DELETE FROM admin_secrets WHERE key = ?').bind(key).run();
+	else
+		await db
+			.prepare('INSERT INTO admin_secrets (key, value, created_at) VALUES (?, ?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value, created_at = excluded.created_at')
+			.bind(key, value, Math.floor(Date.now() / 1000))
+			.run();
+}
+
+/**
+ * The authenticator secret in use: the Cloudflare secret ADMIN_TOTP_SECRET if set, otherwise the one switched on in the
+ * dashboard (Stats → Security, stored in D1). null = two-factor is off.
+ */
+export async function totpSecret(env: Env) {
+	return validSecret(env.ADMIN_TOTP_SECRET) ?? validSecret(await readSecret(env, 'totp').catch(() => null));
+}
+export const totpEnabled = async (env: Env) => (await totpSecret(env)) !== null;
+
+/** A new random secret (160 bits, base32) for the authenticator app. */
+export function newTotpSecret() {
+	const bytes = crypto.getRandomValues(new Uint8Array(20));
+	let bits = '';
+	for (const b of bytes) bits += b.toString(2).padStart(8, '0');
+	return (bits.match(/.{5}/g) ?? []).map((chunk) => BASE32[parseInt(chunk, 2)]).join('');
+}
 
 /** The step (30-second window) the code belongs to, allowing one step of clock drift either way; null if wrong. */
-export async function checkTotp(env: Env, code: string) {
+export async function checkTotp(env: Env, code: string, secretText?: string | null) {
 	if (!/^\d{6}$/.test(code)) return null;
-	const secret = base32(env.ADMIN_TOTP_SECRET!);
+	const text = secretText ?? (await totpSecret(env));
+	if (!text) return null;
+	const secret = base32(text);
 	const now = Math.floor(Date.now() / 1000 / 30);
 	for (const step of [now, now - 1, now + 1]) if ((await totpAt(secret, step)) === code) return step;
 	return null;

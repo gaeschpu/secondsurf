@@ -14,6 +14,7 @@
 		<meta name="apple-mobile-web-app-title" content="ss Admin" />
 		<meta name="theme-color" content="#0e5f6e" />
 		<link rel="stylesheet" href="/admin/admin.css" />
+		<script src="/admin/qrcode.js" defer></script>
 		<script src="/admin/admin.js" defer></script>
 	</head>
 	<body>
@@ -62,6 +63,7 @@
 					<a href="#submissions" data-page="submissions">Sellers <span id="submissions-count" class="count" hidden></span></a>
 					<a href="#offers" data-page="offers">Offers <span id="offers-count" class="count" hidden></span></a>
 					<a href="#auctions" data-page="auctions">Auctions <span id="auctions-count" class="count" hidden></span></a>
+					<a href="#stats" data-page="stats">Stats</a>
 				</nav>
 				<button id="logout" class="link" type="button">Log out</button>
 			</header>
@@ -153,6 +155,43 @@
 					<h2>Auctions</h2>
 					<p id="auctions-error" class="error" role="alert" hidden></p>
 					<div id="auctions"></div>
+				</section>
+			</main>
+
+			<main id="stats-page" hidden>
+				<section>
+					<h1>Stats</h1>
+					<p class="hint">Everything at a glance: the shop, every seller and their pieces. <span id="stats-time"></span></p>
+					<p id="stats-error" class="error" role="alert" hidden></p>
+					<div id="stats-cards" class="stat-grid"></div>
+					<h2>Revenue per month</h2>
+					<div id="stats-months" class="months"></div>
+					<h2>Sellers</h2>
+					<p class="hint">Tap a seller for their pieces and sales.</p>
+					<div id="stats-sellers"></div>
+				</section>
+				<section class="card security" id="security">
+					<h2>Security: two-factor login</h2>
+					<p id="tf-state" class="hint"></p>
+					<p id="tf-error" class="error" role="alert" hidden></p>
+					<div class="actions"><button type="button" id="tf-start" class="primary" hidden>Switch on two-factor</button></div>
+					<div id="tf-setup" hidden>
+						<ol class="steps">
+							<li>Install an authenticator app on your phone (Google Authenticator, Microsoft Authenticator, 1Password …).</li>
+							<li>
+								Scan this code with the app, or on this phone tap <a id="tf-link" href="#">open in the authenticator app</a>, or type the key by hand:
+								<span id="tf-key" class="key"></span>
+							</li>
+							<li>Enter the 6-digit code the app shows:</li>
+						</ol>
+						<div id="tf-qr" class="qr"></div>
+						<label>Code <input id="tf-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" /></label>
+						<div class="actions"><button type="button" id="tf-confirm" class="primary">Confirm and switch on</button></div>
+					</div>
+					<div id="tf-off" hidden>
+						<label>Code from the app <input id="tf-off-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" /></label>
+						<div class="actions"><button type="button" id="tf-disable">Switch two-factor off</button></div>
+					</div>
 				</section>
 			</main>
 

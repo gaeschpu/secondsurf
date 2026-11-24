@@ -556,3 +556,129 @@ dialog#reauth label {
 	gap: 0.25rem;
 	margin: 0.75rem 0;
 }
+
+/* ---------- Stats ---------- */
+.stat-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+	gap: 0.75rem;
+	margin: 1rem 0 2rem;
+}
+.stat {
+	display: grid;
+	gap: 0.2rem;
+	padding: 0.9rem 1rem;
+	border: 1px solid var(--line, #ddd);
+	border-radius: 10px;
+}
+.stat-label {
+	font-size: 0.8rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	opacity: 0.75;
+}
+.stat-value {
+	font-size: 1.6rem;
+	line-height: 1.1;
+}
+.stat-line {
+	font-size: 0.82rem;
+	opacity: 0.75;
+}
+.months {
+	display: grid;
+	gap: 0.35rem;
+	margin: 0.75rem 0 2rem;
+}
+.month {
+	display: grid;
+	grid-template-columns: 6.5rem 1fr auto;
+	align-items: center;
+	gap: 0.75rem;
+	font-size: 0.9rem;
+}
+.bar-wrap {
+	height: 0.9rem;
+	background: var(--accent-tint);
+	border-radius: 4px;
+	overflow: hidden;
+}
+.bar {
+	display: block;
+	height: 100%;
+	background: var(--accent);
+}
+.seller {
+	margin: 0.6rem 0;
+	padding: 0.8rem 1rem;
+}
+.seller summary {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem 1rem;
+	cursor: pointer;
+}
+.seller-nums {
+	font-size: 0.88rem;
+	opacity: 0.8;
+}
+.seller h3 {
+	margin: 1rem 0 0.4rem;
+	font-size: 0.95rem;
+}
+.stat-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.86rem;
+}
+.stat-table th,
+.stat-table td {
+	padding: 0.35rem 0.5rem;
+	border-bottom: 1px solid var(--line, #ddd);
+	text-align: left;
+	vertical-align: top;
+}
+.security {
+	margin-top: 2rem;
+	padding: 1rem 1.2rem;
+}
+.security .steps {
+	padding-left: 1.2rem;
+}
+.security .key {
+	display: block;
+	margin-top: 0.3rem;
+	font-family: ui-monospace, monospace;
+	font-size: 1.05rem;
+	letter-spacing: 0.05em;
+	word-break: break-all;
+}
+.qr {
+	width: min(14rem, 70vw);
+	margin: 0.75rem 0;
+	background: #fff;
+}
+.qr svg {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+.security label {
+	display: grid;
+	gap: 0.25rem;
+	max-width: 14rem;
+}
+@media (max-width: 34rem) {
+	.month {
+		grid-template-columns: 5rem 1fr;
+	}
+	.month-value {
+		grid-column: 1 / -1;
+	}
+}
+
+/* A closed dialog stays hidden (the .card style must not make it visible). */
+dialog:not([open]) {
+	display: none;
+}

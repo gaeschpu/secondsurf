@@ -1,4 +1,5 @@
-// POST /api/admin/login { password, code? }: code = 6 digits from the authenticator app, needed once ADMIN_TOTP_SECRET is set.
+// POST /api/admin/login { password, code? }: code = 6 digits from the authenticator app, needed once two-factor is on
+// (switched on in the dashboard, Stats → Security, or with the Cloudflare secret ADMIN_TOTP_SECRET).
 // Also used to confirm the password again before payouts (a fresh cookie, see isFreshLogin in functions/_lib/auth.ts).
 // Brute force: 5 failures per IP within 15 minutes, 20 failures in total within an hour lock the login for that time.
 // Each code works only once (a code seen on the screen can't be replayed).
@@ -19,7 +20,8 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 
 	const passwordOk = await checkPassword(env, password);
 	let codeOk = true;
-	if (totpEnabled(env)) {
+	const twoFactor = await totpEnabled(env);
+	if (twoFactor) {
 		const step = await checkTotp(env, code);
 		codeOk = step !== null && !(db && (await isLocked(db, `admin-totp:${step}`, 1, 5)));
 		if (codeOk && passwordOk && db) await recordFailure(db, `admin-totp:${step}`); // marks the code as used
@@ -29,10 +31,10 @@ export const onRequestPost: Handler = async ({ request, env }) => {
 		if (db) await recordFailure(db, `admin-ip:${ip}`, 'admin-all');
 		console.warn(JSON.stringify({ event: 'admin-login-failed', ip, country: request.headers.get('CF-IPCountry') ?? '' }));
 		// One message for both, so a guess doesn't learn which part was right.
-		return json({ error: totpEnabled(env) ? 'Wrong password or code.' : 'Wrong password.', code: totpEnabled(env) }, 401);
+		return json({ error: twoFactor ? 'Wrong password or code.' : 'Wrong password.', code: twoFactor }, 401);
 	}
 	return json({ ok: true }, 200, { 'Set-Cookie': await sessionCookie(env) });
 };
 
 /** Whether the login form should ask for the code. */
-export const onRequestGet: Handler = ({ env }) => json({ code: totpEnabled(env) });
+export const onRequestGet: Handler = async ({ env }) => json({ code: await totpEnabled(env) });
