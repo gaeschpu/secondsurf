@@ -23,6 +23,6 @@
     "@astrojs/check": "^0.9.12",
     "@zxing/browser": "^0.2.1",
     "@zxing/library": "^0.23.0",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   }
 }
