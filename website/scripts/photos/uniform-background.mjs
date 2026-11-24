@@ -217,6 +217,48 @@ export async function iron(png, w, h, strength = 0.9) {
 	return sharp(out, { raw: { width: w, height: h, channels: 4 } }).png().toBuffer();
 }
 let ironing = false;
+
+/**
+ * The angle (degrees, clockwise like sharp's rotate) that stands the piece upright: the one at which its outline fits the
+ * smallest upright rectangle. Garments are roughly rectangular (waistband, shoulders, hems), so that is when they are
+ * straight. Searched within ±25°; tiny corrections (< 0.6°) are skipped.
+ */
+async function uprightAngle(png) {
+	const { data, info } = await sharp(png).extractChannel(3).resize({ width: 300, fit: 'inside' }).raw().toBuffer({ resolveWithObject: true });
+	const pts = [];
+	for (let y = 0; y < info.height; y++) for (let x = 0; x < info.width; x++) if (data[y * info.width + x] > 128) pts.push(x, y);
+	// Clothes are mirror-symmetric: upright, the middle of every row (halfway between its left and right edge) lies on one
+	// vertical line. For each angle, measure how much those row middles wander; the straightest angle wins.
+	let best = 0;
+	let bestScore = Infinity;
+	for (let deg = -25; deg <= 25; deg += 0.25) {
+		const a = (deg * Math.PI) / 180;
+		const cos = Math.cos(a);
+		const sin = Math.sin(a);
+		const rows = new Map();
+		for (let i = 0; i < pts.length; i += 2) {
+			const x = pts[i] * cos - pts[i + 1] * sin;
+			const y = Math.round(pts[i] * sin + pts[i + 1] * cos);
+			const r = rows.get(y);
+			if (!r) rows.set(y, [x, x]);
+			else (r[0] = Math.min(r[0], x)), (r[1] = Math.max(r[1], x));
+		}
+		const mids = [...rows.values()].filter((r) => r[1] - r[0] > 8).map((r) => (r[0] + r[1]) / 2);
+		if (mids.length < 10) continue;
+		const mean = mids.reduce((s, m) => s + m, 0) / mids.length;
+		const score = mids.reduce((s, m) => s + (m - mean) ** 2, 0) / mids.length;
+		if (score < bestScore - 1e-6) (bestScore = score), (best = deg);
+	}
+	return Math.abs(best) < 0.6 ? 0 : best;
+}
+
+/** Turns the cut-out piece upright (transparent corners), trimmed to its new outline. */
+async function straighten(png) {
+	const angle = await uprightAngle(png);
+	if (!angle) return { png, angle };
+	const rotated = await sharp(png).rotate(angle, { background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+	return { png: await sharp(rotated).trim({ threshold: 10 }).png().toBuffer(), angle };
+}
 export const setIroning = (on) => (ironing = on);
 
 /** The piece cut out (pixels unchanged, or ironed with --iron), centred on the concrete floor with a soft shadow, 1200×1500. */
@@ -227,11 +269,14 @@ export async function processFlatLay(model, file) {
 	const rgb = await sharp(rotated).raw().toBuffer();
 	const cut = await sharp(rgb, { raw: { width, height, channels: 3 } }).joinChannel(mask, { raw: { width, height, channels: 1 } }).png().toBuffer();
 	// Trim to the piece, then scale it to fill most of the frame.
-	const trimmed = await sharp(cut).trim({ threshold: 10 }).png().toBuffer({ resolveWithObject: true });
-	const scale = Math.min((FLAT.width * FLAT.fill) / trimmed.info.width, (FLAT.height * FLAT.fill) / trimmed.info.height);
-	const w = Math.round(trimmed.info.width * scale);
-	const h = Math.round(trimmed.info.height * scale);
-	const resized = await sharp(trimmed.data).resize(w, h).png().toBuffer();
+	const trimmed = await sharp(cut).trim({ threshold: 10 }).png().toBuffer();
+	// Stand the piece exactly upright (90°), then scale it to fill most of the frame.
+	const upright = (await straighten(trimmed)).png;
+	const size = await sharp(upright).metadata();
+	const scale = Math.min((FLAT.width * FLAT.fill) / size.width, (FLAT.height * FLAT.fill) / size.height);
+	const w = Math.round(size.width * scale);
+	const h = Math.round(size.height * scale);
+	const resized = await sharp(upright).resize(w, h).png().toBuffer();
 	const piece = ironing ? await iron(resized, w, h) : resized;
 	const left = Math.round((FLAT.width - w) / 2);
 	const top = Math.round((FLAT.height - h) / 2);
@@ -270,6 +315,66 @@ function addLabel(dir, n) {
 	fs.writeFileSync(file, md);
 }
 
+// ---------------------------------------------------------------- haul (hero image from the pieces themselves)
+
+/**
+ * --haul <file.jpg>: one big flat-lay of many pieces at once (the front photo of each piece, from the originals), cut out,
+ * straightened, ironed and laid out loosely overlapping on the concrete floor, with soft shadows. 2400×1350 (16:9).
+ */
+export async function makeHaul(model, sources, outFile, layoutSeed = 7) {
+	const W = 2400;
+	const H = 1350;
+	let seed = layoutSeed;
+	const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+	const pieces = [];
+	for (const src of sources) {
+		const rotated = await sharp(src).rotate().removeAlpha().toBuffer();
+		const { width, height } = await sharp(rotated).metadata();
+		const mask = await personMask(model, rotated, width, height);
+		const rgb = await sharp(rotated).raw().toBuffer();
+		const cut = await sharp(rgb, { raw: { width, height, channels: 3 } }).joinChannel(mask, { raw: { width, height, channels: 1 } }).png().toBuffer();
+		const upright = (await straighten(await sharp(cut).trim({ threshold: 10 }).png().toBuffer())).png;
+		const meta = await sharp(upright).metadata();
+		const target = 560; // similar size for every piece
+		const s = target / Math.max(meta.width, meta.height);
+		const w = Math.round(meta.width * s);
+		const h = Math.round(meta.height * s);
+		pieces.push(await iron(await sharp(upright).resize(w, h).png().toBuffer(), w, h));
+	}
+	// Two loose rows, each piece turned a little and moved a little: like clothes laid out on the floor.
+	const n = pieces.length;
+	const perRow = Math.ceil(n / 2);
+	const layers = [];
+	for (let i = 0; i < n; i++) {
+		const row = i < perRow ? 0 : 1;
+		const col = row === 0 ? i : i - perRow;
+		const count = row === 0 ? perRow : n - perRow;
+		const angle = (rand() - 0.5) * 16;
+		const turned = await sharp(pieces[i]).rotate(angle, { background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+		const m = await sharp(turned).metadata();
+		const cx = ((col + 0.5) / count) * W + (rand() - 0.5) * 80 + (row ? W / (2 * count) - W / (2 * perRow) : 0);
+		const cy = (row === 0 ? 0.33 : 0.7) * H + (rand() - 0.5) * 70;
+		const left = Math.round(cx - m.width / 2);
+		const top = Math.round(cy - m.height / 2);
+		const alpha = await sharp(turned).extractChannel(3).raw().toBuffer();
+		const shade = Buffer.alloc(m.width * m.height * 4);
+		for (let k = 0; k < m.width * m.height; k++) (shade[k * 4] = 30), (shade[k * 4 + 1] = 27), (shade[k * 4 + 2] = 24), (shade[k * 4 + 3] = Math.round(alpha[k] * 0.42));
+		const shadow = await sharp(shade, { raw: { width: m.width, height: m.height, channels: 4 } })
+			.extend({ top: 40, bottom: 40, left: 40, right: 40, background: { r: 0, g: 0, b: 0, alpha: 0 } })
+			.blur(16)
+			.png()
+			.toBuffer();
+		layers.push({ input: shadow, left: left - 40 + 6, top: top - 40 + 14 }, { input: turned, left, top });
+	}
+	// Pieces may reach over the edge a little: lay them out on a bigger floor, then cut the frame.
+	const pad = 300;
+	const big = await sharp(await concrete(W + 2 * pad, H + 2 * pad))
+		.composite(layers.map((l) => ({ ...l, left: l.left + pad, top: l.top + pad })))
+		.png()
+		.toBuffer();
+	await sharp(big).extract({ left: pad, top: pad, width: W, height: H }).jpeg({ quality: 86, mozjpeg: true }).toFile(outFile);
+}
+
 /** Photo numbers with a model, from "models: { women: [..], men: [..] }" in index.md. */
 function modelPhotos(dir) {
 	const line = fs.readFileSync(path.join(dir, 'index.md'), 'utf8').match(/^models:\s*(.+)$/m)?.[1] ?? '';
@@ -280,6 +385,28 @@ async function main() {
 	const args = process.argv.slice(2);
 	const opt = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : undefined);
 	const preview = opt('--preview');
+	// --haul <file>: the hero flat-lay of all pieces (front photo = first photo that is neither model nor label), from the originals.
+	const haul = opt('--haul');
+	if (haul) {
+		const model = await session();
+		const sources = [];
+		for (const piece of fs.readdirSync(PRODUCTS).filter((p) => fs.existsSync(path.join(PRODUCTS, p, 'index.md')))) {
+			const dir = path.join(PRODUCTS, piece);
+			const md = fs.readFileSync(path.join(dir, 'index.md'), 'utf8');
+			if (/^sold:\s*true/m.test(md)) continue;
+			const labels = [...(md.match(/^labels:\s*\[([^\]]*)\]/m)?.[1] ?? '').matchAll(/\d+/g)].map(Number);
+			const skip = new Set([...modelPhotos(dir), ...labels]);
+			const files = fs.readdirSync(dir).filter((f) => /^\d+\.(jpe?g|png|webp)$/i.test(f)).sort((x, y) => parseInt(x) - parseInt(y));
+			// --side back: the second photo of the piece (usually the back); front by default.
+			const views = files.filter((f) => !skip.has(parseInt(f)));
+			const front = views[opt('--side') === 'back' ? 1 : 0] ?? views[0];
+			if (!front) continue;
+			const original = path.join(BACKUP, piece, front);
+			sources.push(fs.existsSync(original) ? original : path.join(dir, front));
+		}
+		await makeHaul(model, sources, haul, opt('--side') === 'back' ? 31 : 7);
+		return console.log(`Haul with ${sources.length} pieces: ${haul}`);
+	}
 	const only = opt('--photos')?.split(',').map(Number);
 	const pieces = fs
 		.readdirSync(PRODUCTS)

@@ -1,16 +1,13 @@
-# Hero photos: sources and licences
+# Hero photos: sources
 
-All from Pexels, under the Pexels License (free for commercial use, editing allowed, no credit required;
-not allowed: selling unaltered copies, implying that people shown endorse the shop). https://www.pexels.com/license/
-Downloaded on 24 November 2026. Earlier hero photos (clothing piles) are in the git history.
+Since 24 November 2026 the hero shows the shop's own pieces: one big flat-lay of all available pieces (front views and
+back views), made from the owner's own photos with the photo tool. No outside licences involved.
 
-| File | Photo | Photographer (Pexels user) |
-|---|---|---|
-| 1-surf-shop.jpg | https://www.pexels.com/photo/choice-of-surfboards-and-clothes-23105772/ | matreding |
-| 2-wetsuits.jpg | https://www.pexels.com/photo/beach-surf-shop-with-colorful-surfboards-38411295/ | shojol |
-| 3-rack.jpg | https://www.pexels.com/photo/urban-clothing-store-with-surfing-decor-40820252/ | labibbb03 |
-| 4-wetsuit.jpg | https://www.pexels.com/photo/a-man-holding-a-wetsuit-4621414/ | arthousestudio |
-| 5-board-room.jpg | https://www.pexels.com/photo/four-people-inside-surfing-building-1897745/ | wendywei |
+    npm run photos:background -- --haul src/assets/hero/1-haul-front.jpg
+    npm run photos:background -- --haul src/assets/hero/2-haul-back.jpg --side back
+
+Run both again after adding new pieces, then commit and push. Earlier hero photos (Pexels surf shops and clothing piles)
+are in the git history.
 
 The hero slider (src/pages/[...lang]/new.astro) shows every image in this folder, sorted by file name.
-Only use photos you took yourself or have a licence for, and add them to this list.
+Only use photos you took yourself or have a licence for.
