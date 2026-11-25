@@ -1,20 +1,23 @@
 # Hero photos: sources and licences
 
-Surf style: people in boardshorts, surf tees and wetsuits (not pieces from the shop). All from Pexels, under the Pexels
-License (free for commercial use, editing allowed, no credit required; not allowed: selling unaltered copies, implying
-that people shown endorse the shop). https://www.pexels.com/license/  Downloaded on 24 November 2026.
+Editorial portraits in surf and streetwear (windbreakers, hoodies, boardshorts, surfboards), shown side by side like a
+fashion campaign. Not pieces from the shop. All from Pexels, under the Pexels License (free for commercial use, editing
+allowed, no credit required; not allowed: selling unaltered copies, implying that people shown endorse the shop).
+https://www.pexels.com/license/  Downloaded on 25 November 2026.
 
 | File | Photo | Photographer (Pexels user) |
 |---|---|---|
-| 1-to-the-beach.jpg | https://www.pexels.com/photo/man-holding-surfboard-while-walking-to-the-beach-3202205/ | jonathanborba |
-| 2-boardshorts.jpg | https://www.pexels.com/photo/shirtless-man-with-surfboard-running-towards-water-19613293/ | jonathanborba |
-| 3-riding.jpg | https://www.pexels.com/photo/a-surfer-riding-a-wave-7062912/ | alohaphotostudio |
-| 4-green-board.jpg | https://www.pexels.com/photo/confident-man-in-swimsuit-carrying-surfboard-in-town-6149523/ | alohaphotostudio |
-| 5-surf-tee.jpg | https://www.pexels.com/photo/man-in-black-t-shirt-and-orange-shorts-carrying-white-surfboard-4318989/ | jess-vide |
-| 6-wetsuits.jpg | https://www.pexels.com/photo/people-carrying-surfboards-on-the-beach-7659108/ | kampus |
+| 1-windbreaker-door.jpg | https://www.pexels.com/photo/woman-in-windbreaker-jacket-and-white-pants-standing-near-metal-door-13102000/ | itsbymina |
+| 2-surfboard-wall.jpg | https://www.pexels.com/photo/casual-surfer-posing-with-board-36700188/ | beccacorreiaph |
+| 3-retro-stairs.jpg | https://www.pexels.com/photo/young-woman-wearing-a-windbreaker-jacket-over-a-crop-top-and-cuff-jeans-18846711/ | mikeillyessien |
+| 4-hoodie-skate.jpg | https://www.pexels.com/photo/young-man-wearing-black-hood-sitting-on-a-skateboard-by-a-brick-fence-10510064/ | mavluda-tashbaeva |
+| 5-surf-van.jpg | https://www.pexels.com/photo/woman-in-white-tank-top-standing-beside-green-van-while-holding-brown-surfboard-12116411/ | brianjiz |
+| 6-concrete-hoodie.jpg | https://www.pexels.com/photo/a-man-in-a-hoodie-and-a-cap-standing-by-the-wall-26178659/ | ainnnek |
+| 7-beach-surfer.jpg | https://www.pexels.com/photo/a-man-in-black-shirt-smiling-while-carrying-a-surfboard-9187790/ | roman-odintsov |
+| 8-green-windbreaker.jpg | https://www.pexels.com/photo/man-in-green-jacket-carrying-backpack-13835274/ | detraque |
 
-Not possible: photos of real surfers such as Andy Irons or of brand campaigns (copyright and personality rights).
-Own photos of vintage pieces you own are fine.
+Not possible: photos of real surfers such as Andy Irons, brand campaigns, or pictures from other shops (e.g. Blue Tomato)
+or Pinterest (copyright and personality rights). Own photos are fine.
 
 The flat-lay of the shop's own pieces can be made again any time with
 `npm run photos:background -- --haul src/assets/hero/<name>.jpg` (add `--side back` for the backs).
