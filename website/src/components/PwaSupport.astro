@@ -73,34 +73,56 @@ const register = import.meta.env.PROD;
 			return false;
 		}
 	};
-	const showHint = (kind: 'android' | 'ios') => {
-		if (quiet || standalone || !phone || seenRecently() || cookieNoticeOpen()) return;
+	const openHint = (kind: 'android' | 'ios') => {
 		hint.querySelector<HTMLElement>(`[data-pwa-${kind}]`)!.hidden = false;
 		if (kind === 'android') hint.querySelector<HTMLElement>('[data-pwa-install]')!.hidden = false;
 		hint.hidden = false;
+	};
+	const showHint = (kind: 'android' | 'ios') => {
+		if (quiet || standalone || !phone || seenRecently() || cookieNoticeOpen()) return;
+		openHint(kind);
 		remember();
 	};
 	hint.querySelector('[data-pwa-close]')!.addEventListener('click', () => (hint.hidden = true));
 
-	// Android / Chrome: the browser says when the app can be installed.
+	// Footer button "App auf den Home-Bildschirm": only where installing is possible and not yet installed.
+	const appButtons = document.querySelectorAll<HTMLElement>('[data-pwa-open]');
+	const showAppButtons = () => appButtons.forEach((b) => (b.hidden = standalone));
+
+	// Android / Chrome: the browser says when the app can be installed; the button then opens its install dialog.
 	let deferred: InstallEvent | null = null;
-	window.addEventListener('beforeinstallprompt', (event) => {
-		event.preventDefault();
-		deferred = event as InstallEvent;
-		setTimeout(() => showHint('android'), 8000);
-	});
-	hint.querySelector('[data-pwa-install]')!.addEventListener('click', async () => {
+	const install = async () => {
 		hint.hidden = true;
 		if (!deferred) return;
 		await deferred.prompt();
 		deferred = null;
+	};
+	window.addEventListener('beforeinstallprompt', (event) => {
+		event.preventDefault();
+		deferred = event as InstallEvent;
+		showAppButtons();
+		setTimeout(() => showHint('android'), 8000);
 	});
-	window.addEventListener('appinstalled', () => (hint.hidden = true));
+	hint.querySelector('[data-pwa-install]')!.addEventListener('click', install);
+	window.addEventListener('appinstalled', () => {
+		hint.hidden = true;
+		appButtons.forEach((b) => (b.hidden = true));
+	});
 
-	// iPhone / iPad Safari: no install dialog, so a short instruction (not in Chrome, Firefox etc. on iOS, which can't do it).
+	// iPhone / iPad Safari: Apple doesn't let a site add itself, so the button shows the two taps
+	// (not in Chrome, Firefox etc. on iOS, which can't do it).
 	const ua = navigator.userAgent;
 	const iosSafari = /iPhone|iPad|iPod/.test(ua) && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
-	if (iosSafari) setTimeout(() => showHint('ios'), 8000);
+	if (iosSafari) {
+		showAppButtons();
+		setTimeout(() => showHint('ios'), 8000);
+	}
+	appButtons.forEach((b) =>
+		b.addEventListener('click', () => {
+			if (deferred) install();
+			else if (iosSafari) openHint('ios');
+		}),
+	);
 
 	// Service worker: register, and show the toast when a new version took over this page.
 	if (document.querySelector('[data-pwa-register="1"]') && 'serviceWorker' in navigator) {
