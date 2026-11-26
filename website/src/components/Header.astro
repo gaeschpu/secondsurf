@@ -525,4 +525,25 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 			display: none;
 		}
 	}
+	/* Phones: logo, name and the five icons must fit in one row without the page scrolling sideways. */
+	@media (max-width: 30rem) {
+		.brand {
+			gap: 0.4rem;
+			min-width: 0;
+			font-size: 1.15rem;
+		}
+		.brand :global(.brand-logo) {
+			width: 32px;
+			height: 32px;
+		}
+		.tools {
+			gap: 0;
+		}
+	}
+	/* Very small phones (iPhone SE, 320 px): the logo alone, the name doesn't fit next to the five buttons. */
+	@media (max-width: 22.5rem) {
+		.brand-text {
+			display: none;
+		}
+	}
 </style>
