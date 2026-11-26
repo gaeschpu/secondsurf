@@ -331,15 +331,52 @@ form.addEventListener('submit', async (event) => {
 
 // ---------- List ----------
 
-function renderProducts(products) {
+// Who sells each seller piece (account id -> name), from GET products.
+let sellerNames = {};
+
+function renderProducts(products, waiting = []) {
 	const list = $('products');
-	if (!products.length) {
+	if (!products.length && !waiting.length) {
 		const empty = document.createElement('li');
 		empty.className = 'hint';
 		empty.textContent = 'Nothing here yet.';
 		return list.replaceChildren(empty);
 	}
-	list.replaceChildren(...products.map(renderProduct));
+	list.replaceChildren(...waiting.map(renderWaiting), ...products.map(renderProduct));
+}
+
+/** A seller's piece that isn't in the shop yet: approve or reject it in the Sellers tab. */
+function renderWaiting(sub) {
+	const item = document.createElement('li');
+	item.className = 'product waiting';
+	const thumb = document.createElement(sub.photo ? 'img' : 'div');
+	thumb.className = 'thumb';
+	if (sub.photo) {
+		thumb.src = `/api/admin/sellers/photo?id=${encodeURIComponent(sub.photo)}`;
+		thumb.alt = '';
+		thumb.loading = 'lazy';
+	}
+	const meta = document.createElement('div');
+	meta.className = 'meta';
+	const name = document.createElement('strong');
+	name.textContent = `${sub.brand} ${sub.title}`;
+	const details = document.createElement('small');
+	details.textContent = `CHF ${sub.price} · ${sub.size} · from ${sub.seller}`;
+	const tag = document.createElement('span');
+	tag.className = 'tag';
+	tag.textContent = 'Seller piece, waiting for your check';
+	meta.append(name, details, tag);
+	const actions = document.createElement('div');
+	actions.className = 'actions';
+	const check = document.createElement('a');
+	check.className = 'button';
+	check.href = '#submissions';
+	check.textContent = 'Check';
+	check.style.textDecoration = 'none';
+	actions.append(check);
+	meta.append(actions);
+	item.append(thumb, meta);
+	return item;
 }
 
 function renderProduct(product) {
@@ -359,7 +396,7 @@ function renderProduct(product) {
 	const name = document.createElement('strong');
 	name.textContent = `${product.brand} ${product.title}`;
 	const details = document.createElement('small');
-	details.textContent = `CHF ${product.price} · ${product.size}`;
+	details.textContent = `CHF ${product.price} · ${product.size}${product.seller ? ` · from ${sellerNames[product.seller] ?? `seller #${product.seller}`}` : ''}`;
 	meta.append(name, details);
 	// Tap the photo or the name to edit the piece.
 	for (const target of [thumb, name]) {
@@ -371,6 +408,7 @@ function renderProduct(product) {
 		[product.auctionOnly, 'Auction only'],
 		[product.sold, 'Sold'],
 		[product.draft, 'Hidden draft'],
+		[product.seller, 'Seller piece'],
 	]) {
 		if (!active) continue;
 		const tag = document.createElement('span');
@@ -469,15 +507,16 @@ function fillSelect(name, options) {
 }
 
 async function loadProducts() {
-	const { products, options } = await api('products');
+	const { products, options, sellers = {}, waiting = [] } = await api('products');
 	pieceList = products;
+	sellerNames = sellers;
 	formOptions = options;
 	if (!form.elements.category.options.length) {
 		fillSelect('category', options.categories);
 		fillSelect('size', options.sizes.map((size) => ({ id: size, label: size })));
 		fillSelect('condition', options.conditions);
 	}
-	renderProducts(products);
+	renderProducts(products, waiting);
 }
 
 async function loadDashboard() {
@@ -1446,3 +1485,7 @@ $('tf-disable').addEventListener('click', async () => {
 		show($('tf-error'), error.message);
 	}
 });
+
+// ---------- App (home screen) ----------
+// The shop's service worker (src/pages/sw.js.ts) makes the dashboard installable; it never touches /admin/ or /api/.
+if ('serviceWorker' in navigator && location.hostname !== 'localhost') navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});

@@ -160,6 +160,7 @@ npm run photos:background -- 0013
 
 - Farben Navy / Off-White, Überschriften in schmalen Grossbuchstaben, eckige Buttons. Das alte Design (Petrol / Sand) ist auf dem Branch **save-before-syds-look** gespeichert. Zurück wechseln: Claude sagen «stell das Design von save-before-syds-look wieder her».
 - **Model-Bilder** sind ausgeschaltet: `showModelPhotos` in `src/settings/site.json` auf `true` stellen, dann erscheinen sie wieder (die Dateien sind noch da).
+- **Hero** (grosser Titel und Fotos oben auf der Startseite) ist ausgeschaltet: `showHero` in `src/settings/site.json` auf `true` stellen, dann ist er wieder da (Fotos in `src/assets/hero/`).
 - **Fotos der Pieces** liegen alle auf demselben hellen Betonboden und sind «gebügelt» (Falten weicher). Für ein neues Piece: `npm run photos:background -- 0013 --flatlay --iron`. Nahaufnahmen von Etiketten bleiben unverändert und werden ausgeblendet (`showLabelPhotos` in `site.json`). Originale in `raw-docs/photo-originals/`. Die Fotos ohne Bügeln sind auf dem Branch **save-before-ironing** gespeichert. Alle Pieces werden automatisch gerade ausgerichtet. Liegt ein Pullover mit schrägen Ärmeln trotzdem schief, zusätzlich `--level` anhängen (richtet den unteren Saum waagrecht aus).
 
 ## Hero (Startbild)

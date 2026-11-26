@@ -3,6 +3,7 @@ import { json, type Handler } from '../../../_lib/auth.ts';
 import { commit, listDir, PRODUCTS_DIR, readAllProducts } from '../../../_lib/github.ts';
 import { database } from '../../../_lib/accounts.ts';
 import { auctionsDb, createAuction, now } from '../../../_lib/auctions.ts';
+import { sellersDb } from '../../../_lib/sellers.ts';
 import { folderName, nextNumber, parseNewProduct, summarize, toMarkdown } from '../../../_lib/product.ts';
 
 /** The list, newest first, plus the choices for the form (always the same ones the shop uses). */
@@ -11,8 +12,39 @@ export const onRequestGet: Handler = async ({ env }) => {
 		.filter((p) => p.markdown !== null)
 		.map((p) => summarize(p.id, p.markdown!))
 		.sort((a, b) => b.id.localeCompare(a.id, undefined, { numeric: true }));
+	// Pieces from sellers: who sells each one, and the submissions still waiting for a check (handled in the Sellers tab).
+	type Waiting = { id: number; brand: string; title: string; price: number; size: string; seller: string; photo: number | null };
+	const sellers: Record<number, string> = {};
+	let waiting: Waiting[] = [];
+	if (env.DB) {
+		try {
+			await database(env);
+			const db = (await sellersDb(env))!;
+			const ids = [...new Set(products.map((p) => p.seller).filter((id): id is number => Boolean(id)))];
+			if (ids.length) {
+				const { results } = await db
+					.prepare(`SELECT id, name, email FROM users WHERE id IN (${ids.map(() => '?').join(',')})`)
+					.bind(...ids)
+					.all<{ id: number; name: string; email: string }>();
+				for (const u of results) sellers[u.id] = u.name || u.email;
+			}
+			const { results } = await db
+				.prepare(
+					`SELECT s.id, s.brand, s.title, s.price, s.size, COALESCE(NULLIF(u.name, ''), u.email, '?') AS seller,
+					        (SELECT id FROM submission_photos WHERE submission_id = s.id ORDER BY idx LIMIT 1) AS photo
+					 FROM submissions s LEFT JOIN users u ON u.id = s.user_id
+					 WHERE s.status = 'pending' ORDER BY s.created_at DESC LIMIT 100`,
+				)
+				.all<Waiting>();
+			waiting = results;
+		} catch (error) {
+			console.error('seller info for the piece list', error);
+		}
+	}
 	return json({
 		products,
+		sellers,
+		waiting,
 		options: {
 			categories: CATEGORIES.map((c) => ({ id: c.id, label: c.label.en })),
 			sizes: SIZES,

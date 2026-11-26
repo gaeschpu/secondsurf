@@ -68,6 +68,10 @@ const columns = [
 					<a href={url(lang, '/contact/')}><Icon name="mail" size={20} label={t('nav.contact')} /></a>
 				</li>
 			</ul>
+			<!-- Shown by PwaSupport.astro only where the browser can install the app (Android/Chrome, iPhone Safari). -->
+			<button type="button" class="app-button" data-pwa-open hidden>
+				{{ de: 'App auf den Home-Bildschirm', fr: 'App sur l’écran d’accueil', it: 'App sulla schermata Home', en: 'Add app to home screen' }[lang]}
+			</button>
 		</div>
 		{
 			columns.map((col) => (
@@ -157,6 +161,26 @@ const columns = [
 	.social a:hover {
 		color: var(--accent);
 		background: var(--bg);
+	}
+	.app-button {
+		margin-top: 1rem;
+		min-height: 2.6rem;
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--on-navy);
+		background: none;
+		color: var(--on-navy);
+		font-family: var(--font-display);
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		cursor: pointer;
+	}
+	.app-button:hover {
+		background: var(--on-navy);
+		color: var(--navy);
+	}
+	.app-button[hidden] {
+		display: none;
 	}
 	.bottom {
 		padding-block: 1rem 1.5rem;

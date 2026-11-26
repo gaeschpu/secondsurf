@@ -17,3 +17,11 @@
 
 /.well-known/security.txt
   Content-Type: text/plain; charset=utf-8
+
+# App (PWA): the service worker is always checked fresh, so a new deploy reaches phones at once.
+/sw.js
+  Cache-Control: no-cache
+  Content-Type: application/javascript; charset=utf-8
+
+/manifest.webmanifest
+  Content-Type: application/manifest+json; charset=utf-8

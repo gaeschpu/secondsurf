@@ -169,5 +169,6 @@ export function summarize(id: string, markdown: string) {
 		draft: /^draft:\s*true\b/m.test(body),
 		auctionOnly: /^auctionOnly:\s*true\b/m.test(body),
 		photo: body.match(/^\s+-\s+\.\/(\S+)/m)?.[1] ?? null,
+		seller: Number(scalar('seller')) || null,
 	};
 }

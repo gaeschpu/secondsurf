@@ -1,14 +1,18 @@
 {
+	"id": "/admin/",
 	"name": "secondsurf Admin",
 	"short_name": "ss Admin",
-	"description": "Pieces, price offers and auctions of secondsurf",
+	"description": "Dashboard of secondsurf: pieces, orders, sellers, offers, auctions and stats",
+	"lang": "en",
 	"start_url": "/admin/",
 	"scope": "/admin/",
 	"display": "standalone",
-	"background_color": "#f5f2ec",
-	"theme_color": "#0e5f6e",
+	"orientation": "portrait",
+	"background_color": "#fffdf9",
+	"theme_color": "#162a3d",
 	"icons": [
-		{ "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
-		{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+		{ "src": "/icons/admin-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+		{ "src": "/icons/admin-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+		{ "src": "/icons/admin-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
 	]
 }
