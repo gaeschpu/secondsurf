@@ -1446,3 +1446,7 @@ $('tf-disable').addEventListener('click', async () => {
 		show($('tf-error'), error.message);
 	}
 });
+
+// ---------- App (home screen) ----------
+// The shop's service worker (src/pages/sw.js.ts) makes the dashboard installable; it never touches /admin/ or /api/.
+if ('serviceWorker' in navigator && location.hostname !== 'localhost') navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
