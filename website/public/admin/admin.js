@@ -381,7 +381,7 @@ function renderWaiting(sub) {
 
 function renderProduct(product) {
 	const item = document.createElement('li');
-	item.className = product.sold ? 'product sold' : 'product';
+	item.className = `product${product.sold ? ' sold' : ''}${product.draft ? ' hidden-piece' : ''}`;
 
 	const thumb = document.createElement(product.photo ? 'img' : 'div');
 	thumb.className = 'thumb';
@@ -407,7 +407,7 @@ function renderProduct(product) {
 	for (const [active, label] of [
 		[product.auctionOnly, 'Auction only'],
 		[product.sold, 'Sold'],
-		[product.draft, 'Hidden draft'],
+		[product.draft, 'Hidden: not in the shop'],
 		[product.seller, 'Seller piece'],
 	]) {
 		if (!active) continue;
@@ -430,7 +430,11 @@ function renderProduct(product) {
 	editButton.type = 'button';
 	editButton.textContent = 'Edit';
 	editButton.addEventListener('click', () => openEdit(product));
-	actions.append(editButton, sold, remove);
+	// Take it off the shop for now (not deleted): hidden until "Show again".
+	const hide = actionButton(product.draft ? 'Show again' : 'Hide', product.draft ? 'primary' : '', () =>
+		api(`products/${product.id}`, { method: 'PATCH', body: { hidden: !product.draft } }),
+	);
+	actions.append(editButton, hide, sold, remove);
 	// Put a shop piece up for auction: opens the Auctions tab with this piece chosen.
 	if (!product.sold) {
 		const auction = document.createElement('button');

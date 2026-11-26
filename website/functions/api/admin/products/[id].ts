@@ -1,7 +1,7 @@
 import { notifyPriceDrop } from '../../../_lib/accounts.ts';
 import { json, type Handler } from '../../../_lib/auth.ts';
 import { commit, listDir, PRODUCTS_DIR, readText } from '../../../_lib/github.ts';
-import { isValidPrice, PRODUCT_ID, setPrice, setSold } from '../../../_lib/product.ts';
+import { isValidPrice, PRODUCT_ID, setHidden, setPrice, setSold } from '../../../_lib/product.ts';
 import { parseEdit, readPiece, writePiece } from '../../../_lib/product-edit.ts';
 
 const validId = (params: Record<string, string | string[]>) => {
@@ -20,8 +20,16 @@ export const onRequestGet: Handler = async ({ env, params }) => {
 export const onRequestPatch: Handler = async ({ request, env, params, waitUntil }) => {
 	const id = validId(params);
 	if (!id) return json({ error: 'Not found.' }, 404);
-	const body = (await request.json().catch(() => null)) as { sold?: unknown; price?: unknown; edit?: unknown } | null;
+	const body = (await request.json().catch(() => null)) as { sold?: unknown; price?: unknown; edit?: unknown; hidden?: unknown } | null;
 	const path = `${PRODUCTS_DIR}/${id}/index.md`;
+
+	// Take a piece off the shop for now, or put it back ("Hide" / "Show again" in the dashboard).
+	if (body?.hidden !== undefined) {
+		if (typeof body.hidden !== 'boolean') return json({ error: 'Say whether to hide it.' }, 400);
+		const content = setHidden(await readText(env, path), body.hidden);
+		await commit(env, `${body.hidden ? 'Hidden' : 'Shown again'}: ${id}`, [{ path, mode: '100644', type: 'blob', content }]);
+		return json({ ok: true });
+	}
 
 	if (body?.edit !== undefined) {
 		const edit = parseEdit(body.edit);

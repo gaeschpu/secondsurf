@@ -408,8 +408,12 @@ label[hidden],
 	background: var(--line);
 	border-radius: 8px;
 }
-.product.sold .thumb {
+.product.sold .thumb,
+.product.hidden-piece .thumb {
 	opacity: 0.5;
+}
+.product.hidden-piece {
+	background: repeating-linear-gradient(-45deg, transparent 0 10px, rgba(0, 0, 0, 0.03) 10px 20px);
 }
 .meta {
 	min-width: 0;

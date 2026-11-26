@@ -132,6 +132,14 @@ export function setSold(markdown: string, sold: boolean) {
 	});
 }
 
+/** Hide a piece from the shop for now (draft: true) or show it again. Hidden pieces have no page and can't be bought. */
+export function setHidden(markdown: string, hidden: boolean) {
+	return markdown.replace(FRONTMATTER, (_, body: string) => {
+		const kept = body.split(/\r?\n/).filter((line) => !/^draft:/.test(line));
+		return ['---', ...kept, ...(hidden ? ['draft: true'] : []), '---'].join('\n');
+	});
+}
+
 export function isValidPrice(price: unknown): price is number {
 	return typeof price === 'number' && Number.isFinite(price) && price > 0 && price <= 100000;
 }
