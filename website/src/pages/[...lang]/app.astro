@@ -1,0 +1,250 @@
+---
+// /app/: how to put secondsurf on the home screen, step by step for iPhone/iPad, Android and computer.
+// The visitor's own device comes first. Where the browser can install by itself (Android / Chrome / Edge), the big
+// button opens its install dialog (wired up in src/components/PwaSupport.astro, [data-pwa-install-now]).
+import Base from '../../layouts/Base.astro';
+import { langPaths, type Lang } from '../../i18n';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+
+type Device = { id: 'ios' | 'android' | 'desktop'; title: string; steps: string[]; note?: string };
+const text = {
+	de: {
+		title: 'secondsurf als App',
+		lead: 'Leg den Shop auf deinen Home-Bildschirm. Dann öffnest du secondsurf mit einem Tipp, im Vollbild wie eine richtige App.',
+		perks: ['Ein Tipp zum Shop', 'Vollbild, ohne Browserleiste', 'Immer die aktuellen Pieces', 'Gratis, ohne App Store, braucht kaum Speicher'],
+		install: 'Jetzt installieren',
+		installed: 'Du hast secondsurf schon als App. Viel Spass beim Stöbern!',
+		yours: 'Dein Gerät',
+		others: 'Andere Geräte',
+		done: 'Fertig: Das secondsurf-Logo ist jetzt auf deinem Home-Bildschirm.',
+		devices: [
+			{ id: 'ios', title: 'iPhone & iPad', steps: ['Öffne secondsurf.ch in Safari.', 'Tippe auf «Teilen» – das Quadrat mit dem Pfeil nach oben (iPhone: unten in der Leiste, iPad: oben rechts).', 'Scrolle in der Liste nach unten und tippe auf «Zum Home-Bildschirm».', 'Tippe oben rechts auf «Hinzufügen».'], note: 'In Chrome oder einem anderen Browser auf dem iPhone: Teilen-Symbol neben der Adresszeile, dann «Zum Home-Bildschirm».' },
+			{ id: 'android', title: 'Android', steps: ['Öffne secondsurf.ch in Chrome.', 'Tippe oben auf «Jetzt installieren» – oder auf die drei Punkte ⋮ oben rechts.', 'Wähle «App installieren» (manchmal heisst es «Zum Startbildschirm hinzufügen»).', 'Bestätige mit «Installieren».'] },
+			{ id: 'desktop', title: 'Computer', steps: ['Öffne secondsurf.ch in Chrome oder Edge.', 'Klicke oben auf «Jetzt installieren» – oder rechts in der Adresszeile auf das Installieren-Symbol.', 'Bestätige mit «Installieren».'], note: 'Safari auf dem Mac: Menü «Ablage» → «Zum Dock hinzufügen».' },
+		] as Device[],
+	},
+	fr: {
+		title: 'secondsurf en app',
+		lead: 'Ajoute la boutique à ton écran d’accueil. Tu ouvres secondsurf d’un seul geste, en plein écran comme une vraie app.',
+		perks: ['Un geste pour la boutique', 'Plein écran, sans barre du navigateur', 'Toujours les pièces actuelles', 'Gratuit, sans App Store, presque pas de mémoire'],
+		install: 'Installer maintenant',
+		installed: 'Tu as déjà secondsurf en app. Bonne découverte !',
+		yours: 'Ton appareil',
+		others: 'Autres appareils',
+		done: 'C’est fait : le logo secondsurf est sur ton écran d’accueil.',
+		devices: [
+			{ id: 'ios', title: 'iPhone & iPad', steps: ['Ouvre secondsurf.ch dans Safari.', 'Touche «Partager» – le carré avec la flèche vers le haut (iPhone : en bas, iPad : en haut à droite).', 'Fais défiler la liste et touche «Sur l’écran d’accueil».', 'Touche «Ajouter» en haut à droite.'], note: 'Dans Chrome ou un autre navigateur sur iPhone : icône Partager à côté de l’adresse, puis «Sur l’écran d’accueil».' },
+			{ id: 'android', title: 'Android', steps: ['Ouvre secondsurf.ch dans Chrome.', 'Touche «Installer maintenant» en haut – ou les trois points ⋮ en haut à droite.', 'Choisis «Installer l’application» (parfois «Ajouter à l’écran d’accueil»).', 'Confirme avec «Installer».'] },
+			{ id: 'desktop', title: 'Ordinateur', steps: ['Ouvre secondsurf.ch dans Chrome ou Edge.', 'Clique sur «Installer maintenant» en haut – ou sur l’icône d’installation à droite dans la barre d’adresse.', 'Confirme avec «Installer».'], note: 'Safari sur Mac : menu «Fichier» → «Ajouter au Dock».' },
+		] as Device[],
+	},
+	it: {
+		title: 'secondsurf come app',
+		lead: 'Metti il negozio sulla schermata Home. Così apri secondsurf con un tocco, a schermo intero come una vera app.',
+		perks: ['Un tocco per il negozio', 'Schermo intero, senza barra del browser', 'Sempre i pezzi attuali', 'Gratis, senza App Store, quasi nessuna memoria'],
+		install: 'Installa ora',
+		installed: 'Hai già secondsurf come app. Buono shopping!',
+		yours: 'Il tuo dispositivo',
+		others: 'Altri dispositivi',
+		done: 'Fatto: il logo di secondsurf è sulla tua schermata Home.',
+		devices: [
+			{ id: 'ios', title: 'iPhone & iPad', steps: ['Apri secondsurf.ch in Safari.', 'Tocca «Condividi» – il quadrato con la freccia verso l’alto (iPhone: in basso, iPad: in alto a destra).', 'Scorri l’elenco e tocca «Aggiungi alla schermata Home».', 'Tocca «Aggiungi» in alto a destra.'], note: 'In Chrome o un altro browser su iPhone: icona Condividi accanto all’indirizzo, poi «Aggiungi alla schermata Home».' },
+			{ id: 'android', title: 'Android', steps: ['Apri secondsurf.ch in Chrome.', 'Tocca «Installa ora» in alto – oppure i tre puntini ⋮ in alto a destra.', 'Scegli «Installa app» (a volte «Aggiungi a schermata Home»).', 'Conferma con «Installa».'] },
+			{ id: 'desktop', title: 'Computer', steps: ['Apri secondsurf.ch in Chrome o Edge.', 'Clicca «Installa ora» in alto – oppure l’icona di installazione a destra nella barra degli indirizzi.', 'Conferma con «Installa».'], note: 'Safari su Mac: menu «File» → «Aggiungi al Dock».' },
+		] as Device[],
+	},
+	en: {
+		title: 'secondsurf as an app',
+		lead: 'Put the shop on your home screen. Then secondsurf opens with one tap, full screen like a real app.',
+		perks: ['One tap to the shop', 'Full screen, no browser bar', 'Always the current pieces', 'Free, no App Store, hardly any storage'],
+		install: 'Install now',
+		installed: 'You already have secondsurf as an app. Enjoy browsing!',
+		yours: 'Your device',
+		others: 'Other devices',
+		done: 'Done: the secondsurf logo is now on your home screen.',
+		devices: [
+			{ id: 'ios', title: 'iPhone & iPad', steps: ['Open secondsurf.ch in Safari.', 'Tap “Share” – the square with the arrow pointing up (iPhone: in the bottom bar, iPad: top right).', 'Scroll down the list and tap “Add to Home Screen”.', 'Tap “Add” in the top right.'], note: 'In Chrome or another browser on iPhone: the Share icon next to the address bar, then “Add to Home Screen”.' },
+			{ id: 'android', title: 'Android', steps: ['Open secondsurf.ch in Chrome.', 'Tap “Install now” at the top – or the three dots ⋮ in the top right.', 'Choose “Install app” (sometimes “Add to Home screen”).', 'Confirm with “Install”.'] },
+			{ id: 'desktop', title: 'Computer', steps: ['Open secondsurf.ch in Chrome or Edge.', 'Click “Install now” at the top – or the install icon on the right of the address bar.', 'Confirm with “Install”.'], note: 'Safari on a Mac: “File” menu → “Add to Dock”.' },
+		] as Device[],
+	},
+}[lang];
+---
+
+<Base lang={lang} title={text.title} description={text.lead}>
+	<div class="container app-page">
+		<header class="app-head">
+			<img src="/icons/icon-192.png" alt="" width="96" height="96" class="app-icon" />
+			<h1>{text.title}</h1>
+			<p class="lead">{text.lead}</p>
+			<p class="installed" data-installed hidden>{text.installed}</p>
+			<button type="button" class="btn install-now" data-pwa-install-now hidden>{text.install}</button>
+		</header>
+
+		<ul class="perks">
+			{text.perks.map((perk) => <li>{perk}</li>)}
+		</ul>
+
+		<div class="devices" data-devices>
+			{
+				text.devices.map((device) => (
+					<section class="device" data-device={device.id} aria-labelledby={`device-${device.id}`}>
+						<p class="yours-label" hidden>{text.yours}</p>
+						<h2 id={`device-${device.id}`}>{device.title}</h2>
+						<ol>
+							{device.steps.map((step, i) => (
+								<li>
+									<span class="num" aria-hidden="true">{i + 1}</span>
+									<span>
+										{step}
+										{device.id === 'ios' && i === 1 && (
+											<svg class="share-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+												<path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 11v9h14v-9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+											</svg>
+										)}
+									</span>
+								</li>
+							))}
+						</ol>
+						<p class="done">{text.done}</p>
+						{device.note && <p class="note">{device.note}</p>}
+					</section>
+				))
+			}
+		</div>
+		<h2 class="others-title" data-others hidden>{text.others}</h2>
+	</div>
+</Base>
+
+<script>
+	// Own device first and highlighted; the others follow under "Other devices".
+	const ua = navigator.userAgent;
+	const kind = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? 'ios' : /Android/.test(ua) ? 'android' : 'desktop';
+	const list = document.querySelector<HTMLElement>('[data-devices]')!;
+	const mine = list.querySelector<HTMLElement>(`[data-device="${kind}"]`)!;
+	const others = document.querySelector<HTMLElement>('[data-others]')!;
+	mine.classList.add('yours');
+	mine.querySelector<HTMLElement>('.yours-label')!.hidden = false;
+	list.before(mine);
+	list.before(others);
+	others.hidden = false;
+	const standalone = matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+	if (standalone) document.querySelector<HTMLElement>('[data-installed]')!.hidden = false;
+</script>
+
+<style>
+	.app-page {
+		display: grid;
+		gap: 2rem;
+		max-width: 46rem;
+		padding-block: clamp(2rem, 6vw, 4rem);
+	}
+	.app-head {
+		display: grid;
+		justify-items: center;
+		gap: 0.9rem;
+		text-align: center;
+	}
+	.app-icon {
+		border-radius: 22px;
+		box-shadow: var(--shadow);
+	}
+	.lead {
+		max-width: 34rem;
+		color: var(--ink-soft);
+	}
+	.installed {
+		font-weight: 600;
+	}
+	.install-now {
+		min-height: 3.4rem;
+		padding: 0.9rem 2rem;
+	}
+	.install-now[hidden],
+	.installed[hidden],
+	[hidden] {
+		display: none;
+	}
+	.perks {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+		gap: 0.5rem;
+		padding: 0;
+		list-style: none;
+	}
+	.perks li {
+		padding: 0.8rem 1rem;
+		background: var(--surface, var(--bg));
+		border: 1px solid var(--line);
+		font-size: var(--step--1);
+		font-weight: 600;
+		text-align: center;
+	}
+	.devices {
+		display: grid;
+		gap: 1.25rem;
+	}
+	.device {
+		padding: clamp(1.1rem, 4vw, 1.75rem);
+		border: 1px solid var(--line);
+	}
+	.device.yours {
+		border: 2px solid var(--navy);
+	}
+	.yours-label {
+		margin-bottom: 0.25rem;
+		font-family: var(--font-display);
+		font-size: var(--step--1);
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--accent);
+	}
+	.device h2 {
+		margin-bottom: 1rem;
+		font-size: var(--step-2);
+	}
+	.others-title {
+		margin-bottom: -0.5rem;
+		font-size: var(--step-1);
+	}
+	ol {
+		display: grid;
+		gap: 0.85rem;
+		padding: 0;
+		list-style: none;
+	}
+	ol li {
+		display: flex;
+		gap: 0.8rem;
+		align-items: flex-start;
+	}
+	.num {
+		flex: none;
+		display: grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
+		background: var(--navy);
+		color: var(--on-navy);
+		font-family: var(--font-display);
+		font-weight: 700;
+	}
+	.share-icon {
+		display: inline-block;
+		margin-left: 0.3rem;
+		vertical-align: -0.3em;
+		color: var(--accent);
+	}
+	.done {
+		margin-top: 1rem;
+		font-weight: 600;
+	}
+	.note {
+		margin-top: 0.6rem;
+		font-size: var(--step--1);
+		color: var(--ink-soft);
+	}
+</style>

@@ -6,17 +6,17 @@
 //     iPhone/iPad Safari with a short instruction. At most once in 30 days, never when already installed, never during
 //     a purchase (cart, checkout return, auction or offer payment, parcel check). The admin dashboard doesn't use this
 //     layout, so it never shows there.
-import { type Lang } from '../i18n';
+import { url, type Lang } from '../i18n';
 
 interface Props {
 	lang: Lang;
 }
 const { lang } = Astro.props;
 const text = {
-	de: { update: 'Neue Version verfügbar', reload: 'Neu laden', install: 'secondsurf als App', installText: 'Leg den Shop auf deinen Home-Bildschirm.', installButton: 'Installieren', ios: 'Tippe unten auf «Teilen» und dann auf «Zum Home-Bildschirm».', close: 'Schliessen' },
-	fr: { update: 'Nouvelle version disponible', reload: 'Recharger', install: 'secondsurf en app', installText: 'Ajoute la boutique à ton écran d’accueil.', installButton: 'Installer', ios: 'Touche «Partager» en bas, puis «Sur l’écran d’accueil».', close: 'Fermer' },
-	it: { update: 'Nuova versione disponibile', reload: 'Ricarica', install: 'secondsurf come app', installText: 'Metti il negozio sulla schermata Home.', installButton: 'Installa', ios: 'Tocca «Condividi» in basso e poi «Aggiungi alla schermata Home».', close: 'Chiudi' },
-	en: { update: 'New version available', reload: 'Reload', install: 'secondsurf as an app', installText: 'Put the shop on your home screen.', installButton: 'Install', ios: 'Tap “Share” below, then “Add to Home Screen”.', close: 'Close' },
+	de: { update: 'Neue Version verfügbar', reload: 'Neu laden', install: 'secondsurf als App', installText: 'Leg den Shop auf deinen Home-Bildschirm.', installButton: 'Installieren', how: 'So geht’s Schritt für Schritt', ios: 'Tippe unten auf «Teilen» und dann auf «Zum Home-Bildschirm».', close: 'Schliessen' },
+	fr: { update: 'Nouvelle version disponible', reload: 'Recharger', install: 'secondsurf en app', installText: 'Ajoute la boutique à ton écran d’accueil.', installButton: 'Installer', how: 'Le guide étape par étape', ios: 'Touche «Partager» en bas, puis «Sur l’écran d’accueil».', close: 'Fermer' },
+	it: { update: 'Nuova versione disponibile', reload: 'Ricarica', install: 'secondsurf come app', installText: 'Metti il negozio sulla schermata Home.', installButton: 'Installa', how: 'La guida passo per passo', ios: 'Tocca «Condividi» in basso e poi «Aggiungi alla schermata Home».', close: 'Chiudi' },
+	en: { update: 'New version available', reload: 'Reload', install: 'secondsurf as an app', installText: 'Put the shop on your home screen.', installButton: 'Install', how: 'Step-by-step guide', ios: 'Tap “Share” below, then “Add to Home Screen”.', close: 'Close' },
 }[lang];
 const register = import.meta.env.PROD;
 ---
@@ -32,6 +32,7 @@ const register = import.meta.env.PROD;
 		<strong>{text.install}</strong>
 		<span data-pwa-android hidden>{text.installText}</span>
 		<span data-pwa-ios hidden>{text.ios}</span>
+		<a href={url(lang, '/app/')}>{text.how}</a>
 	</div>
 	<button type="button" class="pwa-btn" data-pwa-install hidden>{text.installButton}</button>
 	<button type="button" class="pwa-close" data-pwa-close aria-label={text.close}>×</button>
@@ -48,7 +49,7 @@ const register = import.meta.env.PROD;
 	const toast = document.querySelector<HTMLElement>('[data-pwa-update]')!;
 	const path = location.pathname.replace(/^\/(fr|it|en)(?=\/)/, '');
 	// No hint during a purchase or on personal pages.
-	const quiet = /^\/(cart|thanks|offer|auction|parcel|account|tracking|offline)\//.test(path);
+	const quiet = /^\/(cart|thanks|offer|auction|parcel|account|tracking|offline|app)\//.test(path);
 	const standalone = matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
 	const phone = matchMedia('(pointer: coarse)').matches && matchMedia('(max-width: 820px)').matches;
 
@@ -85,8 +86,8 @@ const register = import.meta.env.PROD;
 	};
 	hint.querySelector('[data-pwa-close]')!.addEventListener('click', () => (hint.hidden = true));
 
-	// Footer button "App auf den Home-Bildschirm": only where installing is possible and not yet installed.
-	const appButtons = document.querySelectorAll<HTMLElement>('[data-pwa-open]');
+	// "Jetzt installieren" on the /app/ page: only once the browser allows installing, and not inside the app.
+	const appButtons = document.querySelectorAll<HTMLElement>('[data-pwa-install-now]');
 	const showAppButtons = () => appButtons.forEach((b) => (b.hidden = standalone));
 
 	// Android / Chrome: the browser says when the app can be installed; the button then opens its install dialog.
@@ -113,16 +114,8 @@ const register = import.meta.env.PROD;
 	// (not in Chrome, Firefox etc. on iOS, which can't do it).
 	const ua = navigator.userAgent;
 	const iosSafari = /iPhone|iPad|iPod/.test(ua) && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
-	if (iosSafari) {
-		showAppButtons();
-		setTimeout(() => showHint('ios'), 8000);
-	}
-	appButtons.forEach((b) =>
-		b.addEventListener('click', () => {
-			if (deferred) install();
-			else if (iosSafari) openHint('ios');
-		}),
-	);
+	if (iosSafari) setTimeout(() => showHint('ios'), 8000);
+	appButtons.forEach((b) => b.addEventListener('click', install));
 
 	// Service worker: register, and show the toast when a new version took over this page.
 	if (document.querySelector('[data-pwa-register="1"]') && 'serviceWorker' in navigator) {
@@ -172,6 +165,10 @@ const register = import.meta.env.PROD;
 		gap: 0.1rem;
 		font-size: var(--step--1);
 		line-height: 1.35;
+	}
+	.pwa-hint-text a {
+		color: var(--on-navy);
+		font-weight: 600;
 	}
 	.pwa-hint-text strong {
 		font-family: var(--font-display);
