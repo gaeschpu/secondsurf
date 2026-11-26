@@ -28,5 +28,6 @@
 		"en": ""
 	},
 	"showModelPhotos": false,
-	"showLabelPhotos": false
+	"showLabelPhotos": false,
+	"showHero": false
 }

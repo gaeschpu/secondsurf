@@ -42,6 +42,9 @@ export const SHOW_MODEL_PHOTOS: boolean = settings.showModelPhotos ?? true;
 /** Show the close-ups of the labels (the "labels" list of each piece; showLabelPhotos in site.json). */
 export const SHOW_LABEL_PHOTOS: boolean = settings.showLabelPhotos ?? true;
 
+/** Show the hero (big title and photo slider) on the New Drop page (showHero in site.json). Off: the page starts with the pieces. */
+export const SHOW_HERO: boolean = settings.showHero ?? true;
+
 export const OWNER = {
 	name: settings.ownerName,
 	legalForm: settings.legalForm,
