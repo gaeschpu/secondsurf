@@ -5,6 +5,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import WelcomePopup from '../components/WelcomePopup.astro';
 import CookieNotice from '../components/CookieNotice.astro';
+import PwaSupport from '../components/PwaSupport.astro';
 import { htmlLang, languages, stripLang, url, useT, type Lang } from '../i18n';
 import { SITE } from '../config';
 
@@ -60,8 +61,14 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
 
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 		<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
-		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-		<meta name="theme-color" content="#f5f2ea" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+		<!-- Installable as an app (manifest, iPhone home screen). See src/components/PwaSupport.astro and src/pages/sw.js.ts. -->
+		<link rel="manifest" href="/manifest.webmanifest" />
+		<meta name="theme-color" content="#162a3d" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+		<meta name="apple-mobile-web-app-title" content="secondsurf" />
 		<meta name="generator" content={Astro.generator} />
 
 		<Font cssVariable="--font-sans" preload />
@@ -85,6 +92,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
 		<Footer lang={lang} />
 		<WelcomePopup lang={lang} />
 		<CookieNotice lang={lang} />
+		<PwaSupport lang={lang} />
 	</body>
 </html>
 

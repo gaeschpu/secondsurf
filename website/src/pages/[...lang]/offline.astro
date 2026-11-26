@@ -1,0 +1,53 @@
+---
+// /offline/: shown by the service worker (src/pages/sw.js.ts) when there is no connection and the page isn't stored.
+// Shop pages are never shown from storage (no sold piece may look available), so this is what they show offline.
+import Base from '../../layouts/Base.astro';
+import Logo from '../../components/Logo.astro';
+import { langPaths, type Lang } from '../../i18n';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props as { lang: Lang };
+
+const text = {
+	de: { title: 'Du bist offline', text: 'Check deine Verbindung – sobald du wieder online bist, geht’s weiter. Die Pieces und Preise zeigen wir nur live, damit nichts angezeigt wird, das schon verkauft ist.', retry: 'Nochmals versuchen' },
+	fr: { title: 'Tu es hors ligne', text: 'Vérifie ta connexion – dès que tu es de nouveau en ligne, ça repart. Nous montrons les pièces et les prix uniquement en direct, pour ne rien afficher qui soit déjà vendu.', retry: 'Réessayer' },
+	it: { title: 'Sei offline', text: 'Controlla la connessione: appena sei di nuovo online, si riparte. Mostriamo pezzi e prezzi solo in tempo reale, così non vedi nulla che sia già venduto.', retry: 'Riprova' },
+	en: { title: 'You’re offline', text: 'Check your connection – as soon as you’re back online, we’re good to go. We only show pieces and prices live, so nothing appears that has already sold.', retry: 'Try again' },
+}[lang];
+---
+
+<Base lang={lang} title={text.title} description={text.text} noindex>
+	<div class="container offline">
+		<Logo size={96} class="offline-logo" />
+		<h1>{text.title}</h1>
+		<p>{text.text}</p>
+		<p><button type="button" class="btn" data-retry>{text.retry}</button></p>
+	</div>
+</Base>
+
+<script>
+	document.querySelector('[data-retry]')?.addEventListener('click', () => location.reload());
+	// Back online: try again by itself.
+	window.addEventListener('online', () => location.reload());
+</script>
+
+<style>
+	.offline {
+		display: grid;
+		justify-items: center;
+		gap: 1rem;
+		padding-block: clamp(3rem, 12vw, 7rem);
+		text-align: center;
+	}
+	.offline :global(.offline-logo) {
+		color: var(--sand);
+	}
+	.offline p {
+		max-width: 32rem;
+		color: var(--ink-soft);
+	}
+	.btn {
+		min-height: 3.2rem;
+		padding: 0.85rem 1.75rem;
+	}
+</style>
