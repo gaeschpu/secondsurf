@@ -12,8 +12,9 @@ import { json, type Handler } from '../../_lib/auth.ts';
 import { offersDb } from '../../_lib/offers.ts';
 import { ordersDb } from '../../_lib/orders.ts';
 import { sellersDb } from '../../_lib/sellers.ts';
+import { CATEGORIES } from '../../../src/config.ts';
 
-type Piece = { id: string; price: number; sold: boolean; auctionOnly?: boolean; brand?: string; title?: unknown };
+type Piece = { id: string; price: number; sold: boolean; auctionOnly?: boolean; brand?: string; title?: unknown; category?: string };
 
 const DAY = 86400;
 const round = (n: number | null | undefined) => Math.round((n ?? 0) * 100) / 100;
@@ -41,7 +42,7 @@ export const onRequestGet: Handler = async ({ request, env }) => {
 	const all = async <T>(db: typeof accounts | null, sql: string, ...bind: unknown[]) => (db ? (await db.prepare(sql).bind(...bind).all<T>()).results : []);
 
 	const paid = "status IN ('paid', 'shipped')";
-	const [customers, customers30, verified, ordersAll, orders30, toShip, months, wishlist, reminders] = await Promise.all([
+	const [customers, customers30, verified, ordersAll, orders30, toShip, months, wishlist, reminders, signups] = await Promise.all([
 		one<{ n: number }>(accounts, 'SELECT COUNT(*) AS n FROM users'),
 		one<{ n: number }>(accounts, 'SELECT COUNT(*) AS n FROM users WHERE created_at > ?', since30),
 		one<{ n: number }>(accounts, 'SELECT COUNT(*) AS n FROM users WHERE verified = 1'),
@@ -56,6 +57,12 @@ export const onRequestGet: Handler = async ({ request, env }) => {
 		),
 		one<{ n: number }>(accounts, 'SELECT COUNT(*) AS n FROM wishlist'),
 		one<{ n: number }>(accounts, 'SELECT COUNT(*) AS n FROM drop_reminders').catch(() => null),
+		// New customer accounts per month, last 12 months (chart in the Stats tab).
+		all<{ month: string; n: number }>(
+			accounts,
+			`SELECT strftime('%Y-%m', created_at, 'unixepoch') AS month, COUNT(*) AS n FROM users WHERE created_at > ? GROUP BY month ORDER BY month`,
+			now - 365 * DAY,
+		),
 	]);
 
 	const [auctionRunning, auctionPaid, offersOpen, offersPaid] = await Promise.all([
@@ -125,6 +132,11 @@ export const onRequestGet: Handler = async ({ request, env }) => {
 			averageOrder: ordersAll?.n ? round((ordersAll.sum ?? 0) / ordersAll.n) : 0,
 			toShip: toShip?.n ?? 0,
 			months: months.map((m) => ({ month: m.month, orders: m.n, revenue: round(m.sum) })),
+			signups: signups.map((m) => ({ month: m.month, customers: m.n })),
+			// Pieces in the shop per category (English names, like the rest of the dashboard), most first.
+			categories: CATEGORIES.map((c) => ({ name: c.label.en, live: live.filter((p) => !p.auctionOnly && p.category === c.id).length }))
+				.filter((c) => c.live > 0)
+				.sort((a, b) => b.live - a.live),
 			piecesLive: live.filter((p) => !p.auctionOnly).length,
 			piecesSold: pieces.filter((p) => p.sold).length,
 			stockValue: round(live.reduce((t, p) => t + (p.price ?? 0), 0)),

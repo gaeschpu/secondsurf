@@ -15,6 +15,7 @@
 		<meta name="theme-color" content="#162a3d" />
 		<link rel="stylesheet" href="/admin/admin.css" />
 		<script src="/admin/qrcode.js" defer></script>
+		<script src="/admin/charts.js" defer></script>
 		<script src="/admin/admin.js" defer></script>
 	</head>
 	<body>
@@ -177,9 +178,11 @@
 					</div>
 					<div id="visits-body" class="visits" hidden>
 						<div id="visits-cards" class="stat-grid"></div>
-						<h2>Last 30 days</h2>
-						<p class="hint">Per day: visitors (bar) · page views.</p>
-						<div id="visits-days" class="months"></div>
+						<h2>Visitors per day</h2>
+						<p class="hint">Last 30 days. Tap or hover for a day.</p>
+						<div id="visits-days"></div>
+						<h2>Page views per day</h2>
+						<div id="visits-views"></div>
 						<h2>Most viewed pages · last 24 hours</h2>
 						<div id="visits-pages" class="months names"></div>
 						<h2>Came from · last 24 hours</h2>
@@ -200,7 +203,22 @@
 					<p id="stats-error" class="error" role="alert" hidden></p>
 					<div id="stats-cards" class="stat-grid"></div>
 					<h2>Revenue per month</h2>
-					<div id="stats-months" class="months"></div>
+					<p class="hint">Paid orders, last 12 months. Tap or hover a month.</p>
+					<div id="stats-months"></div>
+					<div class="chart-pair">
+						<div>
+							<h2>Orders per month</h2>
+							<div id="stats-orders"></div>
+						</div>
+						<div>
+							<h2>New customers per month</h2>
+							<div id="stats-signups"></div>
+						</div>
+					</div>
+					<h2>Pieces</h2>
+					<div id="stats-split"></div>
+					<h2>In the shop by category</h2>
+					<div id="stats-categories" class="months names"></div>
 					<h2>Sellers</h2>
 					<p class="hint">Tap a seller for their pieces and sales.</p>
 					<div id="stats-sellers"></div>

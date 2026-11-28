@@ -11,6 +11,9 @@
 	--on-accent: light-dark(#ffffff, #06191c);
 	--danger: light-dark(#b42318, #fda29b);
 	--focus: light-dark(#c2410c, #fdba74);
+	/* Charts: one series colour, checked with the dataviz validator against the cards (contrast, chroma, colour-blind). */
+	--series-1: #00839b;
+	--chart-grid: #e8e2d4;
 }
 *,
 *::before,
@@ -629,6 +632,10 @@ dialog#reauth label {
 	font-size: 0.82rem;
 	opacity: 0.75;
 }
+/* Ranked lists (categories, pages, sites): room for longer names on wider screens. */
+.names .month {
+	grid-template-columns: minmax(6.5rem, 13rem) 1fr auto;
+}
 .setup ol {
 	display: grid;
 	gap: 0.5rem;
@@ -653,14 +660,175 @@ dialog#reauth label {
 }
 .bar-wrap {
 	height: 0.9rem;
-	background: var(--accent-tint);
-	border-radius: 4px;
-	overflow: hidden;
 }
+/* Ranked bars: thin, square at the start, 4px round at the value end. */
 .bar-wrap > .bar {
 	display: block;
 	height: 100%;
-	background: var(--accent);
+	background: var(--series-1);
+	border-radius: 0 4px 4px 0;
+}
+
+/* ---------- Charts (charts.js) ---------- */
+.chart {
+	margin: 0.25rem 0 1.75rem;
+}
+.chart-plot {
+	position: relative;
+	width: 100%;
+}
+.chart-plot svg {
+	display: block;
+	overflow: visible;
+}
+.chart-grid {
+	stroke: var(--chart-grid);
+	stroke-width: 1;
+}
+.chart-base {
+	stroke: var(--ink-soft);
+	stroke-width: 1;
+	opacity: 0.5;
+}
+.chart-axis {
+	fill: var(--ink-soft);
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+}
+.chart-value {
+	fill: var(--ink);
+	font-size: 12px;
+	font-weight: 600;
+}
+.chart-mark {
+	fill: var(--series-1);
+}
+.chart-col:hover .chart-mark,
+.chart-col:focus .chart-mark {
+	opacity: 0.75;
+}
+.chart-col:focus {
+	outline: none;
+}
+.chart-col:focus-visible .chart-hit {
+	stroke: var(--focus);
+	stroke-width: 2;
+}
+.chart-hit {
+	fill: transparent;
+	cursor: crosshair;
+}
+.chart-hit:focus {
+	outline: none;
+}
+.chart-line {
+	fill: none;
+	stroke: var(--series-1);
+	stroke-width: 2;
+	stroke-linejoin: round;
+	stroke-linecap: round;
+}
+.chart-wash {
+	fill: var(--series-1);
+	opacity: 0.1;
+}
+.chart-dot {
+	fill: var(--series-1);
+	stroke: var(--bg-raised);
+	stroke-width: 2;
+	pointer-events: none;
+}
+.chart-cross {
+	stroke: var(--ink-soft);
+	stroke-width: 1;
+	pointer-events: none;
+}
+.chart-tip {
+	position: absolute;
+	z-index: 2;
+	display: grid;
+	gap: 0.1rem;
+	min-width: 7rem;
+	padding: 0.45rem 0.65rem;
+	background: var(--bg-raised);
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	box-shadow: 0 4px 14px rgb(0 0 0 / 0.12);
+	font-size: 0.8rem;
+	color: var(--ink-soft);
+	pointer-events: none;
+	white-space: nowrap;
+}
+.chart-tip strong {
+	font-size: 1rem;
+	color: var(--ink);
+}
+.chart-tip-title {
+	color: var(--ink);
+}
+.chart-table {
+	margin-top: 0.4rem;
+	font-size: 0.85rem;
+}
+.chart-table summary {
+	cursor: pointer;
+	color: var(--accent);
+	font-weight: 600;
+}
+.chart-table table {
+	margin-top: 0.4rem;
+	border-collapse: collapse;
+	font-variant-numeric: tabular-nums;
+}
+.chart-table th,
+.chart-table td {
+	padding: 0.2rem 0.9rem 0.2rem 0;
+	text-align: left;
+	border-bottom: 1px solid var(--line);
+}
+.chart-pair {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+	gap: 0 1.5rem;
+}
+/* One whole split into parts: 28px blocks with a 2px gap, 4px corners. */
+.chart-split {
+	display: flex;
+	gap: 2px;
+	height: 28px;
+}
+.chart-part {
+	display: flex;
+	align-items: center;
+	min-width: 2px;
+	padding: 0 0.5rem;
+	border-radius: 4px;
+	font-size: 0.8rem;
+	font-weight: 700;
+	overflow: hidden;
+	white-space: nowrap;
+}
+.chart-empty {
+	color: var(--ink-soft);
+}
+.chart-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem 1rem;
+	margin-top: 0.5rem;
+	padding: 0;
+	list-style: none;
+	font-size: 0.85rem;
+}
+.chart-legend li {
+	display: flex;
+	gap: 0.4rem;
+	align-items: center;
+}
+.chart-key {
+	width: 0.75rem;
+	height: 0.75rem;
+	border-radius: 3px;
 }
 .seller {
 	margin: 0.6rem 0;

@@ -5,7 +5,7 @@
 /*
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   X-Frame-Options: DENY
-  Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=(self), usb=(), interest-cohort=()
+  Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=(self), usb=()
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-origin
   Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; object-src 'none'

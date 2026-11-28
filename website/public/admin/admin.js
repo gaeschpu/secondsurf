@@ -1376,7 +1376,21 @@ async function loadVisits() {
 		}),
 	);
 	const day = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString('de-CH', { weekday: 'short', day: 'numeric', month: 'numeric' });
-	barRows($('visits-days'), [...data.days].reverse().map((d) => [day(d.date), d.visitors, `${count(d.visitors)} · ${count(d.pageViews)}`]), 'No visits yet.');
+	const short = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString('de-CH', { day: 'numeric', month: 'numeric' });
+	Charts.line($('visits-days'), {
+		name: 'Visitors per day',
+		valueName: 'Visitors',
+		whole: true,
+		format: count,
+		data: data.days.map((d) => ({ label: short(d.date), title: day(d.date), value: d.visitors, rows: [['Page views', count(d.pageViews)]] })),
+	});
+	Charts.line($('visits-views'), {
+		name: 'Page views per day',
+		valueName: 'Page views',
+		whole: true,
+		format: count,
+		data: data.days.map((d) => ({ label: short(d.date), title: day(d.date), value: d.pageViews, rows: [['Visitors', count(d.visitors)]] })),
+	});
 	const later = 'Not available (Cloudflare keeps this detail only on some plans).';
 	barRows($('visits-pages'), (data.pages ?? []).map((p) => [p.path, p.views, count(p.views)]), data.pages ? 'No page views in the last 24 hours.' : later);
 	barRows($('visits-referrers'), (data.referrers ?? []).map((r) => [r.host, r.visits, count(r.visits)]), data.referrers ? 'Nobody came from another site in the last 24 hours.' : later);
@@ -1417,22 +1431,42 @@ async function loadStats() {
 		}),
 	);
 
-	// Months: bars relative to the best month.
-	const max = Math.max(1, ...s.months.map((m) => m.revenue));
-	$('stats-months').replaceChildren(
-		...(s.months.length
-			? s.months.map((m) => {
-					const row = el('div', 'month');
-					const wrap = el('span', 'bar-wrap');
-					const bar = el('span', 'bar');
-					bar.style.width = `${Math.max(2, (m.revenue / max) * 100)}%`;
-					wrap.append(bar);
-					const name = new Date(`${m.month}-01T00:00:00`).toLocaleDateString('de-CH', { month: 'short', year: 'numeric' });
-					row.append(el('span', 'month-name', name), wrap, el('span', 'month-value', `${chf(m.revenue)} · ${m.orders}`));
-					return row;
-				})
-			: [el('p', 'hint', 'No paid orders yet.')]),
-	);
+	// Charts (public/admin/charts.js): the last 12 months, months without sales included as 0.
+	const keys = [];
+	for (let i = 11; i >= 0; i--) {
+		const d = new Date();
+		d.setDate(1);
+		d.setMonth(d.getMonth() - i);
+		keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+	}
+	const sales = new Map(s.months.map((m) => [m.month, m]));
+	const signups = new Map((s.signups ?? []).map((m) => [m.month, m.customers]));
+	const monthLabel = (key, style) => new Date(`${key}-01T00:00:00`).toLocaleDateString('de-CH', style);
+	const perMonth = keys.map((key) => ({
+		label: monthLabel(key, { month: 'short' }),
+		title: monthLabel(key, { month: 'long', year: 'numeric' }),
+		revenue: sales.get(key)?.revenue ?? 0,
+		orders: sales.get(key)?.orders ?? 0,
+		customers: signups.get(key) ?? 0,
+	}));
+	const whole = (n) => Number(n).toLocaleString('de-CH');
+	Charts.columns($('stats-months'), {
+		name: 'Revenue per month',
+		valueName: 'Revenue',
+		format: (v) => chf(v),
+		data: perMonth.map((m) => ({ label: m.label, title: m.title, value: m.revenue, rows: [['Orders', whole(m.orders)]] })),
+	});
+	Charts.columns($('stats-orders'), { name: 'Orders per month', valueName: 'Orders', whole: true, format: whole, data: perMonth.map((m) => ({ label: m.label, title: m.title, value: m.orders })) });
+	Charts.columns($('stats-signups'), { name: 'New customers per month', valueName: 'New customers', whole: true, format: whole, data: perMonth.map((m) => ({ label: m.label, title: m.title, value: m.customers })) });
+	Charts.split($('stats-split'), {
+		name: 'Pieces',
+		parts: [
+			{ name: 'In the shop', value: s.piecesLive, color: '#00839b' },
+			{ name: 'Sold', value: s.piecesSold, color: '#eb6834', ink: '#14262b' },
+			{ name: 'Auction lots', value: s.auctionLots, color: '#6250d6' },
+		],
+	});
+	barRows($('stats-categories'), (s.categories ?? []).map((c) => [c.name, c.live, whole(c.live)]), 'No pieces in the shop.');
 
 	// Sellers: one expandable block each.
 	const link = (name, id) => {
