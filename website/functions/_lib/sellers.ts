@@ -201,7 +201,7 @@ const TEXTS: Record<string, Record<Kind, (v: Record<string, string>) => { subjec
 		}),
 		approved: (v) => ({
 			subject: `Freigegeben: ${v.piece}`,
-			text: `Hallo\n\n${v.piece} ist jetzt im Shop für ${v.price}:\n${v.link}\n\nWir melden uns, sobald es verkauft ist.\n\nsecondsurf`,
+			text: `Hallo\n\n${v.piece} ist freigegeben. Wir bringen deine Fotos noch auf unseren Shop-Look, in etwa 10 Minuten ist es online für ${v.price}:\n${v.link}\n\nWir melden uns, sobald es verkauft ist.\n\nsecondsurf`,
 		}),
 		rejected: (v) => ({
 			subject: `Nicht freigegeben: ${v.piece}`,
@@ -217,7 +217,7 @@ const TEXTS: Record<string, Record<Kind, (v: Record<string, string>) => { subjec
 			subject: `Vendu : ${v.pieces}`,
 			text: `Bonjour\n\nBonne nouvelle : ${v.pieces} a été vendu sur secondsurf.\n\nMerci de l’envoyer dans les 2 jours ouvrables par La Poste à :\n\n${v.buyer}\n\nDans ton profil, tu trouves l’étiquette d’adresse et le bon de livraison à imprimer. Indique-y que l’envoi est parti :\n${v.link}\n\nNous te versons le montant (prix de vente moins la commission, plus l’envoi) ${PAYOUT_DAYS} jours après l’envoi.\n\nsecondsurf`,
 		}),
-		approved: (v) => ({ subject: `Validé : ${v.piece}`, text: `Bonjour\n\n${v.piece} est maintenant dans la boutique pour ${v.price} :\n${v.link}\n\nNous te prévenons dès qu’il est vendu.\n\nsecondsurf` }),
+		approved: (v) => ({ subject: `Validé : ${v.piece}`, text: `Bonjour\n\n${v.piece} est validé. Nous mettons encore tes photos au look de la boutique ; dans environ 10 minutes, il est en ligne pour ${v.price} :\n${v.link}\n\nNous te prévenons dès qu’il est vendu.\n\nsecondsurf` }),
 		rejected: (v) => ({
 			subject: `Non validé : ${v.piece}`,
 			text: `Bonjour\n\nMerci pour ta pièce. Malheureusement, nous ne pouvons pas prendre ${v.piece} dans la boutique.${v.reason ? `\n\nRaison : ${v.reason}` : ''}\n\nTu peux la proposer à nouveau avec de meilleures photos ou un autre prix :\n${v.link}\n\nsecondsurf`,
@@ -229,7 +229,7 @@ const TEXTS: Record<string, Record<Kind, (v: Record<string, string>) => { subjec
 			subject: `Venduto: ${v.pieces}`,
 			text: `Ciao\n\nBuone notizie: ${v.pieces} è stato venduto su secondsurf.\n\nSpediscilo entro 2 giorni lavorativi con la Posta a:\n\n${v.buyer}\n\nNel tuo profilo trovi l’etichetta con l’indirizzo e la bolla di consegna da stampare. Segna lì la spedizione come inviata:\n${v.link}\n\nTi versiamo l’importo (prezzo di vendita meno la commissione, più la spedizione) ${PAYOUT_DAYS} giorni dopo la spedizione.\n\nsecondsurf`,
 		}),
-		approved: (v) => ({ subject: `Approvato: ${v.piece}`, text: `Ciao\n\n${v.piece} è ora nel negozio a ${v.price}:\n${v.link}\n\nTi avvisiamo appena è venduto.\n\nsecondsurf` }),
+		approved: (v) => ({ subject: `Approvato: ${v.piece}`, text: `Ciao\n\n${v.piece} è approvato. Adattiamo ancora le tue foto allo stile del negozio: tra circa 10 minuti è online a ${v.price}:\n${v.link}\n\nTi avvisiamo appena è venduto.\n\nsecondsurf` }),
 		rejected: (v) => ({
 			subject: `Non approvato: ${v.piece}`,
 			text: `Ciao\n\nGrazie per il tuo pezzo. Purtroppo non possiamo prendere ${v.piece} nel negozio.${v.reason ? `\n\nMotivo: ${v.reason}` : ''}\n\nPuoi riproporlo con foto migliori o un altro prezzo:\n${v.link}\n\nsecondsurf`,
@@ -241,7 +241,7 @@ const TEXTS: Record<string, Record<Kind, (v: Record<string, string>) => { subjec
 			subject: `Sold: ${v.pieces}`,
 			text: `Hello\n\nGood news: ${v.pieces} was sold on secondsurf.\n\nPlease send it within 2 working days with Swiss Post to:\n\n${v.buyer}\n\nIn your profile you'll find the address label and packing slip to print. Mark the parcel as shipped there:\n${v.link}\n\nWe pay you (sale price minus commission, plus shipping) ${PAYOUT_DAYS} days after shipping.\n\nsecondsurf`,
 		}),
-		approved: (v) => ({ subject: `Approved: ${v.piece}`, text: `Hello\n\n${v.piece} is now in the shop for ${v.price}:\n${v.link}\n\nWe'll let you know as soon as it sells.\n\nsecondsurf` }),
+		approved: (v) => ({ subject: `Approved: ${v.piece}`, text: `Hello\n\n${v.piece} is approved. We're giving your photos the shop's look; in about 10 minutes it's online for ${v.price}:\n${v.link}\n\nWe'll let you know as soon as it sells.\n\nsecondsurf` }),
 		rejected: (v) => ({
 			subject: `Not approved: ${v.piece}`,
 			text: `Hello\n\nThanks for your piece. Unfortunately we can't take ${v.piece} into the shop.${v.reason ? `\n\nReason: ${v.reason}` : ''}\n\nYou're welcome to submit it again with better photos or another price:\n${v.link}\n\nsecondsurf`,

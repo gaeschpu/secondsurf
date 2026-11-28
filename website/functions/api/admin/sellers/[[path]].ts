@@ -17,7 +17,7 @@ import { SITE } from '../../../../src/config.ts';
 import { database } from '../../../_lib/accounts.ts';
 import { isFreshLogin, json, reauthNeeded, type Handler } from '../../../_lib/auth.ts';
 import { commit, createBlob, listDir, PRODUCTS_DIR } from '../../../_lib/github.ts';
-import { folderName, nextNumber, parseNewProduct, toMarkdown } from '../../../_lib/product.ts';
+import { awaitPhotos, folderName, nextNumber, parseNewProduct, toMarkdown } from '../../../_lib/product.ts';
 import { cleanIban, mailSeller, now, PAYOUT_DAYS, sellersDb, type Sale, type Submission } from '../../../_lib/sellers.ts';
 import { ordersDb } from '../../../_lib/orders.ts';
 import { pain001 } from '../../../_lib/pain001.ts';
@@ -65,11 +65,14 @@ export const onRequest: Handler = async ({ request, env, params }) => {
 		const product = parseNewProduct({ ...sub, ...body, staffPick: false, photos: shas });
 		if (typeof product === 'string') return json({ error: product }, 400);
 		product.seller = sub.user_id;
+		// Photos the owner ticked as label close-ups (1-based): left as they are by the photo tool.
+		const labels = [...new Set(Array.isArray(body.labels) ? body.labels : [])].filter((n): n is number => Number.isInteger(n) && n >= 1 && n <= photos.length).sort((a, b) => a - b);
 		const existing = await listDir(env, PRODUCTS_DIR);
 		const id = folderName(nextNumber(existing.map((entry) => entry.name)), product);
 		const dir = `${PRODUCTS_DIR}/${id}`;
 		await commit(env, `Add piece from a seller: ${product.brand} ${product.title}`, [
-			{ path: `${dir}/index.md`, mode: '100644', type: 'blob', content: toMarkdown(product, SITE.currentDrop) },
+			// Hidden until GitHub has given the photos the shop's background (.github/workflows/seller-photos.yml).
+			{ path: `${dir}/index.md`, mode: '100644', type: 'blob', content: awaitPhotos(toMarkdown(product, SITE.currentDrop), labels) },
 			...shas.map((sha, i) => ({ path: `${dir}/${i + 1}.jpg`, mode: '100644' as const, type: 'blob' as const, sha })),
 		]);
 		await db.batch([

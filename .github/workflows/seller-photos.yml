@@ -1,0 +1,58 @@
+# Seller pieces: when the owner approves one in the dashboard, it is saved hidden with "processPhotos: true".
+# This gives its photos the same look as the shop's own pieces (concrete floor, ironed, straightened; label close-ups left
+# as they are) with scripts/photos/uniform-background.mjs --pending, removes both lines and pushes: Cloudflare then
+# publishes the piece. If the photos can't be processed, the piece still goes online with the seller's own photos.
+# Free: the repository is public. The cut-out model (180 MB) is kept in the Actions cache between runs.
+name: Seller photos
+
+on:
+  push:
+    branches: [main]
+    paths: ['website/src/content/products/**/index.md']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: seller-photos
+  cancel-in-progress: false
+
+jobs:
+  photos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Any seller piece waiting for photos?
+        id: check
+        run: |
+          if grep -lq '^processPhotos: true' website/src/content/products/*/index.md; then echo "todo=1" >> "$GITHUB_OUTPUT"; else echo "Nothing to do."; fi
+
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.todo
+        with:
+          node-version: 22
+
+      - uses: actions/cache@v4
+        if: steps.check.outputs.todo
+        with:
+          path: ~/.cache/secondsurf
+          key: isnet-general-use-v1
+
+      - name: Shop look for the photos, then online
+        if: steps.check.outputs.todo
+        working-directory: website
+        run: npm run photos:background -- --pending
+
+      - name: Save
+        if: steps.check.outputs.todo
+        run: |
+          git config user.name "secondsurf photos"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add website/src/content/products
+          if git diff --cached --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "Seller piece online: photos with the shop's background"
+          git pull --rebase origin main
+          git push origin HEAD:main

@@ -140,6 +140,15 @@ export function setHidden(markdown: string, hidden: boolean) {
 	});
 }
 
+/**
+ * An approved seller piece: hidden until GitHub has given its photos the shop's background (processPhotos: true,
+ * scripts/photos/uniform-background.mjs --pending), which then removes both lines and the piece goes online.
+ */
+export function awaitPhotos(markdown: string, labels: number[] = []) {
+	const lines = ['draft: true', 'processPhotos: true', ...(labels.length ? [`labels: [${labels.join(', ')}]`] : [])];
+	return setHidden(markdown, true).replace(/^draft: true$/m, lines.join('\n'));
+}
+
 export function isValidPrice(price: unknown): price is number {
 	return typeof price === 'number' && Number.isFinite(price) && price > 0 && price <= 100000;
 }
@@ -178,5 +187,6 @@ export function summarize(id: string, markdown: string) {
 		auctionOnly: /^auctionOnly:\s*true\b/m.test(body),
 		photo: body.match(/^\s+-\s+\.\/(\S+)/m)?.[1] ?? null,
 		seller: Number(scalar('seller')) || null,
+		photosPending: /^processPhotos:\s*true\b/m.test(body),
 	};
 }

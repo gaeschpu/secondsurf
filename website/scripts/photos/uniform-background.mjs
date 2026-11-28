@@ -6,6 +6,9 @@
 //   npm run photos:background -- 0013 --photos 1,2    only these photos
 //   npm run photos:background -- --all                every piece
 //   add --preview <folder>                            write before/after into that folder instead of changing anything
+//   add --seller                                      sellers' photos (any floor): process all but the ones listed in "labels"
+//   npm run photos:background -- --pending            approved seller pieces waiting for photos: flat-lay + ironing, then online
+//                                                     (GitHub runs this after every push: .github/workflows/seller-photos.yml)
 //
 // Before a photo is replaced, the original is copied to ../raw-docs/photo-originals/<piece>/ (not in the repository; the
 // originals are also in the git history). A photo that was already processed is skipped (list in .uniform-background.json
@@ -485,28 +488,57 @@ async function main() {
 		return console.log(`Haul with ${sources.length} pieces: ${haul}`);
 	}
 	const only = opt('--photos')?.split(',').map(Number);
+	// --pending: the seller pieces approved in the dashboard (hidden, "processPhotos: true"). Run by GitHub after every push
+	// (.github/workflows/seller-photos.yml): flat-lay + ironing like the shop's own pieces, then the piece goes online.
+	const pending = args.includes('--pending');
+	const isPending = (name) => /^processPhotos:\s*true\b/m.test(fs.readFileSync(path.join(PRODUCTS, name, 'index.md'), 'utf8'));
 	const pieces = fs
 		.readdirSync(PRODUCTS)
 		.filter((name) => fs.existsSync(path.join(PRODUCTS, name, 'index.md')))
-		.filter((name) => args.includes('--all') || args.some((a) => /^\d{4}/.test(a) && name.startsWith(a)));
-	if (!pieces.length) return console.log('Which piece? e.g. npm run photos:background -- 0013   (or --all)');
+		.filter((name) => (pending ? isPending(name) : args.includes('--all') || args.some((a) => /^\d{4}/.test(a) && name.startsWith(a))));
+	if (!pieces.length) return console.log(pending ? 'No seller pieces waiting for photos.' : 'Which piece? e.g. npm run photos:background -- 0013   (or --all)');
 
-	const flat = args.includes('--flatlay');
-	ironing = args.includes('--iron');
+	const flat = pending || args.includes('--flatlay');
+	const seller = pending || args.includes('--seller');
+	ironing = pending || args.includes('--iron');
 	leveling = args.includes('--level');
 	const model = await session();
-	for (const piece of pieces) {
+	if (pending) {
+		for (const piece of pieces) {
+			try {
+				await processPiece(piece);
+			} catch (error) {
+				// Never leave a piece hidden because of a photo problem: it goes online with the seller's own photos.
+				console.error(`${piece}: photos not changed (${error.message}); the piece goes online with the original photos`);
+			}
+			const file = path.join(PRODUCTS, piece, 'index.md');
+			const md = fs.readFileSync(file, 'utf8');
+			fs.writeFileSync(file, md.replace(/^processPhotos:.*\r?\n/m, '').replace(/^draft:\s*true\r?\n/m, ''));
+			console.log(`${piece}: online`);
+		}
+		return;
+	}
+	for (const piece of pieces) await processPiece(piece);
+
+	async function processPiece(piece) {
 		const dir = path.join(PRODUCTS, piece);
 		const doneFile = path.join(dir, flat ? '.flatlay.json' : '.uniform-background.json');
 		const done = fs.existsSync(doneFile) ? JSON.parse(fs.readFileSync(doneFile, 'utf8')) : [];
 		const files = fs.readdirSync(dir).filter((f) => /\.(jpe?g|png|webp)$/i.test(f));
 		const models = modelPhotos(dir);
+		const ticked = [...(fs.readFileSync(path.join(dir, 'index.md'), 'utf8').match(/^labels:\s*\[([^\]]*)\]/m)?.[1] ?? '').matchAll(/\d+/g)].map(Number);
 		const numbers = files.map((f) => Number(f.replace(/\.\w+$/, ''))).filter(Number.isInteger).sort((a, b) => a - b);
 		// --flatlay: the photos of the piece itself (not the model photos), only those on a light background (no label close-ups).
 		for (const n of only ?? (flat ? numbers.filter((x) => !models.includes(x)) : models)) {
 			const file = files.find((f) => f.replace(/\.\w+$/, '') === String(n));
 			if (!file) continue;
-			if (flat && !only && !done.includes(file) && !(await isFlatLay(path.join(dir, file)))) {
+			// Sellers' photos lie on any floor, so a white-floor test can't find their label close-ups: the owner ticks them
+			// when approving (the "labels" list in index.md), and only those are left as they are.
+			if (seller && ticked.includes(n)) {
+				console.log(`${piece}/${file}: label close-up (ticked), left as it is`);
+				continue;
+			}
+			if (flat && !seller && !only && !done.includes(file) && !(await isFlatLay(path.join(dir, file)))) {
 				addLabel(dir, n);
 				console.log(`${piece}/${file}: close-up of the label, left as it is (added to "labels")`);
 				continue;
