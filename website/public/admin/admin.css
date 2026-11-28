@@ -44,6 +44,18 @@ h2 {
 	outline-offset: 2px;
 }
 
+.home {
+	display: flex;
+	gap: 0.45rem;
+	align-items: center;
+	font-weight: 700;
+	color: inherit;
+	text-decoration: none;
+}
+.home img {
+	border-radius: 6px;
+	background: #fff;
+}
 .bar {
 	position: sticky;
 	top: 0;
@@ -314,6 +326,15 @@ strong.editable {
 	gap: 0.4rem;
 	margin: 0.5rem 0;
 }
+.sub-photos figure {
+	margin: 0;
+}
+.sub-label {
+	display: flex;
+	gap: 0.3rem;
+	align-items: center;
+	font-size: 0.75rem;
+}
 .sub-photos img {
 	width: 100%;
 	aspect-ratio: 4 / 5;
@@ -465,6 +486,24 @@ label[hidden],
 .tabs a[aria-current='page'] {
 	background: var(--line);
 }
+/* Phones: logo and "Log out" on top, the tabs in their own row below, scrollable sideways inside that row. */
+@media (max-width: 56rem) {
+	.bar {
+		flex-wrap: wrap;
+		row-gap: 0.35rem;
+	}
+	.tabs {
+		order: 3;
+		flex: 1 0 100%;
+		min-width: 0;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+	.tabs a {
+		flex: none;
+		white-space: nowrap;
+	}
+}
 .count {
 	display: inline-block;
 	min-width: 1.4em;
@@ -590,6 +629,16 @@ dialog#reauth label {
 	font-size: 0.82rem;
 	opacity: 0.75;
 }
+.setup ol {
+	display: grid;
+	gap: 0.5rem;
+	padding-left: 1.2rem;
+}
+.month-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
 .months {
 	display: grid;
 	gap: 0.35rem;
@@ -608,7 +657,7 @@ dialog#reauth label {
 	border-radius: 4px;
 	overflow: hidden;
 }
-.bar {
+.bar-wrap > .bar {
 	display: block;
 	height: 100%;
 	background: var(--accent);
@@ -679,6 +728,26 @@ dialog#reauth label {
 	}
 	.month-value {
 		grid-column: 1 / -1;
+	}
+}
+
+/* Visits on phones: days with bar and numbers in one row; long names (pages, sites) on their own line above the bar. */
+@media (max-width: 34rem) {
+	.visits .month {
+		grid-template-columns: 5.2rem 1fr auto;
+		gap: 0.5rem;
+	}
+	.visits .month-value {
+		grid-column: auto;
+	}
+	.visits .names .month {
+		grid-template-columns: 1fr auto;
+		row-gap: 0.15rem;
+	}
+	.visits .names .month-name {
+		grid-column: 1 / -1;
+		white-space: normal;
+		overflow-wrap: anywhere;
 	}
 }
 

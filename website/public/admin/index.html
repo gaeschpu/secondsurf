@@ -56,7 +56,7 @@
 
 		<div id="dashboard" hidden>
 			<header class="bar">
-				<strong>secondsurf</strong>
+				<a class="home" href="/" title="Back to the shop"><img src="/icons/icon-192.png" alt="" width="28" height="28" />secondsurf</a>
 				<nav class="tabs" aria-label="Dashboard pages">
 					<a href="#pieces" data-page="pieces" aria-current="page">Pieces</a>
 					<a href="#orders" data-page="orders">Orders <span id="orders-count" class="count" hidden></span></a>
@@ -64,6 +64,7 @@
 					<a href="#offers" data-page="offers">Offers <span id="offers-count" class="count" hidden></span></a>
 					<a href="#auctions" data-page="auctions">Auctions <span id="auctions-count" class="count" hidden></span></a>
 					<a href="#stats" data-page="stats">Stats</a>
+					<a href="#visits" data-page="visits">Visits</a>
 				</nav>
 				<button id="logout" class="link" type="button">Log out</button>
 			</header>
@@ -155,6 +156,40 @@
 					<h2>Auctions</h2>
 					<p id="auctions-error" class="error" role="alert" hidden></p>
 					<div id="auctions"></div>
+				</section>
+			</main>
+
+			<main id="visits-page" hidden>
+				<section>
+					<h1>Visits</h1>
+					<p class="hint">From Cloudflare, which sits in front of secondsurf.ch: no cookies, no extra script on the shop. <span id="visits-time"></span></p>
+					<p id="visits-error" class="error" role="alert" hidden></p>
+					<div id="visits-setup" class="card setup" hidden>
+						<h2>Switch on the visitor numbers (once, about 5 minutes)</h2>
+						<ol>
+							<li>Cloudflare dashboard → <strong>secondsurf.ch</strong> → Overview: copy the <strong>Zone ID</strong> (right-hand column, under API).</li>
+							<li>Top right: profile icon → <strong>My Profile</strong> → <strong>API Tokens</strong> → <strong>Create Token</strong> → <strong>Create Custom Token</strong>.</li>
+							<li>Name: <em>secondsurf visits</em>. Permissions: <strong>Zone</strong> · <strong>Analytics</strong> · <strong>Read</strong>. Zone Resources: <strong>Include</strong> · <strong>Specific zone</strong> · <strong>secondsurf.ch</strong>. Then Continue → Create Token, and copy the token (it is shown only once).</li>
+							<li><strong>Workers &amp; Pages</strong> → the secondsurf project → <strong>Settings</strong> → <strong>Variables and Secrets</strong> (Production) → Add: <code>CF_ANALYTICS_TOKEN</code> = the token (type <strong>Secret</strong>), and <code>CF_ZONE_ID</code> = the Zone ID.</li>
+							<li>Deployments → the latest one → <strong>Retry deployment</strong> (settings only apply after a new deploy). Then open this tab again.</li>
+						</ol>
+						<p class="hint">The token can only read numbers; it can't change anything. Don't paste it anywhere else.</p>
+					</div>
+					<div id="visits-body" class="visits" hidden>
+						<div id="visits-cards" class="stat-grid"></div>
+						<h2>Last 30 days</h2>
+						<p class="hint">Per day: visitors (bar) · page views.</p>
+						<div id="visits-days" class="months"></div>
+						<h2>Most viewed pages · last 24 hours</h2>
+						<div id="visits-pages" class="months names"></div>
+						<h2>Came from · last 24 hours</h2>
+						<div id="visits-referrers" class="months names"></div>
+						<h2>Countries · 30 days</h2>
+						<p class="hint">Requests (page views plus pictures and files), so bigger numbers than visitors.</p>
+						<div id="visits-countries" class="months names"></div>
+						<h2>Browsers · 30 days</h2>
+						<div id="visits-browsers" class="months names"></div>
+					</div>
 				</section>
 			</main>
 

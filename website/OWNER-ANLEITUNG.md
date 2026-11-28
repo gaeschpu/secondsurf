@@ -121,7 +121,9 @@ Sind mehrere Bestellungen offen, druckst du mit **Print all open labels** alle a
 
 Jede Person mit Konto kann über secondsurf verkaufen: im Profil unter **Verkaufen** die Verkaufsbedingungen akzeptieren, IBAN eintragen und unter **Neues Piece einreichen** Fotos und Angaben hochladen.
 
-1. Du bekommst eine E-Mail. Im Dashboard unter **Sellers** siehst du die Fotos und alle Angaben. Ändere Texte oder Preis, wenn nötig, und tippe auf **Approve → shop** (das Piece kommt in den Shop) oder **Reject** (mit Grund). Die Person bekommt jeweils eine E-Mail.
+1. Du bekommst eine E-Mail. Im Dashboard unter **Sellers** siehst du die Fotos und alle Angaben. Ändere Texte oder Preis, wenn nötig. Ist ein Foto eine Nahaufnahme der Etikette, setz darunter das Häkchen **Label close-up**. Dann tippe auf **Approve → shop** oder **Reject** (mit Grund). Die Person bekommt jeweils eine E-Mail.
+   - Nach **Approve** bekommen die Fotos automatisch denselben Look wie deine Pieces (Betonboden, gebügelt, gerade). Das macht GitHub von selbst, in etwa 10 Minuten ist das Piece online. Bis dahin steht es in «Your pieces» mit «Photos getting the shop look». Nahaufnahmen mit Häkchen bleiben, wie sie sind (und sind im Shop ausgeblendet, wie bei deinen Pieces). Klappt bei einem Foto etwas nicht, kommt das Piece trotzdem online, mit dem Originalfoto.
+   - Bitte keine Fotos freigeben, auf denen jemand das Teil trägt: Dann würde die Person mit ausgeschnitten. Im Verkaufsformular steht deshalb: flach hinlegen oder aufhängen.
 2. Wird ein solches Piece verkauft, bekommt die Verkäuferin die Adresse per E-Mail und im Profil, druckt Etikette und Lieferschein, **verschickt selbst** und muss dabei die Sendungsnummer eingeben oder scannen (die Käuferin bekommt sie per E-Mail). In deinen Orders ist es als «Seller ships» markiert und steht nicht auf deiner Etikette.
 3. Unter **Payouts** siehst du, was du wem schuldest: Verkaufspreis minus Kommission (5 % auf die ersten 3 Verkäufe einer Person, danach 7 %) plus CHF 9 Versand pro Paket. Fällig 14 Tage nach dem Versand. Überweise den Betrag auf die angezeigte IBAN und tippe auf **Paid**.
 4. Die Käuferin bekommt mit der Sendungsnummer einen Link «Ist alles angekommen?». Tippt sie auf **Ja, alles okay**, ist die Auszahlung sofort fällig; ohne Antwort 14 Tage nach dem Versand. Meldet sie ein **Problem**, bekommst du eine E-Mail und die Auszahlung ist angehalten, bis du sie mit **Problem solved – release payout** freigibst.
@@ -173,3 +175,11 @@ Ein Flat-Lay deiner eigenen Pieces als Bild: `npm run photos:background -- --hau
 
 - **Stats** (Tab im Dashboard): Umsatz (total, 30 Tage, pro Monat), offene Pakete, Kund:innen, Pieces live und Lagerwert, Auktionen, Preisvorschläge, Wunschlisten. Darunter jede Verkäuferin: Kontakt, IBAN, eingereichte und live Pieces, Verkäufe, Umsatz, deine Kommission, ausbezahlt und offen. Antippen zeigt ihre Pieces und Verkäufe einzeln.
 - **Zwei-Faktor einschalten:** Stats → ganz unten «Security» → «Switch on two-factor». Mit der Authenticator-App den QR-Code scannen (oder auf dem Handy den Link antippen), den 6-stelligen Code eingeben, fertig. Ab dann braucht das Login Passwort **und** Code. Ausschalten geht dort auch (mit einem aktuellen Code). Neues Handy? Vorher ausschalten und mit dem neuen Handy neu einschalten.
+
+## Besuche (Tab «Visits» im Dashboard)
+
+Wie viele Leute den Shop besuchen: heute, 7 und 30 Tage, jeder Tag einzeln, die meistbesuchten Seiten und woher die Leute kommen (Instagram, Google …) der letzten 24 Stunden, Länder und Browser. Die Zahlen kommen direkt von Cloudflare: kein zusätzliches Script im Shop, keine Cookies.
+
+Einmal einrichten (etwa 5 Minuten): die Schritte stehen im Tab «Visits» selbst, solange es noch nicht eingerichtet ist. Kurz: in Cloudflare ein API-Token mit nur «Zone → Analytics → Read» für secondsurf.ch erstellen und zusammen mit der Zone-ID in Cloudflare Pages unter Settings → Variables and Secrets als `CF_ANALYTICS_TOKEN` (Secret) und `CF_ZONE_ID` eintragen, dann den letzten Deploy neu starten. Das Token nie jemandem schicken oder in den Chat kopieren.
+
+«Visitors» sind verschiedene Geräte (IP-Adressen) pro Tag. Cloudflare zählt auch Bots mit, die es nicht blockiert; die Zahlen sind also etwas höher als echte Menschen.

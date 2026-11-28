@@ -29,6 +29,11 @@ export interface Env {
 	STRIPE_WEBHOOK_SECRET?: string;
 	/** Only for local testing against a fake Stripe. */
 	STRIPE_API?: string;
+	/** Visits tab (/api/admin/visits): API token with only "Zone → Analytics → Read", and the zone ID of secondsurf.ch. */
+	CF_ANALYTICS_TOKEN?: string;
+	CF_ZONE_ID?: string;
+	/** Only for local testing against a fake Cloudflare API. */
+	CF_API?: string;
 	/** The built site, provided by Cloudflare Pages. */
 	ASSETS?: { fetch: (input: URL | string) => Promise<Response> };
 }

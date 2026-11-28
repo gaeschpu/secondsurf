@@ -407,7 +407,8 @@ function renderProduct(product) {
 	for (const [active, label] of [
 		[product.auctionOnly, 'Auction only'],
 		[product.sold, 'Sold'],
-		[product.draft, 'Hidden: not in the shop'],
+		[product.draft && !product.photosPending, 'Hidden: not in the shop'],
+		[product.photosPending, 'Photos getting the shop look – online by itself in ~10 min'],
 		[product.seller, 'Seller piece'],
 	]) {
 		if (!active) continue;
@@ -542,13 +543,15 @@ loadDashboard().catch((error) => {
 // ---------- Pages ----------
 
 function showPage() {
-	const page = { '#offers': 'offers', '#auctions': 'auctions', '#orders': 'orders', '#submissions': 'submissions', '#stats': 'stats' }[location.hash] ?? 'pieces';
+	const page = { '#offers': 'offers', '#auctions': 'auctions', '#orders': 'orders', '#submissions': 'submissions', '#stats': 'stats', '#visits': 'visits' }[location.hash] ?? 'pieces';
 	$('pieces-page').hidden = page !== 'pieces';
 	$('offers-page').hidden = page !== 'offers';
 	$('auctions-page').hidden = page !== 'auctions';
 	$('orders-page').hidden = page !== 'orders';
 	$('submissions-page').hidden = page !== 'submissions';
 	$('stats-page').hidden = page !== 'stats';
+	$('visits-page').hidden = page !== 'visits';
+	if (page === 'visits' && !$('dashboard').hidden) loadVisits().catch((error) => show($('visits-error'), error.message));
 	if (page === 'stats' && !$('dashboard').hidden) {
 		loadStats().catch((error) => show($('stats-error'), error.message));
 		loadTwoFactor().catch((error) => show($('tf-error'), error.message));
@@ -1057,13 +1060,22 @@ function renderSubmission(s) {
 		return item;
 	}
 
+	// Tick the label close-ups: they stay as they are (and hidden in the shop, like on your own pieces); every other photo
+	// gets the shop's background after approving.
 	const gallery = el('div', 'sub-photos');
+	const labelBoxes = [];
 	for (const id of s.photo_ids) {
+		const figure = el('figure');
 		const img = el('img');
 		img.src = `/api/admin/sellers/photo?id=${id}`;
 		img.alt = '';
 		img.loading = 'lazy';
-		gallery.append(img);
+		const label = el('label', 'sub-label');
+		const box = Object.assign(el('input'), { type: 'checkbox' });
+		labelBoxes.push(box);
+		label.append(box, ' Label close-up');
+		figure.append(img, label);
+		gallery.append(figure);
 	}
 	item.append(gallery);
 
@@ -1111,7 +1123,8 @@ function renderSubmission(s) {
 			price: Number(f.price.value),
 			measurements: f.measurements.value,
 			description: f.description.value,
-		}, 'Approved. The piece shows in the shop after the site rebuilds (about 2 minutes); the seller got an email.'),
+			labels: labelBoxes.flatMap((box, i) => (box.checked ? [i + 1] : [])),
+		}, 'Approved. The photos now get the shop background; the piece goes online by itself in about 10 minutes. The seller got an email.'),
 	);
 	const reject = el('button', 'danger', 'Reject');
 	reject.type = 'button';
@@ -1317,6 +1330,65 @@ $('payout-paid').addEventListener('click', async () => {
 
 const day = (seconds) => (seconds ? new Date(seconds * 1000).toLocaleDateString('de-CH', { dateStyle: 'medium' }) : '–');
 const STATUS_LABEL = { live: 'Live', sold: 'Sold', pending: 'Waiting for your check', rejected: 'Rejected', to_ship: 'Sold – to ship', shipped: 'Shipped', paid_out: 'Paid out' };
+
+// ---------- Visits (Cloudflare analytics, /api/admin/visits) ----------
+
+/** Rows with a bar relative to the biggest value: [name, value, text on the right]. */
+function barRows(container, rows, empty) {
+	const max = Math.max(1, ...rows.map((r) => r[1]));
+	container.replaceChildren(
+		...(rows.length
+			? rows.map(([name, value, text]) => {
+					const row = el('div', 'month');
+					const wrap = el('span', 'bar-wrap');
+					const bar = el('span', 'bar');
+					bar.style.width = `${Math.max(2, (value / max) * 100)}%`;
+					wrap.append(bar);
+					row.append(el('span', 'month-name', name), wrap, el('span', 'month-value', text));
+					return row;
+				})
+			: [el('p', 'hint', empty)]),
+	);
+}
+
+const count = (n) => Number(n).toLocaleString('de-CH');
+const megabytes = (bytes) => (bytes >= 1e9 ? `${(bytes / 1e9).toFixed(1)} GB` : `${Math.round(bytes / 1e6)} MB`);
+
+async function loadVisits() {
+	show($('visits-error'));
+	const data = await api('visits');
+	$('visits-setup').hidden = data.configured;
+	$('visits-body').hidden = !data.configured;
+	if (!data.configured) return;
+	$('visits-time').textContent = `As of ${when(data.generated)}.`;
+	const cards = [
+		['Visitors today', count(data.today.visitors), `${count(data.today.pageViews)} page views`],
+		['Last 7 days', count(data.week.visitors), `visitors · ${count(data.week.pageViews)} page views`],
+		['Last 30 days', count(data.month.visitors), `visitors · ${count(data.month.pageViews)} page views`],
+		['Attacks blocked', count(data.month.threats), 'by Cloudflare, 30 days'],
+		['Served from cache', `${data.month.cached} %`, `${megabytes(data.month.bytes)} sent in 30 days`],
+	];
+	$('visits-cards').replaceChildren(
+		...cards.map(([label, value, line]) => {
+			const card = el('div', 'stat');
+			card.append(el('span', 'stat-label', label), el('strong', 'stat-value', value), el('span', 'stat-line', line));
+			return card;
+		}),
+	);
+	const day = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString('de-CH', { weekday: 'short', day: 'numeric', month: 'numeric' });
+	barRows($('visits-days'), [...data.days].reverse().map((d) => [day(d.date), d.visitors, `${count(d.visitors)} · ${count(d.pageViews)}`]), 'No visits yet.');
+	const later = 'Not available (Cloudflare keeps this detail only on some plans).';
+	barRows($('visits-pages'), (data.pages ?? []).map((p) => [p.path, p.views, count(p.views)]), data.pages ? 'No page views in the last 24 hours.' : later);
+	barRows($('visits-referrers'), (data.referrers ?? []).map((r) => [r.host, r.visits, count(r.visits)]), data.referrers ? 'Nobody came from another site in the last 24 hours.' : later);
+	// Cloudflare gives country codes (CH, DE …): shown as names.
+	let region = (code) => code;
+	try {
+		const names = new Intl.DisplayNames(['de-CH'], { type: 'region' });
+		region = (code) => (/^[A-Z]{2}$/.test(code) ? names.of(code) ?? code : code);
+	} catch {}
+	barRows($('visits-countries'), data.countries.map((c) => [region(c.name), c.count, count(c.count)]), 'No data yet.');
+	barRows($('visits-browsers'), data.browsers.map((b) => [b.name, b.count, count(b.count)]), 'No data yet.');
+}
 
 async function loadStats() {
 	show($('stats-error'));
